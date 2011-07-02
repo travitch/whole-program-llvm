@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+#
+# Extract the .llvm_bc section from the provided ELF object and
+# reassemble it into an actual bitcode file.  The ELF section contains
+# absolute paths to all of its constituent bitcode files.  This
+# utility reads the section and links together all of the named
+# bitcode files.
+
+import os
+import sys
+from subprocess import *
+
+sectionName = '.llvm_bc'
+inputFile = sys.argv[1]
+
+# Use objdump on the provided binary; parse out the fields
+# to find the given section.  Return the size and offset of
+# that section (in bytes)
+def getSectionSizeAndOffset(sectionName, filename):
+    objdumpCmd = ['objdump', '-h', '-w', filename]
+    objdumpProc = Popen(objdumpCmd, stdout=PIPE)
+
+    objdumpOutput = objdumpProc.communicate()[0]
+    if objdumpProc.returncode != 0:
+        sys.stderr.write('Could not dump %s' % filename)
+        sys.exit(-1)
+
+    for line in objdumpOutput.splitlines():
+        fields = line.split()
+        if len(fields) <= 7:
+            continue
+        if fields[1] != sectionName:
+            continue
+        try:
+            idx = int(fields[0])
+            size = int(fields[2], 16)
+            offset = int(fields[5], 16)
+            return (size, offset)
+        except ValueError:
+            continue
+
+    return None
+
+# Read the entire content of an ELF section into a string
+def getSectionContent(size, offset, filename):
+    with open(filename) as f:
+        f.seek(offset)
+        c = f.read(size)
+        # The linker pads sections with null bytes; our real data
+        # cannot have null bytes because it is just text.  Discard
+        # nulls.
+        return c.replace('\0', '')
+
+(sectionSize, sectionOffset) = getSectionSizeAndOffset(sectionName, inputFile)
+if sectionSize == 0:
+    sys.stderr.write('%s is empty' % sectionName)
+    sys.exit(-1)
+
+content = getSectionContent(sectionSize, sectionOffset, inputFile)
+fileNames = content.split('\n')
+
+linkCmd = ['llvm-link', '-o', '{0}.bc'.format(inputFile)]
+linkCmd.extend([x for x in fileNames if x != ''])
+linkProc = Popen(linkCmd)
+
+exitCode = linkProc.wait()
+
+sys.exit(exitCode)
+
+
