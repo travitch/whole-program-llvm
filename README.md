@@ -1,4 +1,5 @@
-= Introduction =
+Introduction
+============
 
 This is a small python-based wrapper around a GCC-compatible compiler
 to make it easy to build whole-program (or whole-library) LLVM bitcode
@@ -25,7 +26,8 @@ Currently, this package only works using the dragonegg plugin and gcc
 4.5 (with the required patch for dragonegg).  Support can be extended
 to clang (and the legacy llvm-gcc) if absolutely necessary.
 
-= Usage =
+Usage
+=====
 
 There are three environment variables that must be set to use this
 wrapper script:
@@ -38,7 +40,8 @@ wrapper script:
 Once the environment is set up, just use wllvm and wllvm++ as your C
 and C++ compilers, respectively.
 
-= Example =
+Example
+=======
 
     export LLVM_COMPILER=dragonegg
     export LLVM_GCC_PREFIX=llvm-
