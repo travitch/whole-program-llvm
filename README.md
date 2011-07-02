@@ -30,24 +30,25 @@ to clang (and the legacy llvm-gcc) if absolutely necessary.
 There are three environment variables that must be set to use this
 wrapper script:
 
- * LLVM_COMPILER should be set to 'dragonegg' (clang will be supported eventually).
- * LLVM_GCC_PREFIX should be set to the prefix for the version of gcc that should
+ * `LLVM_COMPILER` should be set to 'dragonegg' (clang will be supported eventually).
+ * `LLVM_GCC_PREFIX` should be set to the prefix for the version of gcc that should
    be used with dragonegg.  This can be empty if there is no prefix.
- * LLVM_DRAGONEGG_PLUGIN should be the full path to the dragonegg plugin.
+ * `LLVM_DRAGONEGG_PLUGIN` should be the full path to the dragonegg plugin.
 
 Once the environment is set up, just use wllvm and wllvm++ as your C
 and C++ compilers, respectively.
 
 = Example =
 
-export LLVM_COMPILER=dragonegg
-export LLVM_GCC_PREFIX=llvm-
-export LLVM_DRAGONEGG_PLUGIN=/unsup/llvm-2.9/lib/dragonegg.so
+    export LLVM_COMPILER=dragonegg
+    export LLVM_GCC_PREFIX=llvm-
+    export LLVM_DRAGONEGG_PLUGIN=/unsup/llvm-2.9/lib/dragonegg.so
 
-tar xf pkg-config-0.26.tar.gz
-cd pkg-config-0.26
-CC=wllvm ./configure
-make
+    tar xf pkg-config-0.26.tar.gz
+    cd pkg-config-0.26
+    CC=wllvm ./configure
+    make
 
-extract-bc pkg-config # Produces pkg-config.bc
+    # Produces pkg-config.bc
+    extract-bc pkg-config
 
