@@ -31,8 +31,10 @@ argFilter = BCFilter(sys.argv[1:])
 
 # Now compile this llvm assembly file into a bitcode file.  The output
 # filename is the same as the object with a .bc appended
-bcname = '.{0}.bc'.format(argFilter.outFileName)
-fakeAssembler = ['llvm-as', infile, '-o', bcname]
+(dirs, filename) = os.path.split(argFilter.outFileName)
+bcfilename = '.{0}.bc'.format(filename)
+bcPath = os.path.join(dirs, bcfilename)
+fakeAssembler = ['llvm-as', infile, '-o', bcPath]
 asmProc = subprocess.Popen(fakeAssembler)
 realRet = asmProc.wait()
 
@@ -42,7 +44,7 @@ if realRet != 0:
 # Now just build a temporary text file with the full path to the
 # bitcode file that we'll write into the object file.
 f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
-f.write(os.path.abspath(bcname))
+f.write(os.path.abspath(bcPath))
 f.write('\n')
 # Ensure buffers are flushed so that objcopy doesn't read an empty
 # file
