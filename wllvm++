@@ -13,6 +13,6 @@ from driver.utils import *
 cmd = list(sys.argv)
 cmd = cmd[1:]
 
-buildObject(cmd, False)
-buildAndAttachBitcode(cmd, False)
+buildObject(cmd, True)
+buildAndAttachBitcode(cmd, True)
 
