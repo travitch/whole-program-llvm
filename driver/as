@@ -27,7 +27,10 @@ class BCFilter(ArgumentListFilter):
 
 argFilter = BCFilter(sys.argv[1:])
 # Since this is just the assembler, there should only ever be one file
-[infile] = argFilter.inputFiles
+try:
+    [infile] = argFilter.inputFiles
+except ValueError:
+    infile = "-"
 
 # Now compile this llvm assembly file into a bitcode file.  The output
 # filename is the same as the object with a .bc appended
