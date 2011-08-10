@@ -80,6 +80,7 @@ class ArgumentListFilter(object):
         self.outputFilename = None
         self.isVerbose = False
         self.isPreprocessOnly = False
+        self.isAssembly = False
 
         argExactMatches = dict(defaultArgExactMatches)
         argExactMatches.update(exactMatches)
@@ -136,6 +137,8 @@ class ArgumentListFilter(object):
     def inputFileCallback(self, infile):
         self.inputFiles.append(infile)
         self.keepArgument(infile)
+        if re.search('\\.s', infile):
+            self.isAssembly = True
 
     def defaultOneArgument(self, flag, arg):
         self.keepArgument(flag)
@@ -177,7 +180,6 @@ def getBitcodeCompiler(isCxx):
 
     print('Error: invalid LLVM_COMPILER: {0}'.format(cstring))
 
-
 def buildObject(cmd, isCxx):
     objCompiler = getCompiler(isCxx)
     objCompiler.extend(cmd)
@@ -189,7 +191,7 @@ def buildObject(cmd, isCxx):
 # This command does not have the executable with it
 def buildAndAttachBitcode(cmd, isCxx):
     af = ArgumentListFilter(cmd)
-    if len(af.inputFiles) == 0:
+    if len(af.inputFiles) == 0 or af.isAssembly:
         return
     bcc = getBitcodeCompiler(isCxx)
     bcc.extend(cmd)
