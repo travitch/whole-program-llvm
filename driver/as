@@ -13,7 +13,6 @@
 import os
 import subprocess, sys
 from utils import *
-import tempfile
 
 
 class BCFilter(ArgumentListFilter):
@@ -44,38 +43,7 @@ realRet = asmProc.wait()
 if realRet != 0:
     sys.exit(realRet)
 
-# Now just build a temporary text file with the full path to the
-# bitcode file that we'll write into the object file.
-f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
-f.write(os.path.abspath(bcPath))
-f.write('\n')
-# Ensure buffers are flushed so that objcopy doesn't read an empty
-# file
-f.flush()
-os.fsync(f.fileno())
-f.close()
-
-# Now write our .llvm_bc section
-objcopyCmd = ['objcopy', '-v', '--add-section', '.llvm_bc={0}'.format(f.name)]
-objcopyCmd.append(argFilter.outFileName)
-
-orc = 0
-
-try:
-    if os.path.getsize(argFilter.outFileName) > 0:
-        objProc = subprocess.Popen(objcopyCmd)
-        orc = objProc.wait()
-except:
-    # configure loves to immediately delete things, causing issues for
-    # us here.  Just ignore it
-    os.remove(f.name)
-    sys.exit(0)
-
-os.remove(f.name)
-
-if orc != 0:
-    print('objcopy failed with {0}'.format(orc))
-    sys.exit(-1)
+attachBitcodePathToObject(bcPath, argFilter.outFileName)
 
 sys.exit(realRet)
 

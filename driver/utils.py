@@ -4,6 +4,8 @@ import errno
 import os
 import re
 import sys
+import tempfile
+import subprocess
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
@@ -77,6 +79,7 @@ class ArgumentListFilter(object):
 
         self.filteredArgs = []
         self.inputFiles = []
+        self.originalOutputFilename = 'a.out'
         self.outputFilename = None
         self.isVerbose = False
         self.isPreprocessOnly = False
@@ -123,6 +126,7 @@ class ArgumentListFilter(object):
         self.filteredArgs.append(arg)
 
     def outputFileCallback(self, flag, filename):
+        self.originalOutputFilename = filename
         self.outputFilename = filename
         self.keepArgument(flag)
         self.keepArgument(filename)
@@ -147,57 +151,139 @@ class ArgumentListFilter(object):
     def defaultNoArgument(self, flag):
         self.keepArgument(flag)
 
-def getCompiler(isCxx):
-    cstring = os.getenv('LLVM_COMPILER')
-    pfx = ''
-    if os.getenv('LLVM_GCC_PREFIX') is not None:
-        pfx = os.getenv('LLVM_GCC_PREFIX')
+# Same as above, but change the name of the output filename when
+# building the bitcode file so that we don't clobber the object file.
+class ClangBitcodeArgumentListFilter(ArgumentListFilter):
+    def __init__(self, arglist):
+        self.bcName = None
+        localCallbacks = { '-o' : (1, ClangBitcodeArgumentListFilter.outputFileCallback) }
+        super(ClangBitcodeArgumentListFilter, self).__init__(arglist, exactMatches=localCallbacks)
 
-    if cstring == 'clang' and isCxx:
-        return ['clang++']
-    elif cstring == 'clang' and not isCxx:
-        return ['clang']
-    elif cstring == 'dragonegg' and isCxx:
-        return ['{0}g++'.format(pfx)]
-    elif cstring == 'dragonegg' and not isCxx:
-        return ['{0}gcc'.format(pfx)]
+    def outputFileCallback(self, flag, filename):
+        self.originalOutputFilename = filename
+        (dirs, baseFile) = os.path.split(filename)
+        bcfilename = '.{0}.bc'.format(baseFile)
+        bcPath = os.path.join(dirs, bcfilename)
+        self.outputFilename = bcPath
+        self.keepArgument(flag)
+        self.keepArgument(self.outputFilename)
+        print self.outputFilename
 
-    print('Error: invalid LLVM_COMPILER: {0}'.format(cstring))
-    sys.exit(-1)
+def attachBitcodePathToObject(bcPath, outFileName):
+    print 'Attaching %s to %s' % (bcPath, outFileName)
+    # Now just build a temporary text file with the full path to the
+    # bitcode file that we'll write into the object file.
+    f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
+    f.write(os.path.abspath(bcPath))
+    f.write('\n')
 
-def getBitcodeCompiler(isCxx):
-    cc = getCompiler(isCxx)
+    # Ensure buffers are flushed so that objcopy doesn't read an empty
+    # file
+    f.flush()
+    os.fsync(f.fileno())
+    f.close()
+
+    # Now write our .llvm_bc section
+    objcopyCmd = ['objcopy', '-v', '--add-section', '.llvm_bc={0}'.format(f.name), outFileName]
+    orc = 0
+
+    try:
+        if os.path.getsize(outFileName) > 0:
+            objProc = subprocess.Popen(objcopyCmd)
+            orc = objProc.wait()
+    except OSError:
+        # configure loves to immediately delete things, causing issues for
+        # us here.  Just ignore it
+        os.remove(f.name)
+        sys.exit(0)
+
+    os.remove(f.name)
+
+    if orc != 0:
+        print('objcopy failed with {0}'.format(orc))
+        sys.exit(-1)
+
+class ClangBuilder(object):
+    def __init__(self, cmd, isCxx):
+        self.cmd = cmd
+        self.isCxx = isCxx
+
+    def getBitcodeCompiler(self):
+        cc = self.getCompiler()
+        return cc + ['-emit-llvm']
+
+    def getCompiler(self):
+        if self.isCxx:
+            return ['clang++']
+        else:
+            return ['clang']
+
+    def getBitcodeArglistFilter(self):
+        return ClangBitcodeArgumentListFilter(self.cmd)
+
+    def attachBitcode(self, bcname, argFilter):
+        attachBitcodePathToObject(bcname, argFilter.originalOutputFilename)
+
+class DragoneggBuilder(object):
+    def __init__(self, cmd, isCxx):
+        self.cmd = cmd
+        self.isCxx = isCxx
+
+    def getBitcodeCompiler(self):
+        pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
+        cc = self.getCompiler()
+        return cc + ['-B', driverDir, '-fplugin={0}'.format(pth),
+                     '-fplugin-arg-dragonegg-emit-ir']
+
+    def getCompiler(self):
+        pfx = ''
+        if os.getenv('LLVM_GCC_PREFIX') is not None:
+            pfx = os.getenv('LLVM_GCC_PREFIX')
+
+        if self.isCxx:
+            return ['{0}g++'.format(pfx)]
+        else:
+            return ['{0}gcc'.format(pfx)]
+
+    def getBitcodeArglistFilter(self):
+        return ArgumentListFilter(self.cmd)
+
+    # Don't need to do anything since the -B flag in the bitcode
+    # compiler and the assembly stub handles it
+    def attachBitcode(self, bcname, argFilter):
+        pass
+
+
+def getBuilder(cmd, isCxx):
     cstring = os.getenv('LLVM_COMPILER')
     if cstring == 'clang':
-        return cc + ['-emit-llvm']
+        return ClangBuilder(cmd, isCxx)
     elif cstring == 'dragonegg':
-        pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
-        # Pass -B here so that, when gcc calls as to assemble the
-        # output, it invokes llvm-as instead of the system assembler
-        # (which does not understand llvm assembly)
-        return cc + [ '-B', driverDir, # '-specs=llvm-specs',
-                     '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
+        return DragoneggBuilder(cmd, isCxx)
+    else:
+        raise Exception('Invalid compiler type: ' + cstring)
 
-    print('Error: invalid LLVM_COMPILER: {0}'.format(cstring))
-
-def buildObject(cmd, isCxx):
-    objCompiler = getCompiler(isCxx)
-    objCompiler.extend(cmd)
+def buildObject(builder):
+    objCompiler = builder.getCompiler()
+    objCompiler.extend(builder.cmd)
     proc = Popen(objCompiler)
     rc = proc.wait()
     if rc != 0:
         sys.exit(rc)
 
 # This command does not have the executable with it
-def buildAndAttachBitcode(cmd, isCxx):
-    af = ArgumentListFilter(cmd)
+def buildAndAttachBitcode(builder):
+    af = builder.getBitcodeArglistFilter()
     if len(af.inputFiles) == 0 or af.isAssembly:
         return
-    bcc = getBitcodeCompiler(isCxx)
-    bcc.extend(cmd)
+    bcc = builder.getBitcodeCompiler()
+    bcc.extend(af.filteredArgs)
     bcc.append('-c')
+    print bcc
     proc = Popen(bcc)
-    # FIXME: if clang, attach bitcode (dragonegg does it in as)
-    sys.exit(proc.wait())
+    rc = proc.wait()
+    if rc == 0:
+        builder.attachBitcode(af.originalOutputFilename + '.bc', af)
+    sys.exit(rc)
 
 
