@@ -32,6 +32,7 @@ class ArgumentListFilter(object):
     def __init__(self, inputList, exactMatches={}, patternMatches={}):
         defaultArgExactMatches = {
             '-o' : (1, ArgumentListFilter.outputFileCallback),
+            '-c' : (0, ArgumentListFilter.compileOnlyCallback),
             '-E' : (0, ArgumentListFilter.preprocessOnlyCallback),
             '--verbose' : (0, ArgumentListFilter.verboseFlagCallback),
             '--param' : (1, ArgumentListFilter.defaultOneArgument),
@@ -79,11 +80,11 @@ class ArgumentListFilter(object):
 
         self.filteredArgs = []
         self.inputFiles = []
-        self.originalOutputFilename = 'a.out'
         self.outputFilename = None
         self.isVerbose = False
         self.isPreprocessOnly = False
         self.isAssembly = False
+        self.isCompileOnly = False
 
         argExactMatches = dict(defaultArgExactMatches)
         argExactMatches.update(exactMatches)
@@ -126,7 +127,6 @@ class ArgumentListFilter(object):
         self.filteredArgs.append(arg)
 
     def outputFileCallback(self, flag, filename):
-        self.originalOutputFilename = filename
         self.outputFilename = filename
         self.keepArgument(flag)
         self.keepArgument(filename)
@@ -137,6 +137,10 @@ class ArgumentListFilter(object):
 
     def verboseFlagCallback(self, flag):
         self.isVerbose = True
+
+    def compileOnlyCallback(self, flag):
+        self.isCompileOnly = True
+        self.keepArgument(flag)
 
     def inputFileCallback(self, infile):
         self.inputFiles.append(infile)
@@ -151,6 +155,15 @@ class ArgumentListFilter(object):
     def defaultNoArgument(self, flag):
         self.keepArgument(flag)
 
+    def getOutputFilename(self):
+        if self.outputFilename is not None:
+            return self.outputFilename
+        elif self.isCompileOnly:
+            (root, ext) = os.path.splitext(self.inputFiles[0])
+            return '{0}.o'.format(root)
+        else:
+            return '.a.out'
+
 # Same as above, but change the name of the output filename when
 # building the bitcode file so that we don't clobber the object file.
 class ClangBitcodeArgumentListFilter(ArgumentListFilter):
@@ -160,17 +173,9 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
         super(ClangBitcodeArgumentListFilter, self).__init__(arglist, exactMatches=localCallbacks)
 
     def outputFileCallback(self, flag, filename):
-        self.originalOutputFilename = filename
-        (dirs, baseFile) = os.path.split(filename)
-        bcfilename = '.{0}.bc'.format(baseFile)
-        bcPath = os.path.join(dirs, bcfilename)
-        self.outputFilename = bcPath
-        self.keepArgument(flag)
-        self.keepArgument(self.outputFilename)
-        print self.outputFilename
+        self.outputFile = filename
 
 def attachBitcodePathToObject(bcPath, outFileName):
-    print 'Attaching %s to %s' % (bcPath, outFileName)
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.
     f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
@@ -203,10 +208,14 @@ def attachBitcodePathToObject(bcPath, outFileName):
         print('objcopy failed with {0}'.format(orc))
         sys.exit(-1)
 
-class ClangBuilder(object):
+class BuilderBase(object):
     def __init__(self, cmd, isCxx):
         self.cmd = cmd
         self.isCxx = isCxx
+
+class ClangBuilder(BuilderBase):
+    def __init__(self, cmd, isCxx):
+        super(ClangBuilder, self).__init__(cmd, isCxx)
 
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
@@ -221,13 +230,26 @@ class ClangBuilder(object):
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
 
-    def attachBitcode(self, bcname, argFilter):
-        attachBitcodePathToObject(bcname, argFilter.originalOutputFilename)
+    def getBitcodeFileName(self, argFilter):
+        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
+        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        bcPath = os.path.join(dirs, bcfilename)
 
-class DragoneggBuilder(object):
+        return bcPath
+
+    def extraBitcodeArgs(self, argFilter):
+        bcPath = self.getBitcodeFileName(argFilter)
+
+        return ['-o', bcPath]
+
+    def attachBitcode(self, argFilter):
+        bcname = self.getBitcodeFileName(argFilter)
+        outFile = argFilter.getOutputFilename()
+        attachBitcodePathToObject(bcname, outFile)
+
+class DragoneggBuilder(BuilderBase):
     def __init__(self, cmd, isCxx):
-        self.cmd = cmd
-        self.isCxx = isCxx
+        super(DragoneggBuilder, self).__init__(cmd, isCxx)
 
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
@@ -250,8 +272,11 @@ class DragoneggBuilder(object):
 
     # Don't need to do anything since the -B flag in the bitcode
     # compiler and the assembly stub handles it
-    def attachBitcode(self, bcname, argFilter):
+    def attachBitcode(self, argFilter):
         pass
+
+    def extraBitcodeArgs(self, argFilter):
+        return []
 
 
 def getBuilder(cmd, isCxx):
@@ -279,11 +304,11 @@ def buildAndAttachBitcode(builder):
     bcc = builder.getBitcodeCompiler()
     bcc.extend(af.filteredArgs)
     bcc.append('-c')
-    print bcc
+    bcc.extend(builder.extraBitcodeArgs(af))
     proc = Popen(bcc)
     rc = proc.wait()
     if rc == 0:
-        builder.attachBitcode(af.originalOutputFilename + '.bc', af)
+        builder.attachBitcode(af)
     sys.exit(rc)
 
 
