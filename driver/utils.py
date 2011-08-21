@@ -162,18 +162,17 @@ class ArgumentListFilter(object):
             (root, ext) = os.path.splitext(self.inputFiles[0])
             return '{0}.o'.format(root)
         else:
-            return '.a.out'
+            return 'a.out'
 
 # Same as above, but change the name of the output filename when
 # building the bitcode file so that we don't clobber the object file.
 class ClangBitcodeArgumentListFilter(ArgumentListFilter):
     def __init__(self, arglist):
-        self.bcName = None
         localCallbacks = { '-o' : (1, ClangBitcodeArgumentListFilter.outputFileCallback) }
         super(ClangBitcodeArgumentListFilter, self).__init__(arglist, exactMatches=localCallbacks)
 
     def outputFileCallback(self, flag, filename):
-        self.outputFile = filename
+        self.outputFilename = filename
 
 def attachBitcodePathToObject(bcPath, outFileName):
     # Now just build a temporary text file with the full path to the
