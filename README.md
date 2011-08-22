@@ -22,9 +22,8 @@ static libraries in builds.  This approach has the distinct advantage
 of generating working binaries, in case some part of a build process
 actually requires that.
 
-Currently, this package only works using the dragonegg plugin and gcc
-4.5 (with the required patch for dragonegg).  Support can be extended
-to clang (and the legacy llvm-gcc) if absolutely necessary.
+Currently, this package only works using clang or the dragonegg plugin
+with gcc 4.5 (with the required patch for dragonegg).
 
 Usage
 =====
@@ -32,10 +31,12 @@ Usage
 There are three environment variables that must be set to use this
 wrapper script:
 
- * `LLVM_COMPILER` should be set to 'dragonegg' (clang will be supported eventually).
+ * `LLVM_COMPILER` should be set to 'dragonegg' or 'clang'.
  * `LLVM_GCC_PREFIX` should be set to the prefix for the version of gcc that should
-   be used with dragonegg.  This can be empty if there is no prefix.
- * `LLVM_DRAGONEGG_PLUGIN` should be the full path to the dragonegg plugin.
+   be used with dragonegg.  This can be empty if there is no prefix.  This variable is
+   not used if `$LLVM_COMPILER == clang`.
+ * `LLVM_DRAGONEGG_PLUGIN` should be the full path to the dragonegg plugin.  This
+   variable is not used if `$LLVM_COMPILER == clang`.
 
 Once the environment is set up, just use wllvm and wllvm++ as your C
 and C++ compilers, respectively.
