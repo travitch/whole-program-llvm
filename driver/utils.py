@@ -232,9 +232,8 @@ class ClangBuilder(BuilderBase):
     def getBitcodeFileName(self, argFilter):
         (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        bcPath = os.path.join(dirs, bcfilename)
 
-        return bcPath
+        return bcfilename
 
     def extraBitcodeArgs(self, argFilter):
         bcPath = self.getBitcodeFileName(argFilter)
@@ -309,5 +308,3 @@ def buildAndAttachBitcode(builder):
     if rc == 0:
         builder.attachBitcode(af)
     sys.exit(rc)
-
-
