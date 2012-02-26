@@ -175,6 +175,12 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
         self.outputFilename = filename
 
 def attachBitcodePathToObject(bcPath, outFileName):
+    # Don't try to attach a bitcode path to a binary.  Unfortunately
+    # that won't work.
+    (root, ext) = os.path.splitext(outFileName)
+    if ext != ".o":
+        return
+
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.
     f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
@@ -188,7 +194,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     f.close()
 
     # Now write our .llvm_bc section
-    objcopyCmd = ['objcopy', '-v', '--add-section', '.llvm_bc={0}'.format(f.name), outFileName]
+    objcopyCmd = ['objcopy', '--add-section', '.llvm_bc={0}'.format(f.name), outFileName]
     orc = 0
 
     try:
@@ -204,6 +210,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     os.remove(f.name)
 
     if orc != 0:
+        print objcopyCmd
         print('objcopy failed with {0}'.format(orc))
         sys.exit(-1)
 
