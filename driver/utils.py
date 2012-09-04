@@ -34,6 +34,7 @@ class ArgumentListFilter(object):
             '-o' : (1, ArgumentListFilter.outputFileCallback),
             '-c' : (0, ArgumentListFilter.compileOnlyCallback),
             '-E' : (0, ArgumentListFilter.preprocessOnlyCallback),
+            '-S' : (0, ArgumentListFilter.assembleOnlyCallback),
             '--verbose' : (0, ArgumentListFilter.verboseFlagCallback),
             '--param' : (1, ArgumentListFilter.defaultOneArgument),
             '-aux-info' : (1, ArgumentListFilter.defaultOneArgument),
@@ -83,6 +84,7 @@ class ArgumentListFilter(object):
         self.outputFilename = None
         self.isVerbose = False
         self.isPreprocessOnly = False
+        self.isAssembleOnly = False
         self.isAssembly = False
         self.isCompileOnly = False
 
@@ -133,6 +135,10 @@ class ArgumentListFilter(object):
 
     def preprocessOnlyCallback(self, flag):
         self.isPreprocessOnly = True
+        self.keepArgument(flag)
+
+    def assembleOnlyCallback(self, flag):
+        self.isAssembleOnly = True
         self.keepArgument(flag)
 
     def verboseFlagCallback(self, flag):
@@ -307,7 +313,7 @@ def isLinkOption(arg):
 # This command does not have the executable with it
 def buildAndAttachBitcode(builder):
     af = builder.getBitcodeArglistFilter()
-    if len(af.inputFiles) == 0 or af.isAssembly:
+    if len(af.inputFiles) == 0 or af.isAssembly or af.isAssembleOnly:
         return
     bcc = builder.getBitcodeCompiler()
     bcc.extend(af.filteredArgs)
