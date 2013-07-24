@@ -184,7 +184,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
-    if ext != ".o" and ext != '.lo':
+    if ext not in ('.o', '.lo', '.os'):
         return
 
     # Now just build a temporary text file with the full path to the
