@@ -310,6 +310,17 @@ def buildObject(builder):
 def isLinkOption(arg):
     return arg == '-pthread' or arg.startswith('-l') or arg.startswith('-Wl,')
 
+def removeLinkOptions(args):
+    filtered = []
+    prevarg = None
+    for arg in args:
+        if "-Xclang" == prevarg:
+            filtered += [arg]
+        elif not isLinkOption(arg):
+            filtered += [arg]
+        prevarg = arg
+    return filtered
+
 # This command does not have the executable with it
 def buildAndAttachBitcode(builder):
     af = builder.getBitcodeArglistFilter()
@@ -324,7 +335,7 @@ def buildAndAttachBitcode(builder):
     # check to see if there was any output on stderr instead of the
     # return code of commands, so warnings about unused link flags can
     # cause spurious failures here.
-    bcc = [arg for arg in bcc if not isLinkOption(arg)]
+    bcc = removeLinkOptions(bcc)
     proc = Popen(bcc)
     rc = proc.wait()
     if rc == 0:
