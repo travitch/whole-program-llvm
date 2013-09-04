@@ -1,10 +1,14 @@
 #!/usr/bin/env python
-#
-# Extract the .llvm_bc section from the provided ELF object and
-# reassemble it into an actual bitcode file.  The ELF section contains
-# absolute paths to all of its constituent bitcode files.  This
-# utility reads the section and links together all of the named
-# bitcode files.
+"""
+Extract the .llvm_bc section from the provided ELF object and
+reassemble it into an actual bitcode file.  The ELF section contains
+absolute paths to all of its constituent bitcode files.  This
+utility reads the section and links together all of the named
+bitcode files.
+
+The environment variable LLVM_LINKER can be used as an alternative
+to the --linker option.
+"""
 
 import os
 import sys
@@ -16,8 +20,6 @@ from driver.utils import elfSectionName
 import logging
 import pprint
 import driver.logconfig
-inputFile = sys.argv[1]
-
 sectionName = '.llvm_bc'
 inputFile = sys.argv[1]
 
@@ -63,26 +65,40 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return c.replace('\0', '')
 
-llvmLinker = os.getenv(llvmCompilerPathEnv)
-if not llvmLinker:
-    llvmLinker=''
-llvmLinker = os.path.join(llvmLinker, 'llvm-link')
+def main(args):
+    import argparse
 
-(sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
-if sectionSize == 0:
-    sys.stderr.write('%s is empty' % elfSectionName)
-    sys.exit(-1)
+    llvmLinker = os.getenv(llvmCompilerPathEnv)
+    if not llvmLinker:
+      llvmLinker=''
+    llvmLinker = os.path.join(llvmLinker, 'llvm-link')
 
-content = getSectionContent(sectionSize, sectionOffset, inputFile)
-fileNames = content.split('\n')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("wllvm_binary", help="A binary produced by wllvm/wllvm++")
+    parser.add_argument("--linker","-l", help='The LLVM bitcode linker to use. Default "%(default)s"',
+                        default=llvmLinker)
+    parsedArgs = parser.parse_args()
 
-logging.debug('Found the following file names from ELF header:\n' + pprint.pformat(fileNames))
-linkCmd = [ llvmLinker, '-o', '{0}.bc'.format(inputFile)]
-linkCmd.extend([x for x in fileNames if x != ''])
-linkProc = Popen(linkCmd)
+    inputFile = parsedArgs.wllvm_binary
+    llvmLinker= parsedArgs.linker
 
-exitCode = linkProc.wait()
+    (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
+    if sectionSize == 0:
+        sys.stderr.write('%s is empty' % elfSectionName)
+        sys.exit(-1)
 
-sys.exit(exitCode)
+    content = getSectionContent(sectionSize, sectionOffset, inputFile)
+    fileNames = content.split('\n')
 
+    logging.debug('Found the following file names from ELF header:\n' + pprint.pformat(fileNames))
+    linkCmd = [ llvmLinker, '-o', '{0}.bc'.format(inputFile)]
+    linkCmd.extend([x for x in fileNames if x != ''])
+    linkProc = Popen(linkCmd)
+
+    exitCode = linkProc.wait()
+
+    sys.exit(exitCode)
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
 
