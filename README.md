@@ -41,6 +41,14 @@ wrapper script:
 Once the environment is set up, just use wllvm and wllvm++ as your C
 and C++ compilers, respectively.
 
+In addition to the above environment variables the following can be optionally used:
+
+ * `LLVM_COMPILER_PATH` can be set to the absolute path to the folder that contains
+   the compiler to be used. This prevents searching for the compiler in your PATH
+   environment variable.  This can be useful if you have different versions of clang on
+   your system and you want to easily switch compilers without tinkering with your PATH
+   variable. Example `LLVM_COMPILER_PATh=/home/user/llvm_and_clang/Debug+Asserts/bin`.
+
 Example
 =======
 

@@ -11,6 +11,9 @@ fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
 
+# Environmental variable for path to compiler tools (clang/llvm-link etc..)
+llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
+
 # This class applies filters to GCC argument lists.  It has a few
 # default arguments that it records, but does not modify the argument
 # list at all.  It can be subclassed to change this behavior.
@@ -221,13 +224,28 @@ def attachBitcodePathToObject(bcPath, outFileName):
         sys.exit(-1)
 
 class BuilderBase(object):
-    def __init__(self, cmd, isCxx):
+    def __init__(self, cmd, isCxx, prefixPath=None):
         self.cmd = cmd
         self.isCxx = isCxx
 
+        # Used as prefix path for compiler
+        if prefixPath:
+          self.prefixPath = prefixPath
+
+          # Ensure prefixPath has trailing slash
+          if self.prefixPath[-1] != os.path.sep:
+            self.prefixPath = self.prefixPath + os.path.sep
+
+          # Check prefix path exists
+          if not os.path.exists(self.prefixPath):
+            raise Exception('Path to compiler "{0}" does not exist'.format(self.prefixPath))
+
+        else:
+          self.prefixPath = ''
+
 class ClangBuilder(BuilderBase):
-    def __init__(self, cmd, isCxx):
-        super(ClangBuilder, self).__init__(cmd, isCxx)
+    def __init__(self, cmd, isCxx, prefixPath=None):
+        super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
 
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
@@ -235,9 +253,9 @@ class ClangBuilder(BuilderBase):
 
     def getCompiler(self):
         if self.isCxx:
-            return ['clang++']
+            return ['{0}clang++'.format(self.prefixPath)]
         else:
-            return ['clang']
+            return ['{0}clang'.format(self.prefixPath)]
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
@@ -259,8 +277,8 @@ class ClangBuilder(BuilderBase):
         attachBitcodePathToObject(bcname, outFile)
 
 class DragoneggBuilder(BuilderBase):
-    def __init__(self, cmd, isCxx):
-        super(DragoneggBuilder, self).__init__(cmd, isCxx)
+    def __init__(self, cmd, isCxx, prefixPath=None):
+        super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)
 
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
@@ -274,9 +292,9 @@ class DragoneggBuilder(BuilderBase):
             pfx = os.getenv('LLVM_GCC_PREFIX')
 
         if self.isCxx:
-            return ['{0}g++'.format(pfx)]
+            return ['{0}{1}g++'.format(self.prefixPath, pfx)]
         else:
-            return ['{0}gcc'.format(pfx)]
+            return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
 
     def getBitcodeArglistFilter(self):
         return ArgumentListFilter(self.cmd)
@@ -292,10 +310,12 @@ class DragoneggBuilder(BuilderBase):
 
 def getBuilder(cmd, isCxx):
     cstring = os.getenv('LLVM_COMPILER')
+    pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
+
     if cstring == 'clang':
-        return ClangBuilder(cmd, isCxx)
+        return ClangBuilder(cmd, isCxx, pathPrefix)
     elif cstring == 'dragonegg':
-        return DragoneggBuilder(cmd, isCxx)
+        return DragoneggBuilder(cmd, isCxx, pathPrefix)
     else:
         raise Exception('Invalid compiler type: ' + cstring)
 
