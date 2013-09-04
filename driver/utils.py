@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import tempfile
-from popenwrapper import Popen
+from driver.popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
@@ -114,7 +114,7 @@ class ArgumentListFilter(object):
                 handler(self, currentItem, *flagArgs)
             else:
                 matched = False
-                for pattern, (arity, handler) in argPatterns.iteritems():
+                for pattern, (arity, handler) in argPatterns.items():
                     if re.match(pattern, currentItem):
                         flagArgs = self._shiftArgs(arity)
                         handler(self, currentItem, *flagArgs)
@@ -197,10 +197,10 @@ def attachBitcodePathToObject(bcPath, outFileName):
 
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.
-    f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
+    f = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
     absBcPath = os.path.abspath(bcPath)
-    f.write(absBcPath)
-    f.write('\n')
+    f.write(absBcPath.encode())
+    f.write('\n'.encode())
     _logger.debug(pprint.pformat('Wrote "{0}" to file "{1}"'.format(absBcPath, f.name)))
 
     # Ensure buffers are flushed so that objcopy doesn't read an empty
