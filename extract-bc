@@ -40,7 +40,11 @@ def getSectionSizeAndOffset(sectionName, filename):
         except ValueError:
             continue
 
-    return None
+    # The needed section could not be found
+    raise Exception('Could not find "{0}" ELF section in "{1}"'.format(
+                    sectionName,
+                    filename)
+                   )
 
 # Read the entire content of an ELF section into a string
 def getSectionContent(size, offset, filename):
