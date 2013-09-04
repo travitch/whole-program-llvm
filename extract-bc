@@ -11,10 +11,12 @@ import sys
 from subprocess import *
 from driver.utils import llvmCompilerPathEnv
 from driver.popenwrapper import Popen
+from driver.utils import elfSectionName
 
 import logging
 import pprint
 import driver.logconfig
+inputFile = sys.argv[1]
 
 sectionName = '.llvm_bc'
 inputFile = sys.argv[1]
@@ -66,9 +68,9 @@ if not llvmLinker:
     llvmLinker=''
 llvmLinker = os.path.join(llvmLinker, 'llvm-link')
 
-(sectionSize, sectionOffset) = getSectionSizeAndOffset(sectionName, inputFile)
+(sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
 if sectionSize == 0:
-    sys.stderr.write('%s is empty' % sectionName)
+    sys.stderr.write('%s is empty' % elfSectionName)
     sys.exit(-1)
 
 content = getSectionContent(sectionSize, sectionOffset, inputFile)

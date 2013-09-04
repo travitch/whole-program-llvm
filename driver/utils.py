@@ -16,6 +16,9 @@ driverDir = prefix
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
 llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 
+# This is the ELF section name inserted into binaries
+elfSectionName='.llvm_bc'
+
 # Internal logger
 _logger = logging.getLogger(__name__)
 
@@ -210,7 +213,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     f.close()
 
     # Now write our .llvm_bc section
-    objcopyCmd = ['objcopy', '--add-section', '.llvm_bc={0}'.format(f.name), outFileName]
+    objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
 
     try:
