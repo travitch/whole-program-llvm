@@ -11,8 +11,9 @@
 # compiler).  We'll link this together at a later stage.
 
 import os
-import subprocess, sys
+import sys
 from utils import *
+from subprocess import *
 
 
 class BCFilter(ArgumentListFilter):

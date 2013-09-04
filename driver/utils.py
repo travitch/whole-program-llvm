@@ -208,7 +208,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
 
     try:
         if os.path.getsize(outFileName) > 0:
-            objProc = subprocess.Popen(objcopyCmd)
+            objProc = Popen(objcopyCmd)
             orc = objProc.wait()
     except OSError:
         # configure loves to immediately delete things, causing issues for
