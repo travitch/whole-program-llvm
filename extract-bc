@@ -10,6 +10,11 @@ import os
 import sys
 from subprocess import *
 from driver.utils import llvmCompilerPathEnv
+from driver.popenwrapper import Popen
+
+import logging
+import pprint
+import driver.logconfig
 
 sectionName = '.llvm_bc'
 inputFile = sys.argv[1]
@@ -23,7 +28,7 @@ def getSectionSizeAndOffset(sectionName, filename):
 
     objdumpOutput = objdumpProc.communicate()[0]
     if objdumpProc.returncode != 0:
-        sys.stderr.write('Could not dump %s' % filename)
+        logging.error('Could not dump %s' % filename)
         sys.exit(-1)
 
     for line in objdumpOutput.splitlines():
@@ -69,6 +74,7 @@ if sectionSize == 0:
 content = getSectionContent(sectionSize, sectionOffset, inputFile)
 fileNames = content.split('\n')
 
+logging.debug('Found the following file names from ELF header:\n' + pprint.pformat(fileNames))
 linkCmd = [ llvmLinker, '-o', '{0}.bc'.format(inputFile)]
 linkCmd.extend([x for x in fileNames if x != ''])
 linkProc = Popen(linkCmd)

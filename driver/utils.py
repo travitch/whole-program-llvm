@@ -1,11 +1,13 @@
 from subprocess import *
 import collections
+import pprint
+import logging
 import errno
 import os
 import re
 import sys
 import tempfile
-import subprocess
+from popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
@@ -13,6 +15,9 @@ driverDir = prefix
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
 llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
+
+# Internal logger
+_logger = logging.getLogger(__name__)
 
 # This class applies filters to GCC argument lists.  It has a few
 # default arguments that it records, but does not modify the argument
@@ -193,8 +198,10 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.
     f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
-    f.write(os.path.abspath(bcPath))
+    absBcPath = os.path.abspath(bcPath)
+    f.write(absBcPath)
     f.write('\n')
+    _logger.debug(pprint.pformat('Wrote "{0}" to file "{1}"'.format(absBcPath, f.name)))
 
     # Ensure buffers are flushed so that objcopy doesn't read an empty
     # file
@@ -219,8 +226,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     os.remove(f.name)
 
     if orc != 0:
-        print objcopyCmd
-        print('objcopy failed with {0}'.format(orc))
+        _logger.error('objcopy failed with {0}'.format(orc))
         sys.exit(-1)
 
 class BuilderBase(object):
@@ -238,7 +244,9 @@ class BuilderBase(object):
 
           # Check prefix path exists
           if not os.path.exists(self.prefixPath):
-            raise Exception('Path to compiler "{0}" does not exist'.format(self.prefixPath))
+            errorMsg='Path to compiler "{0}" does not exist'.format(self.prefixPath)
+            _logger.error(errorMsg)
+            raise Exception(errorMsg)
 
         else:
           self.prefixPath = ''
@@ -311,6 +319,9 @@ class DragoneggBuilder(BuilderBase):
 def getBuilder(cmd, isCxx):
     cstring = os.getenv('LLVM_COMPILER')
     pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
+    _logger.info('WLLVM compiler using {0}'.format(cstring))
+    if pathPrefix:
+      _logger.info('WLLVM compiler path prefix "{0}"'.format(pathPrefix))
 
     if cstring == 'clang':
         return ClangBuilder(cmd, isCxx, pathPrefix)

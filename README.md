@@ -67,3 +67,20 @@ Example
     # Produces pkg-config.bc
     extract-bc pkg-config
 
+
+Debugging
+=========
+
+The WLLVM tools can show various levels of output to aid with debugging.
+To show this output set WLLVM_OUTPUT to one of the following levels:
+
+ * `CRITICAL`
+ * `ERROR`
+ * `WARNING`
+ * `INFO`
+ * `DEBUG`
+
+For example
+
+    export WLLVM_OUTPUT=DEBUG
+
