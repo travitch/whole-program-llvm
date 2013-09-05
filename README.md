@@ -10,9 +10,12 @@ bitcode file in an ELF section of the actual object file.
 
 When object files are linked together, the contents of non-special ELF
 sections are just concatenated (so we don't lose the locations of any
-of the constituent bitcode files).  This package contains an extra
-utility, extract-bc, to read the contents of this ELF section and link
-all of the bitcode into a single whole-program bitcode file.
+of the constituent bitcode files).
+
+This package contains an extra utility, extract-bc, to read the
+contents of this ELF section and link all of the bitcode into a single
+whole-program bitcode file. This utility can also be used on built
+native static libraries to generate LLVM bitcode archives.
 
 This two-phase build process is slower and more elaborate than normal,
 but in practice is necessary to be a drop-in replacement for gcc in
@@ -50,7 +53,6 @@ In addition to the above environment variables the following can be optionally u
    and you want to easily switch compilers without tinkering with your PATH
    variable.
    Example `LLVM_COMPILER_PATH=/home/user/llvm_and_clang/Debug+Asserts/bin`.
-
 
 Example
 =======

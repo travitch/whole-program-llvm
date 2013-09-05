@@ -191,6 +191,39 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
     def outputFileCallback(self, flag, filename):
         self.outputFilename = filename
 
+
+# Static class that allows the type of a file to be checked.
+class FileType(object):
+  # Provides int -> str map
+  revMap = { }
+
+  @classmethod
+  def getFileType(cls, fileName):
+      # This is a hacky way of determining
+      # the type of file we are looking at.
+      # Maybe we should use python-magic instead?
+
+      fileP = Popen(['file',fileName], stdout=PIPE)
+      output = fileP.communicate()[0]
+      output = output.decode()
+      if 'ELF' in output and 'executable' in output:
+          return cls.EXECUTABLE
+      elif 'current ar archive' in output:
+          return cls.ARCHIVE
+      elif 'ELF' in output and 'relocatable' in output:
+          return cls.OBJECT
+      else:
+          return cls.UNKNOWN
+
+  @classmethod
+  def init(cls):
+      for (index, name) in enumerate(('UNKNOWN', 'EXECUTABLE', 'OBJECT', 'ARCHIVE')):
+          setattr(cls, name, index)
+          cls.revMap[index] = name
+
+# Initialise FileType static class
+FileType.init()
+
 def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
@@ -364,3 +397,4 @@ def buildAndAttachBitcode(builder):
     if rc == 0:
         builder.attachBitcode(af)
     sys.exit(rc)
+
