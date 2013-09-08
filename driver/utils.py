@@ -353,7 +353,8 @@ class DragoneggBuilder(BuilderBase):
 
 
 def getBuilder(cmd, isCxx):
-    cstring = os.getenv('LLVM_COMPILER')
+    compilerEnv = 'LLVM_COMPILER'
+    cstring = os.getenv(compilerEnv)
     pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
     _logger.info('WLLVM compiler using {0}'.format(cstring))
     if pathPrefix:
@@ -363,8 +364,14 @@ def getBuilder(cmd, isCxx):
         return ClangBuilder(cmd, isCxx, pathPrefix)
     elif cstring == 'dragonegg':
         return DragoneggBuilder(cmd, isCxx, pathPrefix)
+    elif cstring == None:
+        errorMsg = ' No compiler set. Please set environment variable ' + compilerEnv
+        _logger.critical(errorMsg)
+        raise Exception(errorMsg)
     else:
-        raise Exception('Invalid compiler type: ' + cstring)
+        errorMsg= compilerEnv + '=' + str(cstring) + ' : Invalid compiler type'
+        _logger.critical(errorMsg)
+        raise Exception(errorMsg)
 
 def buildObject(builder):
     objCompiler = builder.getCompiler()
