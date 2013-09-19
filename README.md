@@ -10,9 +10,12 @@ bitcode file in an ELF section of the actual object file.
 
 When object files are linked together, the contents of non-special ELF
 sections are just concatenated (so we don't lose the locations of any
-of the constituent bitcode files).  This package contains an extra
-utility, extract-bc, to read the contents of this ELF section and link
-all of the bitcode into a single whole-program bitcode file.
+of the constituent bitcode files).
+
+This package contains an extra utility, extract-bc, to read the
+contents of this ELF section and link all of the bitcode into a single
+whole-program bitcode file. This utility can also be used on built
+native static libraries to generate LLVM bitcode archives.
 
 This two-phase build process is slower and more elaborate than normal,
 but in practice is necessary to be a drop-in replacement for gcc in
@@ -41,8 +44,18 @@ wrapper script:
 Once the environment is set up, just use wllvm and wllvm++ as your C
 and C++ compilers, respectively.
 
-Example
-=======
+In addition to the above environment variables the following can be optionally used:
+
+ * `LLVM_COMPILER_PATH` can be set to the absolute path to the folder that
+   contains the compiler and other LLVM tools such as `llvm-link` to be used.
+   This prevents searching for the compiler in your PATH environment variable.
+   This can be useful if you have different versions of clang on your system
+   and you want to easily switch compilers without tinkering with your PATH
+   variable.
+   Example `LLVM_COMPILER_PATH=/home/user/llvm_and_clang/Debug+Asserts/bin`.
+
+Example building bitcode module
+===============================
 
     export LLVM_COMPILER=dragonegg
     export LLVM_GCC_PREFIX=llvm-
@@ -55,4 +68,33 @@ Example
 
     # Produces pkg-config.bc
     extract-bc pkg-config
+
+Example building bitcode archive
+================================
+
+    export LLVM_COMPILER=clang
+    tar -xvf bullet-2.81-rev2613.tgz
+    mkdir bullet-bin
+    cd bullet-bin
+    CC=wllvm CXX=wllvm++ cmake ../bullet-2.81-rev2613/
+    make
+
+    # Produces src/LinearMath/libLinearMath.bca
+    extract-bc src/LinearMath/libLinearMath.a
+
+Debugging
+=========
+
+The WLLVM tools can show various levels of output to aid with debugging.
+To show this output set WLLVM_OUTPUT to one of the following levels:
+
+ * `CRITICAL`
+ * `ERROR`
+ * `WARNING`
+ * `INFO`
+ * `DEBUG`
+
+For example
+
+    export WLLVM_OUTPUT=DEBUG
 
