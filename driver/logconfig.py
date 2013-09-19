@@ -9,7 +9,7 @@ import sys
 
 _loggingEnv = 'WLLVM_OUTPUT'
 _validLogLevels = ['CRITICAL','ERROR', 'WARNING', 'INFO', 'DEBUG']
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.WARNING, format='%(levelname)s:%(message)s')
 if os.getenv(_loggingEnv):
     level = os.getenv(_loggingEnv).upper()
     if not level in _validLogLevels:
@@ -18,3 +18,10 @@ if os.getenv(_loggingEnv):
         sys.exit(1)
     else:
         logging.getLogger().setLevel(getattr(logging, level))
+
+# Adjust the format if debugging
+if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+  formatter = logging.Formatter('%(levelname)s::%(module)s.%(funcName)s() at %(filename)s:%(lineno)d ::%(message)s')
+  for h in logging.getLogger().handlers:
+    h.setFormatter(formatter)
+
