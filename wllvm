@@ -9,6 +9,7 @@
 
 import sys
 from driver.utils import *
+import driver.logconfig
 
 cmd = list(sys.argv)
 cmd = cmd[1:]

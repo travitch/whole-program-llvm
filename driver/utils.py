@@ -1,15 +1,26 @@
 from subprocess import *
 import collections
+import pprint
+import logging
 import errno
 import os
 import re
 import sys
 import tempfile
-import subprocess
+from driver.popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
+
+# Environmental variable for path to compiler tools (clang/llvm-link etc..)
+llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
+
+# This is the ELF section name inserted into binaries
+elfSectionName='.llvm_bc'
+
+# Internal logger
+_logger = logging.getLogger(__name__)
 
 # This class applies filters to GCC argument lists.  It has a few
 # default arguments that it records, but does not modify the argument
@@ -106,7 +117,7 @@ class ArgumentListFilter(object):
                 handler(self, currentItem, *flagArgs)
             else:
                 matched = False
-                for pattern, (arity, handler) in argPatterns.iteritems():
+                for pattern, (arity, handler) in argPatterns.items():
                     if re.match(pattern, currentItem):
                         flagArgs = self._shiftArgs(arity)
                         handler(self, currentItem, *flagArgs)
@@ -180,6 +191,39 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
     def outputFileCallback(self, flag, filename):
         self.outputFilename = filename
 
+
+# Static class that allows the type of a file to be checked.
+class FileType(object):
+  # Provides int -> str map
+  revMap = { }
+
+  @classmethod
+  def getFileType(cls, fileName):
+      # This is a hacky way of determining
+      # the type of file we are looking at.
+      # Maybe we should use python-magic instead?
+
+      fileP = Popen(['file',fileName], stdout=PIPE)
+      output = fileP.communicate()[0]
+      output = output.decode()
+      if 'ELF' in output and 'executable' in output:
+          return cls.EXECUTABLE
+      elif 'current ar archive' in output:
+          return cls.ARCHIVE
+      elif 'ELF' in output and 'relocatable' in output:
+          return cls.OBJECT
+      else:
+          return cls.UNKNOWN
+
+  @classmethod
+  def init(cls):
+      for (index, name) in enumerate(('UNKNOWN', 'EXECUTABLE', 'OBJECT', 'ARCHIVE')):
+          setattr(cls, name, index)
+          cls.revMap[index] = name
+
+# Initialise FileType static class
+FileType.init()
+
 def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
@@ -189,9 +233,11 @@ def attachBitcodePathToObject(bcPath, outFileName):
 
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.
-    f = tempfile.NamedTemporaryFile(mode='rw+b', delete=False)
-    f.write(os.path.abspath(bcPath))
-    f.write('\n')
+    f = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
+    absBcPath = os.path.abspath(bcPath)
+    f.write(absBcPath.encode())
+    f.write('\n'.encode())
+    _logger.debug(pprint.pformat('Wrote "{0}" to file "{1}"'.format(absBcPath, f.name)))
 
     # Ensure buffers are flushed so that objcopy doesn't read an empty
     # file
@@ -200,12 +246,12 @@ def attachBitcodePathToObject(bcPath, outFileName):
     f.close()
 
     # Now write our .llvm_bc section
-    objcopyCmd = ['objcopy', '--add-section', '.llvm_bc={0}'.format(f.name), outFileName]
+    objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
 
     try:
         if os.path.getsize(outFileName) > 0:
-            objProc = subprocess.Popen(objcopyCmd)
+            objProc = Popen(objcopyCmd)
             orc = objProc.wait()
     except OSError:
         # configure loves to immediately delete things, causing issues for
@@ -216,18 +262,34 @@ def attachBitcodePathToObject(bcPath, outFileName):
     os.remove(f.name)
 
     if orc != 0:
-        print objcopyCmd
-        print('objcopy failed with {0}'.format(orc))
+        _logger.error('objcopy failed with {0}'.format(orc))
         sys.exit(-1)
 
 class BuilderBase(object):
-    def __init__(self, cmd, isCxx):
+    def __init__(self, cmd, isCxx, prefixPath=None):
         self.cmd = cmd
         self.isCxx = isCxx
 
+        # Used as prefix path for compiler
+        if prefixPath:
+          self.prefixPath = prefixPath
+
+          # Ensure prefixPath has trailing slash
+          if self.prefixPath[-1] != os.path.sep:
+            self.prefixPath = self.prefixPath + os.path.sep
+
+          # Check prefix path exists
+          if not os.path.exists(self.prefixPath):
+            errorMsg='Path to compiler "{0}" does not exist'.format(self.prefixPath)
+            _logger.error(errorMsg)
+            raise Exception(errorMsg)
+
+        else:
+          self.prefixPath = ''
+
 class ClangBuilder(BuilderBase):
-    def __init__(self, cmd, isCxx):
-        super(ClangBuilder, self).__init__(cmd, isCxx)
+    def __init__(self, cmd, isCxx, prefixPath=None):
+        super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
 
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
@@ -235,9 +297,9 @@ class ClangBuilder(BuilderBase):
 
     def getCompiler(self):
         if self.isCxx:
-            return ['clang++']
+            return ['{0}clang++'.format(self.prefixPath)]
         else:
-            return ['clang']
+            return ['{0}clang'.format(self.prefixPath)]
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
@@ -259,8 +321,8 @@ class ClangBuilder(BuilderBase):
         attachBitcodePathToObject(bcname, outFile)
 
 class DragoneggBuilder(BuilderBase):
-    def __init__(self, cmd, isCxx):
-        super(DragoneggBuilder, self).__init__(cmd, isCxx)
+    def __init__(self, cmd, isCxx, prefixPath=None):
+        super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)
 
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
@@ -274,9 +336,9 @@ class DragoneggBuilder(BuilderBase):
             pfx = os.getenv('LLVM_GCC_PREFIX')
 
         if self.isCxx:
-            return ['{0}g++'.format(pfx)]
+            return ['{0}{1}g++'.format(self.prefixPath, pfx)]
         else:
-            return ['{0}gcc'.format(pfx)]
+            return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
 
     def getBitcodeArglistFilter(self):
         return ArgumentListFilter(self.cmd)
@@ -291,13 +353,25 @@ class DragoneggBuilder(BuilderBase):
 
 
 def getBuilder(cmd, isCxx):
-    cstring = os.getenv('LLVM_COMPILER')
+    compilerEnv = 'LLVM_COMPILER'
+    cstring = os.getenv(compilerEnv)
+    pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
+    _logger.info('WLLVM compiler using {0}'.format(cstring))
+    if pathPrefix:
+      _logger.info('WLLVM compiler path prefix "{0}"'.format(pathPrefix))
+
     if cstring == 'clang':
-        return ClangBuilder(cmd, isCxx)
+        return ClangBuilder(cmd, isCxx, pathPrefix)
     elif cstring == 'dragonegg':
-        return DragoneggBuilder(cmd, isCxx)
+        return DragoneggBuilder(cmd, isCxx, pathPrefix)
+    elif cstring == None:
+        errorMsg = ' No compiler set. Please set environment variable ' + compilerEnv
+        _logger.critical(errorMsg)
+        raise Exception(errorMsg)
     else:
-        raise Exception('Invalid compiler type: ' + cstring)
+        errorMsg= compilerEnv + '=' + str(cstring) + ' : Invalid compiler type'
+        _logger.critical(errorMsg)
+        raise Exception(errorMsg)
 
 def buildObject(builder):
     objCompiler = builder.getCompiler()
@@ -330,3 +404,4 @@ def buildAndAttachBitcode(builder):
     if rc == 0:
         builder.attachBitcode(af)
     sys.exit(rc)
+
