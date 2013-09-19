@@ -54,8 +54,8 @@ In addition to the above environment variables the following can be optionally u
    variable.
    Example `LLVM_COMPILER_PATH=/home/user/llvm_and_clang/Debug+Asserts/bin`.
 
-Example
-=======
+Example building bitcode module
+===============================
 
     export LLVM_COMPILER=dragonegg
     export LLVM_GCC_PREFIX=llvm-
@@ -69,6 +69,18 @@ Example
     # Produces pkg-config.bc
     extract-bc pkg-config
 
+Example building bitcode archive
+================================
+
+    export LLVM_COMPILER=clang
+    tar -xvf bullet-2.81-rev2613.tgz
+    mkdir bullet-bin
+    cd bullet-bin
+    CC=wllvm CXX=wllvm++ cmake ../bullet-2.81-rev2613/
+    make
+
+    # Produces src/LinearMath/libLinearMath.bca
+    extract-bc src/LinearMath/libLinearMath.a
 
 Debugging
 =========
