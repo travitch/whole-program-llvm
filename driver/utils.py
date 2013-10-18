@@ -343,6 +343,9 @@ class DragoneggBuilder(BuilderBase):
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
         cc = self.getCompiler()
+        # We use '-B' to tell gcc where to look for an assembler.
+        # When we build LLVM bitcode we do not want to use the GNU assembler,
+        # instead we want gcc to use our own assembler (see driver/as).
         return cc + ['-B', driverDir, '-fplugin={0}'.format(pth),
                      '-fplugin-arg-dragonegg-emit-ir']
 
