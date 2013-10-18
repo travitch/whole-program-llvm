@@ -244,6 +244,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
     if ext not in ('.o', '.lo', '.os'):
+        _logger.warning('Cannot attach bitcode path to "{0}"'.format(outFileName))
         return
 
     # Now just build a temporary text file with the full path to the
