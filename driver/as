@@ -15,6 +15,7 @@ import sys
 from utils import *
 from subprocess import *
 from popenwrapper import Popen
+import logconfig
 
 
 class BCFilter(ArgumentListFilter):
@@ -33,13 +34,18 @@ try:
 except ValueError:
     infile = "-"
 
+# set llvm-as
+llvmAssembler='llvm-as'
+if os.getenv(llvmCompilerPathEnv):
+    llvmAssembler = os.path.join(os.getenv(llvmCompilerPathEnv), llvmAssembler)
+
 # Now compile this llvm assembly file into a bitcode file.  The output
 # filename is the same as the object with a .bc appended
 (dirs, filename) = os.path.split(argFilter.outFileName)
 bcfilename = '.{0}.bc'.format(filename)
 bcPath = os.path.join(dirs, bcfilename)
-fakeAssembler = ['llvm-as', infile, '-o', bcPath]
-asmProc = subprocess.Popen(fakeAssembler)
+fakeAssembler = [llvmAssembler, infile, '-o', bcPath]
+asmProc = Popen(fakeAssembler)
 realRet = asmProc.wait()
 
 if realRet != 0:
