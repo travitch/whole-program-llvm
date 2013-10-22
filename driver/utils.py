@@ -7,11 +7,26 @@ import os
 import re
 import sys
 import tempfile
-from driver.popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
+
+# This is a bit hacky.
+# We cannot do
+# from .popenwrapper import Popen
+# OR
+# from driver.popenwrapper import Popen
+# because then 'as' will not succesfully import us (wllvm/wllvm++ can
+# successfully import however).
+#
+# Using
+# from popenwrapper import Popen
+# will allow 'as' to import us but then wllvm/wllvm++ will not be able to.
+#
+# The work around is to put this directory in the search path for modules.
+sys.path.insert(0,driverDir)
+from popenwrapper import Popen
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
 llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
@@ -229,6 +244,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
     if ext not in ('.o', '.lo', '.os'):
+        _logger.warning('Cannot attach bitcode path to "{0}"'.format(outFileName))
         return
 
     # Now just build a temporary text file with the full path to the
@@ -327,6 +343,9 @@ class DragoneggBuilder(BuilderBase):
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
         cc = self.getCompiler()
+        # We use '-B' to tell gcc where to look for an assembler.
+        # When we build LLVM bitcode we do not want to use the GNU assembler,
+        # instead we want gcc to use our own assembler (see driver/as).
         return cc + ['-B', driverDir, '-fplugin={0}'.format(pth),
                      '-fplugin-arg-dragonegg-emit-ir']
 

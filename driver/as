@@ -15,6 +15,7 @@ import sys
 from utils import *
 from subprocess import *
 from popenwrapper import Popen
+import logconfig
 
 
 class BCFilter(ArgumentListFilter):
@@ -31,18 +32,30 @@ argFilter = BCFilter(sys.argv[1:])
 try:
     [infile] = argFilter.inputFiles
 except ValueError:
+    logging.debug('Input file argument not detected, assuming stdin.')
     infile = "-"
+
+# set llvm-as
+llvmAssembler='llvm-as'
+if os.getenv(llvmCompilerPathEnv):
+    llvmAssembler = os.path.join(os.getenv(llvmCompilerPathEnv), llvmAssembler)
 
 # Now compile this llvm assembly file into a bitcode file.  The output
 # filename is the same as the object with a .bc appended
-(dirs, filename) = os.path.split(argFilter.outFileName)
+try:
+    (dirs, filename) = os.path.split(argFilter.outFileName)
+except AttributeError as e:
+    logging.error('Output file argument not found.\nException message: ' + str(e))
+    sys.exit(1)
+
 bcfilename = '.{0}.bc'.format(filename)
 bcPath = os.path.join(dirs, bcfilename)
-fakeAssembler = ['llvm-as', infile, '-o', bcPath]
-asmProc = subprocess.Popen(fakeAssembler)
+fakeAssembler = [llvmAssembler, infile, '-o', bcPath]
+asmProc = Popen(fakeAssembler)
 realRet = asmProc.wait()
 
 if realRet != 0:
+    logging.error('llvm-as failed')
     sys.exit(realRet)
 
 attachBitcodePathToObject(bcPath, argFilter.outFileName)
