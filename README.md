@@ -98,3 +98,7 @@ For example
 
     export WLLVM_OUTPUT=DEBUG
 
+License
+=======
+
+WLLVM is released under the MIT license. See the file `LICENSE` for details.
