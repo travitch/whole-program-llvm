@@ -112,7 +112,7 @@ def handleExecutable(inputFile, llvmLinker, outputFile=None):
 def handleArchive(inputFile, llvmArchiver, outputFile=None):
     inputFile = os.path.abspath(inputFile)
     originalDir = os.getcwd() # This will be the destination
-    
+
     # Make temporary directory to extract objects to
     tempDir = ''
     bitCodeFiles = [ ]
@@ -150,7 +150,7 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
                                bitCodeFiles.append(bcFile)
                else:
                    logging.warning('Ignoring file "{0}" in archive'.format(f))
-        
+
         logging.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
                       pprint.pformat(bitCodeFiles)))
 
@@ -219,14 +219,14 @@ def main(args):
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("wllvm_binary", help="A binary produced by wllvm/wllvm++")
-    parser.add_argument("--linker","-l", 
+    parser.add_argument("--linker","-l",
                         help='The LLVM bitcode linker to use. Default "%(default)s"',
                         default=llvmLinker)
-    parser.add_argument("--archiver","-a", 
+    parser.add_argument("--archiver","-a",
                         help='The LLVM bitcode archiver to use. Default "%(default)s"',
                         default=llvmArchiver)
-    parser.add_argument("--output","-o", 
-                        help='The output file. Defaults to a file in the same directory ' + 
+    parser.add_argument("--output","-o",
+                        help='The output file. Defaults to a file in the same directory ' +
                              'as the input with the same name as the input but with an ' +
                              'added file extension (.'+ moduleExtension + ' for bitcode '+
                              'modules and .' + bitCodeArchiveExtension +' for bitcode archives)',
@@ -250,7 +250,7 @@ def main(args):
         logging.error('Output directory "{0}" does not exist.'.format(
                       os.path.dirname(outputFile)))
         return 1
-      
+
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
@@ -267,4 +267,3 @@ def main(args):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
-
