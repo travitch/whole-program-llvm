@@ -218,11 +218,13 @@ class FileType(object):
       # the type of file we are looking at.
       # Maybe we should use python-magic instead?
 
-      fileP = Popen(['file',fileName], stdout=PIPE)
+      fileP = Popen(['file',os.path.realpath(fileName)], stdout=PIPE)
       output = fileP.communicate()[0]
       output = output.decode()
       if 'ELF' in output and 'executable' in output:
           return cls.EXECUTABLE
+      elif 'ELF' in output and 'shared' in output:
+          return cls.SHARED
       elif 'current ar archive' in output:
           return cls.ARCHIVE
       elif 'ELF' in output and 'relocatable' in output:
@@ -232,7 +234,7 @@ class FileType(object):
 
   @classmethod
   def init(cls):
-      for (index, name) in enumerate(('UNKNOWN', 'EXECUTABLE', 'OBJECT', 'ARCHIVE')):
+      for (index, name) in enumerate(('UNKNOWN', 'EXECUTABLE', 'OBJECT', 'ARCHIVE', 'SHARED')):
           setattr(cls, name, index)
           cls.revMap[index] = name
 

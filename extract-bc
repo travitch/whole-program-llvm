@@ -254,7 +254,7 @@ def main(args):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
-    if ft == FileType.EXECUTABLE:
+    if ft == FileType.EXECUTABLE or ft == FileType.SHARED:
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(inputFile, llvmLinker, outputFile )
     elif ft == FileType.ARCHIVE:
