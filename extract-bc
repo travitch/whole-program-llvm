@@ -50,7 +50,7 @@ def getSectionSizeAndOffset(sectionName, filename):
         logging.error('Could not dump %s' % filename)
         sys.exit(-1)
 
-    for line in [l.decode() for l in objdumpOutput.splitlines()] :
+    for line in [l.decode('utf-8') for l in objdumpOutput.splitlines()] :
         fields = line.split()
         if len(fields) <= 7:
             continue
@@ -77,7 +77,7 @@ def getSectionContent(size, offset, filename):
         d = ''
         try:
             c = f.read(size)
-            d = c.decode()
+            d = c.decode('utf-8')
         except UnicodeDecodeError:
             logging.error('Failed to read section containing:')
             print(c)
