@@ -10,7 +10,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 def Popen(*pargs, **kwargs):
-    _logger.debug("WLLVM Executing:\n" + pprint.pformat(pargs[0]))
+    _logger.debug("WLLVM Executing:\n" + pprint.pformat(pargs[0]) + "\nin: " +  os.getcwd())
     try:
         return subprocess.Popen(*pargs,**kwargs)
     except OSError:

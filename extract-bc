@@ -102,11 +102,13 @@ def handleExecutable(inputFile, llvmLinker, outputFile=None):
       outputFile = inputFile + '.' + moduleExtension
 
     logging.debug('Found the following file names from ELF header:\n' + pprint.pformat(fileNames))
-    linkCmd = [ llvmLinker, '-o', outputFile ]
+    #iam: TODO: toggle the -v with a cmd line switch
+    linkCmd = [ llvmLinker, '-v', '-o', outputFile ]
     linkCmd.extend([x for x in fileNames if x != ''])
     logging.info('Writing output to {0}'.format(outputFile))
     linkProc = Popen(linkCmd)
     exitCode = linkProc.wait()
+    logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
     return exitCode
 
 def handleArchive(inputFile, llvmArchiver, outputFile=None):

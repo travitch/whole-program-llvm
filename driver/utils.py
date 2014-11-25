@@ -37,6 +37,10 @@ elfSectionName='.llvm_bc'
 # Internal logger
 _logger = logging.getLogger(__name__)
 
+# Flag for debugging 
+DEBUG = False
+
+
 # This class applies filters to GCC argument lists.  It has a few
 # default arguments that it records, but does not modify the argument
 # list at all.  It can be subclassed to change this behavior.
@@ -57,58 +61,165 @@ _logger = logging.getLogger(__name__)
 class ArgumentListFilter(object):
     def __init__(self, inputList, exactMatches={}, patternMatches={}):
         defaultArgExactMatches = {
+
             '-o' : (1, ArgumentListFilter.outputFileCallback),
             '-c' : (0, ArgumentListFilter.compileOnlyCallback),
             '-E' : (0, ArgumentListFilter.preprocessOnlyCallback),
             '-S' : (0, ArgumentListFilter.assembleOnlyCallback),
+            
             '--verbose' : (0, ArgumentListFilter.verboseFlagCallback),
-            '--param' : (1, ArgumentListFilter.defaultOneArgument),
-            '-aux-info' : (1, ArgumentListFilter.defaultOneArgument),
+            '--param' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '-aux-info' : (1, ArgumentListFilter.defaultBinaryCallback),
+
+            #iam: presumably the len(inputFiles) == 0 in this case
+            '--version' : (0, ArgumentListFilter.compileOnlyCallback),
+
+            #warnings (apart from the regex below)
+            '-w' : (0, ArgumentListFilter.compileOnlyCallback),
+            '-W' : (0, ArgumentListFilter.compileOnlyCallback),
+            
+            
+            #iam: if this happens, then we need to stop and think.
+            '-emit-llvm' : (0, ArgumentListFilter.abortUnaryCallback),
+
+            #iam: buildworld and buildkernel use these flags
+            '-pipe' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-undef' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-nostdinc' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-nostdinc++' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-Qunused-arguments' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-no-integrated-as' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-integrated-as' : (0, ArgumentListFilter.compileUnaryCallback),
+            #iam: gcc uses this in both compile and link, but clang only in compile
+            '-pthread' : (0, ArgumentListFilter.compileUnaryCallback),
+            
+            #iam: arm stuff
+            '-mno-omit-leaf-frame-pointer' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-maes' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-aes' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mavx' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-avx' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mcmodel=kernel' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-red-zone' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mmmx' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-mmx' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-msse' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-sse2' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-msse2' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-sse3' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-msse3' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-sse' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-msoft-float' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-m3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-mno-3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
+
             # Preprocessor assertion
-            '-A' : (1, ArgumentListFilter.defaultOneArgument),
-            '-D' : (1, ArgumentListFilter.defaultOneArgument),
-            '-U' : (1, ArgumentListFilter.defaultOneArgument),
+            '-A' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-D' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-U' : (1, ArgumentListFilter.compileBinaryCallback),
+
             # Dependency generation
-            '-MT' : (1, ArgumentListFilter.defaultOneArgument),
-            '-MQ' : (1, ArgumentListFilter.defaultOneArgument),
-            '-MF' : (1, ArgumentListFilter.defaultOneArgument),
-            '-MD' : (1, ArgumentListFilter.defaultOneArgument),
-            '-MMD' : (1, ArgumentListFilter.defaultOneArgument),
+            '-M'  : (0, ArgumentListFilter.dependencyOnlyCallback),
+            '-MM' : (0, ArgumentListFilter.dependencyOnlyCallback),
+            '-MF' : (1, ArgumentListFilter.dependencyBinaryCallback),
+            '-MG' : (0, ArgumentListFilter.dependencyOnlyCallback),
+            '-MP' : (0, ArgumentListFilter.dependencyOnlyCallback),
+            '-MT' : (1, ArgumentListFilter.dependencyBinaryCallback),
+            '-MQ' : (1, ArgumentListFilter.dependencyBinaryCallback),
+            '-MD' : (0, ArgumentListFilter.dependencyOnlyCallback),
+            '-MMD' : (0, ArgumentListFilter.dependencyOnlyCallback),
+
             # Include
-            '-I' : (1, ArgumentListFilter.defaultOneArgument),
-            '-idirafter' : (1, ArgumentListFilter.defaultOneArgument),
-            '-include' : (1, ArgumentListFilter.defaultOneArgument),
-            '-imacros' : (1, ArgumentListFilter.defaultOneArgument),
-            '-iprefix' : (1, ArgumentListFilter.defaultOneArgument),
-            '-iwithprefix' : (1, ArgumentListFilter.defaultOneArgument),
-            '-iwithprefixbefore' : (1, ArgumentListFilter.defaultOneArgument),
-            '-isystem' : (1, ArgumentListFilter.defaultOneArgument),
-            '-isysroot' : (1, ArgumentListFilter.defaultOneArgument),
-            '-iquote' : (1, ArgumentListFilter.defaultOneArgument),
-            '-imultilib' : (1, ArgumentListFilter.defaultOneArgument),
+            '-I' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-idirafter' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-include' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-imacros' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-iprefix' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-iwithprefix' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-iwithprefixbefore' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-isystem' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-isysroot' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-iquote' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-imultilib' : (1, ArgumentListFilter.compileBinaryCallback),
+
             # Language
-            '-x' : (1, ArgumentListFilter.defaultOneArgument),
+            '-ansi' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-x' : (1, ArgumentListFilter.compileBinaryCallback),
+
+            # Debug
+            '-g' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-g0' : (0, ArgumentListFilter.compileUnaryCallback),     #iam: clang not gcc
+            '-gdwarf-2' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-gdwarf-3' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-p' : (0, ArgumentListFilter.compileUnaryCallback),   
+            '-pg' : (0, ArgumentListFilter.compileUnaryCallback),            
+
+            # Optimization
+            '-O' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-O0' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-O1' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-O2' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-O3' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-Os' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-Ofast' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-Og' : (0, ArgumentListFilter.compileUnaryCallback),
             # Component-specifiers
-            '-Xpreprocessor' : (1, ArgumentListFilter.defaultOneArgument),
-            '-Xassembler' : (1, ArgumentListFilter.defaultOneArgument),
-            '-Xlinker' : (1, ArgumentListFilter.defaultOneArgument),
+            '-Xclang' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '-Xpreprocessor' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '-Xassembler' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '-Xlinker' : (1, ArgumentListFilter.defaultBinaryCallback),
             # Linker
-            '-l' : (1, ArgumentListFilter.defaultOneArgument),
-            '-L' : (1, ArgumentListFilter.defaultOneArgument),
-            '-T' : (1, ArgumentListFilter.defaultOneArgument),
-            '-u' : (1, ArgumentListFilter.defaultOneArgument),
-            }
+            '-l' : (1, ArgumentListFilter.linkBinaryCallback),
+            '-L' : (1, ArgumentListFilter.linkBinaryCallback),
+            '-T' : (1, ArgumentListFilter.linkBinaryCallback),
+            '-u' : (1, ArgumentListFilter.linkBinaryCallback),
+            #iam: specify the entry point
+            '-e' : (1, ArgumentListFilter.linkBinaryCallback),
+            # runtime library search path
+            '-rpath' : (1, ArgumentListFilter.linkBinaryCallback),
+            # iam: showed up in buildkernel
+            '-shared' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-static' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-nostdlib' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
+           }
 
-        # The default pattern only recognizes input filenames.  Flags can also
-        # be recognized here.
+        #
+        # Patterns for other command-line arguments:
+        # - inputFiles
+        # - objecFiles (suffix .o)
+        # - libraries + linker options as in -lxxx -Lpath or -Wl,xxxx
+        # - preprocessor options as in -DXXX -Ipath
+        # - compiler warning options: -W....
+        # - optimiziation and other flags: -f...
+        #
         defaultArgPatterns = {
-            r'^.+\.(c|cc|cpp|C|cxx|i|s)$' : (0, ArgumentListFilter.inputFileCallback),
-            }
+            r'^.+\.(c|cc|cpp|C|cxx|i|s|S)$' : (0, ArgumentListFilter.inputFileCallback),
+            #iam: the object file recogition is not really very robust, object files
+            # should be determined by their existance and contents...
+            r'^.+\.(o|So|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
+            r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
+            r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            #iam: hopefully the order of these is preserved, time will tell
+            r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
+            r'^-W.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+        }
 
-        self.filteredArgs = []
+        #iam: try and keep track of the files, input object, and output
         self.inputFiles = []
+        self.objectFiles = []
         self.outputFilename = None
+
+        #iam: try and split the args into linker and compiler switches
+        self.compileArgs = []
+        self.linkArgs = []
+
+
         self.isVerbose = False
+        self.isDependencyOnly = False
         self.isPreprocessOnly = False
         self.isAssembleOnly = False
         self.isAssembly = False
@@ -120,7 +231,13 @@ class ArgumentListFilter(object):
         argPatterns.update(patternMatches)
 
         self._inputArgs = collections.deque(inputList)
-        while len(self._inputArgs) > 0:
+
+        #iam: parse the cmd line, bailing if we discover that there will be no second phase.
+        while ( len(self._inputArgs) > 0   and
+                not (self.isAssembly or
+                     self.isAssembleOnly or
+                     self.isDependencyOnly or
+                     self.isPreprocessOnly  ) ):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
             # First, see if this exact flag has a handler in the table.
@@ -141,7 +258,11 @@ class ArgumentListFilter(object):
                 # If no action has been specified, this is a zero-argument
                 # flag that we should just keep.
                 if not matched:
-                    self.keepArgument(currentItem)
+                    _logger.warning('Did not recognize the compiler flag "{0}"'.format(currentItem))
+                    self.compileUnaryCallback(currentItem)
+
+        if DEBUG:
+            self.dump()
 
     def _shiftArgs(self, nargs):
         ret = []
@@ -151,50 +272,98 @@ class ArgumentListFilter(object):
             nargs = nargs - 1
         return ret
 
-    def keepArgument(self, arg):
-        self.filteredArgs.append(arg)
+    def abortUnaryCallback(self, flag):
+        _logger.warning('Out of context experience: "{0}"'.format(str(self.inputList)))
+        sys.exit(1)
+        
+    def inputFileCallback(self, infile):
+        self.inputFiles.append(infile)
+        if re.search('\\.(s|S)', infile):
+            self.isAssembly = True
 
     def outputFileCallback(self, flag, filename):
         self.outputFilename = filename
-        self.keepArgument(flag)
-        self.keepArgument(filename)
+ 
+    def objectFileCallback(self, objfile):
+        self.objectFiles.append(objfile)   
 
     def preprocessOnlyCallback(self, flag):
         self.isPreprocessOnly = True
-        self.keepArgument(flag)
+
+    def dependencyOnlyCallback(self, flag):
+        self.isDependencyOnly = True
 
     def assembleOnlyCallback(self, flag):
         self.isAssembleOnly = True
-        self.keepArgument(flag)
 
     def verboseFlagCallback(self, flag):
         self.isVerbose = True
 
     def compileOnlyCallback(self, flag):
         self.isCompileOnly = True
-        self.keepArgument(flag)
 
-    def inputFileCallback(self, infile):
-        self.inputFiles.append(infile)
-        self.keepArgument(infile)
-        if re.search('\\.s', infile):
-            self.isAssembly = True
+    def linkUnaryCallback(self, flag):
+        self.linkArgs.append(flag)
 
-    def defaultOneArgument(self, flag, arg):
-        self.keepArgument(flag)
-        self.keepArgument(arg)
+    def compileUnaryCallback(self, flag):
+        self.compileArgs.append(flag)
 
-    def defaultNoArgument(self, flag):
-        self.keepArgument(flag)
+    def defaultBinaryCallback(self, flag, arg):
+        _logger.warning('Ignoring compiler arg pair: "{0} {1}"'.format(flag, arg))
+
+    def dependencyBinaryCallback(self, flag, arg):
+        self.isDependencyOnly = True
+
+    def compileBinaryCallback(self, flag, arg):
+        self.compileArgs.append(flag)
+        self.compileArgs.append(arg)
+
+
+    def linkBinaryCallback(self, flag, arg):
+        self.linkArgs.append(flag)
+        self.linkArgs.append(arg)
 
     def getOutputFilename(self):
         if self.outputFilename is not None:
             return self.outputFilename
         elif self.isCompileOnly:
-            (root, ext) = os.path.splitext(self.inputFiles[0])
+            #iam: -c but no -o, therefore the obj should end up in the cwd.
+            (path, base) = os.path.split(self.inputFiles[0])
+            (root, ext) = os.path.splitext(base)
             return '{0}.o'.format(root)
         else:
             return 'a.out'
+
+    # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
+    # the hidden flag determines whether the objectFile is hidden like the
+    # bitcodeFile is (starts with a '.'), use the DEBUG flag to get a sense
+    # of what is being written out.
+    def getArtifactNames(self, srcFile, hidden=False):
+        (srcpath, srcbase) = os.path.split(srcFile)
+        (srcroot, srcext) = os.path.splitext(srcbase)
+        if hidden:
+            objbase = '.{0}.o'.format(srcroot)
+        else:
+            objbase = '{0}.o'.format(srcroot)
+        bcbase = '.{0}.o.bc'.format(srcroot)
+        path = ''
+        if self.outputFilename is not None:
+            path = os.path.dirname(self.outputFilename)
+        return [os.path.join(path, objbase), os.path.join(path, bcbase)]
+
+    #iam: for printing our partitioning of the args
+    def dump(self):
+        print "compileArgs: ", self.compileArgs
+        print "inputFiles: ", self.inputFiles
+        print "linkArgs: ", self.linkArgs
+        print "objectFiles: ", self.objectFiles
+        print "outputFilename: ", self.outputFilename
+        for srcFile in self.inputFiles:
+            print "srcFile: ", srcFile
+            (objFile, bcFile) = self.getArtifactNames(srcFile)
+            print "{0} ===> ({1}, {2})".format(srcFile, objFile, bcFile)
+
+
 
 # Same as above, but change the name of the output filename when
 # building the bitcode file so that we don't clobber the object file.
@@ -245,8 +414,9 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
-    if ext not in ('.o', '.lo', '.os'):
-        _logger.warning('Cannot attach bitcode path to "{0}"'.format(outFileName))
+    #iam: this also looks very dodgey; we need a more reliable way to do this:
+    if ext not in ('.o', '.lo', '.os', '.So', '.po'):
+        _logger.warning('Cannot attach bitcode path to "{0} of type {1}"'.format(outFileName, FileType.getFileType(outFileName)))
         return
 
     # Now just build a temporary text file with the full path to the
@@ -325,12 +495,10 @@ class ClangBuilder(BuilderBase):
     def getBitcodeFileName(self, argFilter):
         (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-
         return bcfilename
 
     def extraBitcodeArgs(self, argFilter):
         bcPath = self.getBitcodeFileName(argFilter)
-
         return ['-o', bcPath]
 
     def attachBitcode(self, argFilter):
@@ -338,6 +506,7 @@ class ClangBuilder(BuilderBase):
         outFile = argFilter.getOutputFilename()
         attachBitcodePathToObject(bcname, outFile)
 
+#iam: this should join the dodo soon, yes?
 class DragoneggBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)
@@ -402,27 +571,117 @@ def buildObject(builder):
     if rc != 0:
         sys.exit(rc)
 
-def isLinkOption(arg):
-    return arg == '-pthread' or arg.startswith('-l') or arg.startswith('-Wl,')
-
 # This command does not have the executable with it
 def buildAndAttachBitcode(builder):
+
     af = builder.getBitcodeArglistFilter()
-    if len(af.inputFiles) == 0 or af.isAssembly or af.isAssembleOnly:
+
+    if ( len(af.inputFiles) == 0 or
+         af.isAssembly or
+         af.isAssembleOnly or
+         af.isDependencyOnly or
+         af.isPreprocessOnly  ):
         return
+
+    #iam: when we have multiple input files we'll have to keep track of their object files.
+    newObjectFiles = []
+        
+    hidden = not af.isCompileOnly
+
+    if  len(af.inputFiles) == 1 and af.isCompileOnly:
+        # iam:
+        # we could have
+        # "... -c -o foo.o" or even "... -c -o foo.So" which is OK, but we could also have
+        # "... -c -o crazy-assed.objectfile" which we wouldn't get right (yet)
+        # so we need to be careful with the objFile and bcFile
+        # maybe python-magic is in out future ...
+        srcFile = af.inputFiles[0]
+        (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
+        if af.outputFilename is not None:
+            objFile = af.outputFilename
+            bcFile =  builder.getBitcodeFileName(af)
+        buildBitcodeFile(builder, srcFile, bcFile)
+        attachBitcodePathToObject(bcFile, objFile)
+
+    else:
+        
+        for srcFile in af.inputFiles:
+            (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
+            if hidden:
+                buildObjectFile(builder, srcFile, objFile)
+                newObjectFiles.append(objFile)
+            buildBitcodeFile(builder, srcFile, bcFile)
+            attachBitcodePathToObject(bcFile, objFile)
+        
+
+    if not af.isCompileOnly:
+        linkFiles(builder, newObjectFiles)
+            
+    sys.exit(0)
+
+def linkFiles(builder, objectFiles):
+    af = builder.getBitcodeArglistFilter()
+    outputFile = af.getOutputFilename()
+    cc = builder.getCompiler()
+    cc.extend(af.objectFiles) 
+    cc.extend(objectFiles) 
+    cc.extend(af.linkArgs) 
+    cc.extend(['-o', outputFile])
+    proc = Popen(cc)
+    rc = proc.wait()
+    if rc != 0:
+        _logger.warning('Failed to link "{0}"'.format(str(cc)))
+        sys.exit(rc)
+
+        
+def buildBitcodeFile(builder, srcFile, bcFile):
+    af = builder.getBitcodeArglistFilter()
     bcc = builder.getBitcodeCompiler()
-    bcc.extend(af.filteredArgs)
-    bcc.append('-c')
-    bcc.extend(builder.extraBitcodeArgs(af))
-    # Filter out linker options since we are compiling with -c.  If we
-    # leave them in, clang will emit warnings.  Some configure scripts
-    # check to see if there was any output on stderr instead of the
-    # return code of commands, so warnings about unused link flags can
-    # cause spurious failures here.
-    bcc = [arg for arg in bcc if not isLinkOption(arg)]
+    bcc.extend(af.compileArgs)
+    bcc.extend(['-c', srcFile])
+    bcc.extend(['-o', bcFile])
     proc = Popen(bcc)
     rc = proc.wait()
-    if rc == 0:
-        builder.attachBitcode(af)
-    sys.exit(rc)
+    if rc != 0:
+        _logger.warning('Failed to generate bitcode "{0}" for "{1}"'.format(bcFile, srcFile))
+        sys.exit(rc)
+
+def buildObjectFile(builder, srcFile, objFile):
+    af = builder.getBitcodeArglistFilter()
+    cc = builder.getCompiler()
+    cc.extend(af.compileArgs)
+    cc.append(srcFile)
+    cc.extend(['-c', '-o',  objFile])
+    proc = Popen(cc)
+    rc = proc.wait()
+    if rc != 0:
+        _logger.warning('Failed to generate object "{0}" for "{1}"'.format(objFile, srcFile))
+        sys.exit(rc)
+        
+# bd & iam:
+#
+# case 1 (compileOnly):
+#
+# if the -c flag exists then so do all the .o files, and we need to
+# locate them and produce and embed the bit code.
+#
+# locating them is easy:
+#   either the .o is in the cmdline and we are in the simple case,
+#   or else it was generated according to getObjectFilename
+# 
+# we then produce and attach bitcode for each inputFile in the cmdline
+#
+#
+# case 2 (compile and link)
+#
+#  af.inputFiles is not empty, and compileOnly is false.
+#  in this case the .o's may not exist, we must regenerate 
+#  them in any case.
+#
+#
+# case 3 (link only)
+#
+# in this case af.inputFiles is empty and we are done
+#
+#
 
