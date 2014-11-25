@@ -234,10 +234,10 @@ class ArgumentListFilter(object):
 
         #iam: parse the cmd line, bailing if we discover that there will be no second phase.
         while ( len(self._inputArgs) > 0   and
-                not (af.isAssembly or
-                     af.isAssembleOnly or
-                     af.isDependencyOnly or
-                     af.isPreprocessOnly  ) ):
+                not (self.isAssembly or
+                     self.isAssembleOnly or
+                     self.isDependencyOnly or
+                     self.isPreprocessOnly  ) ):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
             # First, see if this exact flag has a handler in the table.
