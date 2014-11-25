@@ -191,7 +191,9 @@ class ArgumentListFilter(object):
         if self.outputFilename is not None:
             return self.outputFilename
         elif self.isCompileOnly:
-            (root, ext) = os.path.splitext(self.inputFiles[0])
+            #iam: -c but no -o, therefore the obj should end up in the cwd.
+            (path, base) = os.path.split(self.inputFiles[0])
+            (root, ext) = os.path.splitext(base)
             return '{0}.o'.format(root)
         else:
             return 'a.out'
