@@ -37,6 +37,10 @@ elfSectionName='.llvm_bc'
 # Internal logger
 _logger = logging.getLogger(__name__)
 
+# Flag for debugging 
+DEBUG = False
+
+
 # This class applies filters to GCC argument lists.  It has a few
 # default arguments that it records, but does not modify the argument
 # list at all.  It can be subclassed to change this behavior.
@@ -143,6 +147,9 @@ class ArgumentListFilter(object):
                 if not matched:
                     self.keepArgument(currentItem)
 
+        if DEBUG:
+            self.dump()
+
     def _shiftArgs(self, nargs):
         ret = []
         while nargs > 0:
@@ -197,6 +204,37 @@ class ArgumentListFilter(object):
             return '{0}.o'.format(root)
         else:
             return 'a.out'
+
+    # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
+    # the hidden flag determines whether the objectFile is hidden like the
+    # bitcodeFile is (starts with a '.'), use the DEBUG flag to get a sense
+    # of what is being written out.
+    def getArtifactNames(self, srcFile, hidden=False):
+        (srcpath, srcbase) = os.path.split(srcFile)
+        (srcroot, srcext) = os.path.splitext(srcbase)
+        if hidden:
+            objbase = '.{0}.o'.format(srcroot)
+        else:
+            objbase = '{0}.o'.format(srcroot)
+        bcbase = '.{0}.o.bc'.format(srcroot)
+        path = ''
+        if self.outputFilename is not None:
+            path = os.path.dirname(self.outputFilename)
+        return [os.path.join(path, objbase), os.path.join(path, bcbase)]
+
+    #iam: for printing our partitioning of the args
+    def dump(self):
+        print "compileArgs: ", self.compileArgs
+        print "inputFiles: ", self.inputFiles
+        print "linkArgs: ", self.linkArgs
+        print "objectFiles: ", self.objectFiles
+        print "outputFilename: ", self.outputFilename
+        for srcFile in self.inputFiles:
+            print "srcFile: ", srcFile
+            (objFile, bcFile) = self.getArtifactNames(srcFile)
+            print "{0} ===> ({1}, {2})".format(srcFile, objFile, bcFile)
+
+
 
 # Same as above, but change the name of the output filename when
 # building the bitcode file so that we don't clobber the object file.
