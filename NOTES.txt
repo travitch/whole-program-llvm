@@ -38,3 +38,21 @@ ld -r <file.o> converts the extern symbols into local symbols.
 
 Workaround for now: give a warning if we see -fvisibility=hidden on
 the Mac.
+
+
+
+TODO: extract-bc for MacOS
+
+To extract bitcode from binaries, objects, or library files on Darwin:
+
+  otool -X -s __LLVM __llvm_bc yices_sat | xxd -r 
+
+Explanations:
+
+  otool -s __LLVM __llvm_bc file  extracts and display the section we care about
+
+  flag -X removes some useless headers we don't want
+
+  xxd -r converts the hexdump to ASCII list of file names
+
+
