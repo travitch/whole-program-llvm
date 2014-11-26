@@ -18,3 +18,23 @@ WARNING:Did not recognize the compiler flag "0x600"
 WARNING:Did not recognize the compiler flag "-m"
 WARNING:Did not recognize the compiler flag "elf_i386_fbsd"
 
+
+Darwin linker flags:
+
+WARNING:Did not recognize the compiler flag "-dynamiclib"
+WARNING:Did not recognize the compiler flag "-current_version"
+WARNING:Did not recognize the compiler flag "2.2.2"
+WARNING:Did not recognize the compiler flag "-compatibility_version"
+WARNING:Did not recognize the compiler flag "2.2.0"
+
+Attempt to attach bitcode stuff on MacOS using ld:
+
+ ld -r <file.o> -sectcreate __LLVM __llvm_bc <tmpfile> -o <file.o>
+
+This works (it adds a new section called __llvm_bc in a new __LLVM
+segment), but the 'ld -r' part may have bad side effects. For example
+if the <file.o> is produced with -fvisibility=hidden then calling
+ld -r <file.o> converts the extern symbols into local symbols.
+
+Workaround for now: give a warning if we see -fvisibility=hidden on
+the Mac.

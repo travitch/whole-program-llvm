@@ -438,7 +438,10 @@ def attachBitcodePathToObject(bcPath, outFileName):
     f.close()
 
     # Now write our .llvm_bc section
-    objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
+    if (sys.platform.startswith('darwin')):
+        objcopyCmd = ['ld', '-r', outFileName, '-sectcreate', '__LLVM', '__llvm_bc',  f.name, '-o', outFileName]
+    else:
+        objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
 
     try:
