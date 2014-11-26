@@ -1,19 +1,3 @@
-# currently many works; neither one nor two, nor mix work
-# one possibility is to do each .c file in turn
-# essentially turning one and two into many. 
-#
-# two strategies:
-
-# the important
-# point is to make sure for each generated .*.bc file that
-# there is a corresponding *.o file. so we may have to alter
-# both "stages" of the compilation, or extend the second one substantially.
-
-# just alter the second phase to get the many.
-# Including the thing we are not supposed be able to do 
-# which is attach the bit bitcode paths directly to the executable.
-# in the mix version we will need to to append to a section. which
-# has to be done by reading, removing then wrtiting the section.
 
 zero:
 	${CXX} hello.cc -o hello
