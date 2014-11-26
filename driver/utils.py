@@ -37,7 +37,7 @@ elfSectionName='.llvm_bc'
 # Internal logger
 _logger = logging.getLogger(__name__)
 
-# Flag for debugging 
+# Flag for debugging
 DEBUG = False
 
 
@@ -66,7 +66,7 @@ class ArgumentListFilter(object):
             '-c' : (0, ArgumentListFilter.compileOnlyCallback),
             '-E' : (0, ArgumentListFilter.preprocessOnlyCallback),
             '-S' : (0, ArgumentListFilter.assembleOnlyCallback),
-            
+
             '--verbose' : (0, ArgumentListFilter.verboseFlagCallback),
             '--param' : (1, ArgumentListFilter.defaultBinaryCallback),
             '-aux-info' : (1, ArgumentListFilter.defaultBinaryCallback),
@@ -77,8 +77,8 @@ class ArgumentListFilter(object):
             #warnings (apart from the regex below)
             '-w' : (0, ArgumentListFilter.compileOnlyCallback),
             '-W' : (0, ArgumentListFilter.compileOnlyCallback),
-            
-            
+
+
             #iam: if this happens, then we need to stop and think.
             '-emit-llvm' : (0, ArgumentListFilter.abortUnaryCallback),
 
@@ -92,7 +92,7 @@ class ArgumentListFilter(object):
             '-integrated-as' : (0, ArgumentListFilter.compileUnaryCallback),
             #iam: gcc uses this in both compile and link, but clang only in compile
             '-pthread' : (0, ArgumentListFilter.compileUnaryCallback),
-            
+
             #iam: arm stuff
             '-mno-omit-leaf-frame-pointer' : (0, ArgumentListFilter.compileUnaryCallback),
             '-maes' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -151,8 +151,8 @@ class ArgumentListFilter(object):
             '-g0' : (0, ArgumentListFilter.compileUnaryCallback),     #iam: clang not gcc
             '-gdwarf-2' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gdwarf-3' : (0, ArgumentListFilter.compileUnaryCallback),
-            '-p' : (0, ArgumentListFilter.compileUnaryCallback),   
-            '-pg' : (0, ArgumentListFilter.compileUnaryCallback),            
+            '-p' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-pg' : (0, ArgumentListFilter.compileUnaryCallback),
 
             # Optimization
             '-O' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -275,7 +275,7 @@ class ArgumentListFilter(object):
     def abortUnaryCallback(self, flag):
         _logger.warning('Out of context experience: "{0}"'.format(str(self.inputList)))
         sys.exit(1)
-        
+
     def inputFileCallback(self, infile):
         _logger.debug('Input file: ' + infile)
         self.inputFiles.append(infile)
@@ -284,9 +284,9 @@ class ArgumentListFilter(object):
 
     def outputFileCallback(self, flag, filename):
         self.outputFilename = filename
- 
+
     def objectFileCallback(self, objfile):
-        self.objectFiles.append(objfile)   
+        self.objectFiles.append(objfile)
 
     def preprocessOnlyCallback(self, flag):
         self.isPreprocessOnly = True
@@ -591,7 +591,7 @@ def buildAndAttachBitcode(builder):
 
     #iam: when we have multiple input files we'll have to keep track of their object files.
     newObjectFiles = []
-        
+
     hidden = not af.isCompileOnly
 
     if  len(af.inputFiles) == 1 and af.isCompileOnly:
@@ -610,7 +610,7 @@ def buildAndAttachBitcode(builder):
         attachBitcodePathToObject(bcFile, objFile)
 
     else:
-        
+
         for srcFile in af.inputFiles:
             (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
             if hidden:
@@ -618,20 +618,20 @@ def buildAndAttachBitcode(builder):
                 newObjectFiles.append(objFile)
             buildBitcodeFile(builder, srcFile, bcFile)
             attachBitcodePathToObject(bcFile, objFile)
-        
+
 
     if not af.isCompileOnly:
         linkFiles(builder, newObjectFiles)
-            
+
     sys.exit(0)
 
 def linkFiles(builder, objectFiles):
     af = builder.getBitcodeArglistFilter()
     outputFile = af.getOutputFilename()
     cc = builder.getCompiler()
-    cc.extend(af.objectFiles) 
-    cc.extend(objectFiles) 
-    cc.extend(af.linkArgs) 
+    cc.extend(af.objectFiles)
+    cc.extend(objectFiles)
+    cc.extend(af.linkArgs)
     cc.extend(['-o', outputFile])
     proc = Popen(cc)
     rc = proc.wait()
@@ -639,7 +639,7 @@ def linkFiles(builder, objectFiles):
         _logger.warning('Failed to link "{0}"'.format(str(cc)))
         sys.exit(rc)
 
-        
+
 def buildBitcodeFile(builder, srcFile, bcFile):
     af = builder.getBitcodeArglistFilter()
     bcc = builder.getBitcodeCompiler()
@@ -663,7 +663,7 @@ def buildObjectFile(builder, srcFile, objFile):
     if rc != 0:
         _logger.warning('Failed to generate object "{0}" for "{1}"'.format(objFile, srcFile))
         sys.exit(rc)
-        
+
 # bd & iam:
 #
 # case 1 (compileOnly):
@@ -674,14 +674,14 @@ def buildObjectFile(builder, srcFile, objFile):
 # locating them is easy:
 #   either the .o is in the cmdline and we are in the simple case,
 #   or else it was generated according to getObjectFilename
-# 
+#
 # we then produce and attach bitcode for each inputFile in the cmdline
 #
 #
 # case 2 (compile and link)
 #
 #  af.inputFiles is not empty, and compileOnly is false.
-#  in this case the .o's may not exist, we must regenerate 
+#  in this case the .o's may not exist, we must regenerate
 #  them in any case.
 #
 #
@@ -690,4 +690,3 @@ def buildObjectFile(builder, srcFile, objFile):
 # in this case af.inputFiles is empty and we are done
 #
 #
-
