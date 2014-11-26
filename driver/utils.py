@@ -234,12 +234,12 @@ class ArgumentListFilter(object):
 
         #iam: parse the cmd line, bailing if we discover that there will be no second phase.
         while ( len(self._inputArgs) > 0   and
-                not (af.isAssembly or
-                     af.isAssembleOnly or
-                     af.isDependencyOnly or
-                     af.isPreprocessOnly  ) ):
+                not (self.isAssembly or
+                     self.isAssembleOnly or
+                     self.isPreprocessOnly  ) ):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
+            _logger.debug('Trying to match item ' + currentItem)
             # First, see if this exact flag has a handler in the table.
             # This is a cheap test.  Otherwise, see if the input matches
             # some pattern with a handler that we recognize
@@ -277,6 +277,7 @@ class ArgumentListFilter(object):
         sys.exit(1)
         
     def inputFileCallback(self, infile):
+        _logger.debug('Input file: ' + infile)
         self.inputFiles.append(infile)
         if re.search('\\.(s|S)', infile):
             self.isAssembly = True
@@ -292,6 +293,7 @@ class ArgumentListFilter(object):
 
     def dependencyOnlyCallback(self, flag):
         self.isDependencyOnly = True
+        self.compileArgs.append(flag)
 
     def assembleOnlyCallback(self, flag):
         self.isAssembleOnly = True
@@ -313,6 +315,8 @@ class ArgumentListFilter(object):
 
     def dependencyBinaryCallback(self, flag, arg):
         self.isDependencyOnly = True
+        self.compileArgs.append(flag)
+        self.compileArgs.append(arg)
 
     def compileBinaryCallback(self, flag, arg):
         self.compileArgs.append(flag)
@@ -579,8 +583,10 @@ def buildAndAttachBitcode(builder):
     if ( len(af.inputFiles) == 0 or
          af.isAssembly or
          af.isAssembleOnly or
-         af.isDependencyOnly or
+         (af.isDependencyOnly and not af.isCompileOnly) or
          af.isPreprocessOnly  ):
+        _logger.debug('No work to do')
+        _logger.debug(af.__dict__)
         return
 
     #iam: when we have multiple input files we'll have to keep track of their object files.
