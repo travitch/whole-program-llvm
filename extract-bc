@@ -49,7 +49,7 @@ verboseFlag = False
 # that section (in bytes)
 def getSectionSizeAndOffset(sectionName, filename):
     objdumpCmd = ['objdump', '-h', '-w', filename]
-    objdumpProc = Popen(objdumpCmd, stdout=PIPE)
+    objdumpProc = Popen(objdumpCmd, stdout=sp.PIPE)
 
     objdumpOutput = objdumpProc.communicate()[0]
     if objdumpProc.returncode != 0:
