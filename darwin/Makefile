@@ -13,11 +13,17 @@ obj: foo.c bar.c baz.c main.c
 	${CC} baz.c  -c
 	${CC} main.c -c
 
+bc: foo.c bar.c baz.c main.c
+	${CC} foo.c  -c -emit-llvm -o .foo.o.bc
+	${CC} bar.c  -c -emit-llvm -o .bar.o.bc
+	${CC} baz.c  -c -emit-llvm -o .baz.o.bc
+	${CC} main.c -c -emit-llvm -o .main.o.bc
+
 aux: obj
-	echo "foo.o.bc" > foo.txt
-	echo "bar.o.bc" > bar.txt
-	echo "baz.o.bc" > baz.txt
-	echo "main.o.bc" > main.txt
+	echo ".foo.o.bc" > foo.txt
+	echo ".bar.o.bc" > bar.txt
+	echo ".baz.o.bc" > baz.txt
+	echo ".main.o.bc" > main.txt
 
 embed: aux
 	ld -r foo.o -sectcreate __LLVM __llvm_bc foo.txt -o foo.xxx.o

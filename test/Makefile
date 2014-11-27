@@ -18,9 +18,17 @@ many:
 	${CC} bar.c  -c
 	${CC} baz.c  -c
 	${CC} main.c -c
-	${CC} -Ioff/in/lala/land -I some/where/else foo.o bar.o baz.o main.o -lm -Lz -o main
+	${CC} foo.o bar.o baz.o main.o -o main
 
 
 clean:
 	rm -f *.o main .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello
+
+
+
+mystery:
+	otool -X -s __LLVM __llvm_bc main > main.otool
+	xxd -r  main.otool
+	xxd -r  main.otool main.xxd
+
 
