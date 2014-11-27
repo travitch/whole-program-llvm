@@ -86,7 +86,6 @@ Example building an Operating System
 ================================
 
 To see how to build freeBSD 10.0 from scratch check out the guide 
-
 [here.](../master/README-freeBSD.md)
 
 Debugging
