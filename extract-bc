@@ -220,56 +220,6 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
     return retCode
 
 
-# Use objdump on the provided binary; parse out the fields
-# to find the given section.  Return the size and offset of
-# that section (in bytes)
-def getSectionSizeAndOffset(sectionName, filename):
-    objdumpCmd = ['objdump', '-h', '-w', filename]
-    objdumpProc = Popen(objdumpCmd, stdout=PIPE)
-
-    objdumpOutput = objdumpProc.communicate()[0]
-    if objdumpProc.returncode != 0:
-        logging.error('Could not dump %s' % filename)
-        sys.exit(-1)
-
-    for line in [l.decode('utf-8') for l in objdumpOutput.splitlines()] :
-        fields = line.split()
-        if len(fields) <= 7:
-            continue
-        if fields[1] != sectionName:
-            continue
-        try:
-            idx = int(fields[0])
-            size = int(fields[2], 16)
-            offset = int(fields[5], 16)
-            return (size, offset)
-        except ValueError:
-            continue
-
-    # The needed section could not be found
-    raise Exception('Could not find "{0}" ELF section in "{1}"'.format(
-                    sectionName,
-                    filename)
-                   )
-
-# Read the entire content of an ELF section into a string
-def getSectionContent(size, offset, filename):
-    with open(filename, mode='rb') as f:
-        f.seek(offset)
-        d = ''
-        try:
-            c = f.read(size)
-            d = c.decode('utf-8')
-        except UnicodeDecodeError:
-            logging.error('Failed to read section containing:')
-            print(c)
-            raise
-        # The linker pads sections with null bytes; our real data
-        # cannot have null bytes because it is just text.  Discard
-        # nulls.
-        return d.replace('\0', '')
-
-
 
 def extract_bc_args(args):
     import argparse
