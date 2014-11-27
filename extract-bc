@@ -445,7 +445,7 @@ def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
-    if ft == FileType.MACH_EXECUTABLE:
+    if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED:
         logging.info('Generating LLVM Bitcode module')
         return process_executable_darwin(inputFile, outputFile, llvmLinker, llvmArchiver)
     elif ft == FileType.ARCHIVE:
@@ -455,7 +455,7 @@ def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
         logging.error('File "{0}" of type {1} cannot be used'.format(inputFile,FileType.revMap[ft]))
         return 1
 
-    #ft == FileType.MACH_SHARED ?
+    #?
  
 
     

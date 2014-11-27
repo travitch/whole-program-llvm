@@ -27,12 +27,16 @@ archive: objects
 	ranlib libfoo.a
 
 
+dylib: objects
+	${CC} -dynamiclib foo.o bar.o baz.o -o libfoo.dylib
+
+
 link_with_archive:: archive
 	$(CC) main.o libfoo.a -o main.arch
 
 
 clean:
-	rm -f *.o main .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello *.a
+	rm -f *.o main main.arch .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello *.a *.bca *.dylib
 
 
 

@@ -187,6 +187,8 @@ class ArgumentListFilter(object):
             '-static' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nostdlib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
+            # darwin flags
+            '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
            }
 
         #
