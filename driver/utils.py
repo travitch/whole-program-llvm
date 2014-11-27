@@ -34,6 +34,11 @@ llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 # This is the ELF section name inserted into binaries
 elfSectionName='.llvm_bc'
 
+# These are the MACH_O segment and section name
+darwinSegmentName='__LLVM'
+darwinSectionName='__llvm_bc'
+
+
 # Internal logger
 _logger = logging.getLogger(__name__)
 
@@ -437,9 +442,10 @@ def attachBitcodePathToObject(bcPath, outFileName):
     os.fsync(f.fileno())
     f.close()
 
-    # Now write our .llvm_bc section
+    
+    # Now write our bitcode section
     if (sys.platform.startswith('darwin')):
-        objcopyCmd = ['ld', '-r', outFileName, '-sectcreate', '__LLVM', '__llvm_bc',  f.name, '-o', outFileName]
+        objcopyCmd = ['ld', '-r', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName,  f.name, '-o', outFileName]
     else:
         objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
@@ -603,7 +609,7 @@ def buildAndAttachBitcode(builder):
         # "... -c -o foo.o" or even "... -c -o foo.So" which is OK, but we could also have
         # "... -c -o crazy-assed.objectfile" which we wouldn't get right (yet)
         # so we need to be careful with the objFile and bcFile
-        # maybe python-magic is in out future ...
+        # maybe python-magic is in our future ...
         srcFile = af.inputFiles[0]
         (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
         if af.outputFilename is not None:

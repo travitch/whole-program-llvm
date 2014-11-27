@@ -16,10 +16,13 @@ archive from the bitcode files.
 
 import os
 import sys
-from subprocess import *
+import subprocess as sp
+#from subprocess import *
 from driver.utils import llvmCompilerPathEnv
 from driver.popenwrapper import Popen
 from driver.utils import elfSectionName
+from driver.utils import darwinSegmentName
+from driver.utils import darwinSectionName
 from driver.utils import FileType
 
 import logging
@@ -210,7 +213,8 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
 
     return retCode
 
-def main(args):
+
+def extract_bc_args(args):
     import argparse
 
     llvmToolPrefix = os.getenv(llvmCompilerPathEnv)
@@ -235,13 +239,13 @@ def main(args):
                         default=None)
     parsedArgs = parser.parse_args()
 
-    inputFile = parsedArgs.wllvm_binary
-    llvmLinker= parsedArgs.linker
+    inputFile  = parsedArgs.wllvm_binary
+    llvmLinker = parsedArgs.linker
 
     # Check file exists
     if not os.path.exists(inputFile):
         logging.error('File "{0}" does not exist.'.format(inputFile))
-        return 1
+        return (False)
 
     # Check output destitionation if set
     outputFile = parsedArgs.output
@@ -251,8 +255,32 @@ def main(args):
       if not os.path.exists(os.path.dirname(outputFile)):
         logging.error('Output directory "{0}" does not exist.'.format(
                       os.path.dirname(outputFile)))
+        return (False)
+
+    return (True, inputFile, outputFile, llvmLinker, llvmArchiver)
+    
+
+def main(args):
+
+    (success, inputFile, outputFile, llvmLinker, llvmArchiver) = extract_bc_args(args)
+
+    if not success:
         return 1
 
+    if ( sys.platform.startswith('freebsd') or
+         sys.platform.startswith('linux') ):
+        process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver)
+
+    elif sys.platform.startswith('darwin'):
+        process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver)
+
+    else:
+        #iam: do we work on anything else?
+        logging.error('Unsupported or unrecognized platform: {0}'.format(sys.platform))
+        return 1
+
+    
+def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
@@ -265,7 +293,39 @@ def main(args):
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(inputFile,FileType.revMap[ft]))
         return 1
-    sys.exit(exitCode)
 
+from driver.utils import darwinSegmentName
+from driver.utils import darwinSectionName
+
+#iam: "xxd -r" would just refuse to play nice, so it got tossed.
+# if any one can get
+#    otool -X -s __LLVM __llvm_bc inputFile | xxd -r
+# to work this can be simplified.
+def extract_section(inputFile):
+    otoolCmd  = ['otool', '-X', '-s', darwinSegmentName, darwinSectionName, inputFile]
+    output = sp.check_output(otoolCmd)
+    lines = output.splitlines()
+    octets = []
+    for line in lines:
+        (_, octetline) = line.split('\t')
+        octets.extend(octetline.split())
+    octets = ''.join(octets)
+    contents = octets.decode('hex').splitlines()
+    return contents
+ 
+def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
+
+    if outputFile == None:
+        outputFile = inputFile + '.' + moduleExtension
+        
+    fileNames = extract_section(inputFile)
+    linkCmd = [ llvmLinker, '-v', '-o', outputFile ]
+    linkCmd.extend([x for x in fileNames if x != ''])
+    logging.info('Writing output to {0}'.format(outputFile))
+    linkProc = Popen(linkCmd)
+    exitCode = linkProc.wait()
+    logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
+    return exitCode
+    
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
