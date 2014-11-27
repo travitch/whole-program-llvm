@@ -400,19 +400,32 @@ class FileType(object):
       output = fileP.communicate()[0]
       output = output.decode()
       if 'ELF' in output and 'executable' in output:
-          return cls.EXECUTABLE
+          return cls.ELF_EXECUTABLE
+      if 'Mach-O' in output and 'executable' in output:
+          return cls.MACH_EXECUTABLE
       elif 'ELF' in output and 'shared' in output:
-          return cls.SHARED
+          return cls.ELF_SHARED
+      elif 'Mach-O' in output and 'dynamically linked shared' in output:
+          return cls.MACH_SHARED
       elif 'current ar archive' in output:
           return cls.ARCHIVE
       elif 'ELF' in output and 'relocatable' in output:
-          return cls.OBJECT
+          return cls.ELF_OBJECT
+      elif 'Mach-O' in output and 'object' in output:
+          return cls.MACH_OBJECT
       else:
           return cls.UNKNOWN
 
   @classmethod
   def init(cls):
-      for (index, name) in enumerate(('UNKNOWN', 'EXECUTABLE', 'OBJECT', 'ARCHIVE', 'SHARED')):
+      for (index, name) in enumerate(('UNKNOWN',
+                                      'ELF_EXECUTABLE',
+                                      'ELF_OBJECT',
+                                      'ELF_SHARED',
+                                      'MACH_EXECUTABLE',
+                                      'MACH_OBJECT',
+                                      'MACH_SHARED',
+                                      'ARCHIVE')):
           setattr(cls, name, index)
           cls.revMap[index] = name
 
