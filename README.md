@@ -82,6 +82,13 @@ Example building bitcode archive
     # Produces src/LinearMath/libLinearMath.bca
     extract-bc src/LinearMath/libLinearMath.a
 
+Example building an Operating System
+================================
+
+To see how to build freeBSD 10.0 from scratch check out the guide 
+
+[here.](../blob/master/README-freeBSD.md)
+
 Debugging
 =========
 
