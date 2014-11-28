@@ -93,23 +93,47 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return d.replace('\0', '')
 
+#use otool to insert the segment and section
+#iam: "xxd -r" would just refuse to play nice, so it got tossed.
+# if any one can get
+#    otool -X -s __LLVM __llvm_bc inputFile | xxd -r
+# to work this can be simplified.
+def extract_section_darwin(inputFile):
+    otoolCmd  = ['otool', '-X', '-s', darwinSegmentName, darwinSectionName, inputFile]
+    output = sp.check_output(otoolCmd)
+    lines = output.splitlines()
+    octets = []
+    for line in lines:
+        (_, octetline) = line.split('\t')
+        octets.extend(octetline.split())
+    octets = ''.join(octets)
+    contents = octets.decode('hex').splitlines()
+    if not contents:
+        logging.error('{0} contained no {1} section is empty'.format(inputFile, darwinSegmentName))
+    return contents
+
+#analagous procedure for linux (relying on objcopy)
+def extract_section_linux(inputFile):
+    (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, fPath)
+    content = getSectionContent(sectionSize, sectionOffset, fPath)
+    contents = content.split('\n')
+    if not contents:
+        logging.error('{0} contained no {1} section is empty'.format(inputFile, elfSectionName))
+    return contents
 
 
-def handleExecutable(inputFile, llvmLinker, outputFile=None):
-    (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
-    if sectionSize == 0:
-        logging.error('%s is empty' % elfSectionName)
+def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
+
+    fileNames = extractor(inputFile)
+
+    if not fileNames:
         return 1
 
-    content = getSectionContent(sectionSize, sectionOffset, inputFile)
-    fileNames = content.split('\n')
-
     if outputFile == None:
-      outputFile = inputFile + '.' + moduleExtension
-
-    logging.debug('Found the following file names from ELF header:\n' + pprint.pformat(fileNames))
+        outputFile = inputFile + '.' + moduleExtension
+        
     linkCmd = [ llvmLinker, '-o', outputFile ]
-
+    
     if verboseFlag:
         linkCmd.insert(1, '-v')
     
@@ -120,10 +144,17 @@ def handleExecutable(inputFile, llvmLinker, outputFile=None):
     logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
     return exitCode
 
-def handleArchive(inputFile, llvmArchiver, outputFile=None):
+
+
+
+def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchiver):
     inputFile = os.path.abspath(inputFile)
     originalDir = os.getcwd() # This will be the destination
 
+    arCmd.append(inputFile);
+    if verboseFlag:
+        arCmd.insert(1, '-v')
+    
     # Make temporary directory to extract objects to
     tempDir = ''
     bitCodeFiles = [ ]
@@ -133,37 +164,34 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
         os.chdir(tempDir)
 
         # Extract objects from archive
-        arC = ['ar','x', inputFile]
-        arP = Popen(arC)
+        arP = Popen(arCmd)
         arPE = arP.wait()
 
         if arPE != 0:
-            errorMsg = 'Failed to execute archiver with command {0}'.format(arC)
+            errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
             logging.error(errorMsg)
             raise Exception(errorMsg)
 
-        # Iterate over objects and examine their .llvm_bc header
+        # Iterate over objects and examine their bitcode inserts
         for (root, dirs, files) in os.walk(tempDir):
            logging.debug('Exploring "{0}"'.format(root))
            for f in files:
                fPath = os.path.join(root, f)
-               if FileType.getFileType(fPath) == FileType.ELF_OBJECT:
+               if FileType.getFileType(fPath) == fileType:
                    # Extract bitcode locations from object
-                   (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, fPath)
-                   content = getSectionContent(sectionSize, sectionOffset, fPath)
-                   fileNames = content.split('\n')
-                   for bcFile in fileNames:
+                   contents = extractor(fPath)
+
+                   for bcFile in contents:
                        if bcFile != '':
                            if not os.path.exists(bcFile):
-                               logging.warning('{0} ELF section in {1} lists bitcode library "{2}" but it could not be found'.format(
-                                               elfSectionName, f, bcFile))
+                               logging.warning('{0} lists bitcode library "{1}" but it could not be found'.format(f, bcFile))
                            else:
                                bitCodeFiles.append(bcFile)
                else:
-                   logging.warning('Ignoring file "{0}" in archive'.format(f))
+                   logging.info('Ignoring file "{0}" in archive'.format(f))
 
         logging.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
-                      pprint.pformat(bitCodeFiles)))
+            pprint.pformat(bitCodeFiles)))
 
     finally:
         # Delete the temporary folder
@@ -173,6 +201,10 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
     # Build bitcode archive
     os.chdir(originalDir)
 
+    return buildArchive(inputFile, outputFile, llvmArchiver, bitCodeFiles)
+
+def buildArchive(inputFile, outputFile, llvmArchiver, bitCodeFiles):
+    retCode=0
     # Pick output file path if outputFile not set
     if outputFile == None:
       if inputFile.endswith('.a'):
@@ -211,7 +243,6 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
           logging.error('Failed to execute:\n{0}'.format(pprint.pformat(larCmd)))
           break
 
-
     if retCode == 0:
         logging.info('Generated LLVM bitcode archive {0}'.format(outputFile))
     else:
@@ -219,7 +250,7 @@ def handleArchive(inputFile, llvmArchiver, outputFile=None):
 
     return retCode
 
-
+    
 
 def extract_bc_args(args):
     import argparse
@@ -258,7 +289,7 @@ def extract_bc_args(args):
     # Check file exists
     if not os.path.exists(inputFile):
         logging.error('File "{0}" does not exist.'.format(inputFile))
-        return (False)
+        return (False, inputFile, '', llvmLinker, llvmArchiver)
 
     # Check output destitionation if set
     outputFile = parsedArgs.output
@@ -268,7 +299,7 @@ def extract_bc_args(args):
       if not os.path.exists(os.path.dirname(outputFile)):
         logging.error('Output directory "{0}" does not exist.'.format(
                       os.path.dirname(outputFile)))
-        return (False)
+        return (False, inputFile, '', llvmLinker, llvmArchiver)
 
     return (True, inputFile, outputFile, llvmLinker, llvmArchiver)
     
@@ -282,9 +313,11 @@ def main(args):
 
     if ( sys.platform.startswith('freebsd') or
          sys.platform.startswith('linux') ):
+
         process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver)
 
     elif sys.platform.startswith('darwin'):
+
         process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver)
 
     else:
@@ -297,166 +330,40 @@ def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
+    extractor = extract_section_linux
+
     if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED:
         logging.info('Generating LLVM Bitcode module')
-        return handleExecutable(inputFile, llvmLinker, outputFile )
+        return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
     elif ft == FileType.ARCHIVE:
+        arCmd = ['ar','x']
+        fileType = FileType.ELF_OBJECT
         logging.info('Generating LLVM Bitcode archive')
-        return handleArchive(inputFile, llvmArchiver, outputFile )
+        return handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchiver)
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(inputFile,FileType.revMap[ft]))
         return 1
 
-from driver.utils import darwinSegmentName
-from driver.utils import darwinSectionName
-
-#iam: "xxd -r" would just refuse to play nice, so it got tossed.
-# if any one can get
-#    otool -X -s __LLVM __llvm_bc inputFile | xxd -r
-# to work this can be simplified.
-def extract_section(inputFile):
-    otoolCmd  = ['otool', '-X', '-s', darwinSegmentName, darwinSectionName, inputFile]
-    output = sp.check_output(otoolCmd)
-    lines = output.splitlines()
-    octets = []
-    for line in lines:
-        (_, octetline) = line.split('\t')
-        octets.extend(octetline.split())
-    octets = ''.join(octets)
-    contents = octets.decode('hex').splitlines()
-    return contents
-
- 
-def process_executable_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
-    if outputFile == None:
-        outputFile = inputFile + '.' + moduleExtension
-    fileNames = extract_section(inputFile)
-    linkCmd = [ llvmLinker, '-o', outputFile ]
-
-    if verboseFlag:
-        linkCmd.insert(1, '-v')
     
-    linkCmd.extend([x for x in fileNames if x != ''])
-    logging.info('Writing output to {0}'.format(outputFile))
-    linkProc = Popen(linkCmd)
-    exitCode = linkProc.wait()
-    logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
-    return exitCode
-
-def process_archive_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
-    #iam: shamelessly borrowed from the handleArchive routine above.
-    #iam: begging for some procedural abstraction. maybe once the dust settles.
-    inputFile = os.path.abspath(inputFile)
-    originalDir = os.getcwd() # This will be the destination
-
-    # Make temporary directory to extract objects to
-    tempDir = ''
-    bitCodeFiles = [ ]
-    retCode=0
-    try:
-        tempDir = tempfile.mkdtemp(suffix='wllvm')
-        os.chdir(tempDir)
-
-        # Extract objects from archive
-        arC = ['ar', '-x', inputFile]
-        if verboseFlag:
-            arC.insert(1, '-v')
-        
-        arP = Popen(arC)
-        arPE = arP.wait()
-
-        if arPE != 0:
-            errorMsg = 'Failed to execute archiver with command {0}'.format(arC)
-            logging.error(errorMsg)
-            raise Exception(errorMsg)
-
-        # Iterate over objects and examine their llvm segment and section
-        for (root, dirs, files) in os.walk(tempDir):
-           logging.info('Exploring "{0}"'.format(root))
-           for f in files:
-               fPath = os.path.join(root, f)
-               if FileType.getFileType(fPath) == FileType.MACH_OBJECT:
-                   logging.info('Processing file "{0}" in archive'.format(f))
-                   contents = extract_section(fPath)
-                   
-                   if contents:
-                       bitCodeFiles.extend(contents)
-               else:
-                   logging.info('Ignoring file "{0}" in archive'.format(f))
-        logging.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
-            pprint.pformat(bitCodeFiles)))
-
-    finally:
-        # Delete the temporary folder
-        logging.info('Deleting temporary folder "{0}"'.format(tempDir))
-        shutil.rmtree(tempDir)
-    # Build bitcode archive
-    os.chdir(originalDir)
-
-    # iam: from here on we are a pure copy of the same code in handleArchive above.
-    # Pick output file path if outputFile not set
-    if outputFile == None:
-      if inputFile.endswith('.a'):
-        # Strip off .a suffix
-        outputFile = inputFile[:-2]
-      else:
-        outputFile = inputFile
-      outputFile +='.' + bitCodeArchiveExtension
-
-    logging.info('Writing output to {0}'.format(outputFile))
-
-    # We do not want full paths in the archive so we need to chdir into each
-    # bitcode's folder. Handle this by calling llvm-ar once for all bitcode
-    # files in the same directory
-
-    # Map of directory names to list of bitcode files in that directory
-    dirToBCMap = {}
-    for bitCodeFile in bitCodeFiles:
-        dirName = os.path.dirname(bitCodeFile)
-        basename = os.path.basename(bitCodeFile)
-        if dirName in dirToBCMap:
-            dirToBCMap[dirName].append(basename)
-        else:
-            dirToBCMap[dirName] = [ basename ]
-
-    logging.debug('Built up directory to bitcode file list map:\n{0}'.format(
-                   pprint.pformat(dirToBCMap)))
-
-    for (dirname, bcList) in dirToBCMap.items():
-        logging.debug('Changing directory to "{0}"'.format(dirname))
-        os.chdir(dirname)
-        larCmd = [llvmArchiver, 'rs', outputFile ] + bcList
-        larProc = Popen(larCmd)
-        retCode = larProc.wait()
-        if retCode != 0:
-          logging.error('Failed to execute:\n{0}'.format(pprint.pformat(larCmd)))
-          break
-
-
-    if retCode == 0:
-        logging.info('Generated LLVM bitcode archive {0}'.format(outputFile))
-    else:
-        logging.error('Failed to generate LLVM bitcode archive')
-
-    return retCode
-
 
 def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
+    extractor = extract_section_darwin
+
     if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED:
         logging.info('Generating LLVM Bitcode module')
-        return process_executable_darwin(inputFile, outputFile, llvmLinker, llvmArchiver)
+        return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
     elif ft == FileType.ARCHIVE:
+        arCmd = ['ar','-x']
+        fileType = FileType.MACH_OBJECT
         logging.info('Generating LLVM Bitcode archive')
-        return process_archive_darwin(inputFile, outputFile, llvmLinker, llvmArchiver)
+        return handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchiver)
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(inputFile,FileType.revMap[ft]))
         return 1
 
-    #?
- 
 
     
 if __name__ == '__main__':
