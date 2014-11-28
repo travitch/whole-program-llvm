@@ -119,8 +119,8 @@ def extract_section_darwin(inputFile):
 
 #analagous procedure for linux (relying on objcopy)
 def extract_section_linux(inputFile):
-    (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, fPath)
-    content = getSectionContent(sectionSize, sectionOffset, fPath)
+    (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
+    content = getSectionContent(sectionSize, sectionOffset, inputFile)
     contents = content.split('\n')
     if not contents:
         logging.error('{0} contained no {1} section is empty'.format(inputFile, elfSectionName))
@@ -183,6 +183,7 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
            for f in files:
                fPath = os.path.join(root, f)
                if FileType.getFileType(fPath) == fileType:
+
                    # Extract bitcode locations from object
                    contents = extractor(fPath)
 
