@@ -3,14 +3,19 @@
 This tool can be used two ways.
 
 If the passed in file is a binary executable it
-will extract the .llvm_bc section from the provided ELF object and reassemble
-it into an actual bitcode file.  The ELF section contains absolute paths to all
+will extract the bitcode section from the provided ELF or MACH-O object and reassemble
+it into an actual bitcode file.  The ELF or MACH-Osection contains absolute paths to all
 of its constituent bitcode files.  This utility reads the section and links
 together all of the named bitcode files.
 
 If the passed in file is a static library it will extract the constituent
-ELF objects and read their .llvm_bc sections and create a LLVM Bitcode
+ELF or MACH-O objects and read their bitcode sections and create a LLVM Bitcode
 archive from the bitcode files.
+
+The above language is deliberately vague, since ELF contains a .llvm_bc section,
+whereas the MACH-O contains a segement called __LLVM that contains a section
+called __llvm_bc.
+
 
 """
 
