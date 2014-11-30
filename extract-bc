@@ -12,7 +12,7 @@ constituent ELF or MACH-O objects and read their bitcode sections and
 create a LLVM Bitcode archive from the bitcode files.
 
 The above language is deliberately vague, since ELF contains a
-.llvm_bc section, whereas the MACH-O contains a segement called __LLVM
+.llvm_bc section, whereas the MACH-O contains a segment called __LLVM
 that contains a section called __llvm_bc.
 
 """
@@ -96,7 +96,8 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return d.replace('\0', '')
 
-#use otool to insert the segment and section
+# os independent abstraction (darwin version)
+#use otool to extract the segment and section
 #iam: "xxd -r" would just refuse to play nice, so it got tossed.
 # if any one can get
 #    otool -X -s __LLVM __llvm_bc inputFile | xxd -r
@@ -122,7 +123,8 @@ def extract_section_darwin(inputFile):
         logging.error('{0} contained no {1} segment'.format(inputFile, darwinSegmentName))
     return contents
 
-#analagous procedure for linux (relying on objcopy)
+# os independent abstraction (*nix version)
+#analagous procedure for linux (relying on getSectionSizeAndOffset and getSectionContent)
 def extract_section_linux(inputFile):
     (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
     content = getSectionContent(sectionSize, sectionOffset, inputFile)
