@@ -189,9 +189,20 @@ class ArgumentListFilter(object):
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
             # darwin flags
             '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
-            # need to warn the darwin user that these flags will rain on their parade
-            # (otool is a bit single minded)
-            '-fvisibility=hidden' :  (0, ArgumentListFilter.darwinWarningCompilerUnaryCallback),
+            '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
+            '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
+
+            # bd: need to warn the darwin user that these flags will rain on their parade
+            # (the Darwin ld is a bit single minded)
+            #
+            # 1) compilation with -fvisibility=hidden causes trouble when we try to
+            #    attach bitcode filenames to an object file. The global symbols in object 
+            #    files get turned into local symbols when we invoke 'ld -r'
+            #
+            # 2) all stripping commands (e.g., -dead_strip) remove the __LLVM segment after
+            #    linking
+            #
+            '-fvisibility=hidden' :  (0, ArgumentListFilter.darwinWarningCompileUnaryCallback),
             '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
             
            }
