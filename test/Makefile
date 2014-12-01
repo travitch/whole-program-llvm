@@ -30,6 +30,9 @@ archive: objects
 dylib: objects
 	${CC} -dynamiclib foo.o bar.o baz.o -o libfoo.dylib
 
+deadstrip: objects
+	${CC} -dynamiclib -Wl,-dead_strip foo.o bar.o baz.o -o libfoo.dylib
+
 
 link_with_archive:: archive
 	$(CC) main.o libfoo.a -o main.arch

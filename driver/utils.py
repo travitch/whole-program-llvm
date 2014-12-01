@@ -189,8 +189,10 @@ class ArgumentListFilter(object):
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
             # darwin flags
             '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
-            # need to warn the darwin user that this one will rain on their parade
-            '-fvisibility=hidden' :  (0, ArgumentListFilter.darwinWarningCallback),
+            # need to warn the darwin user that these flags will rain on their parade
+            # (otool is a bit single minded)
+            '-fvisibility=hidden' :  (0, ArgumentListFilter.darwinWarningCompilerUnaryCallback),
+            '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
             
            }
 
@@ -320,12 +322,19 @@ class ArgumentListFilter(object):
     def compileUnaryCallback(self, flag):
         self.compileArgs.append(flag)
 
-    def darwinWarningCallback(self, flag):
+    def darwinWarningCompileUnaryCallback(self, flag):
         if sys.platform.startswith('darwin'):
             _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
             sys.exit(1)
         else:
             self.compileArgs.append(flag)
+
+    def darwinWarningLinkUnaryCallback(self, flag):
+        if sys.platform.startswith('darwin'):
+            _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
+            sys.exit(1)
+        else:
+            self.linkArgs.append(flag)
 
     def defaultBinaryCallback(self, flag, arg):
         _logger.warning('Ignoring compiler arg pair: "{0} {1}"'.format(flag, arg))
