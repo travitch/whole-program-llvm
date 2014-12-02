@@ -34,6 +34,11 @@ llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 # This is the ELF section name inserted into binaries
 elfSectionName='.llvm_bc'
 
+# These are the MACH_O segment and section name
+darwinSegmentName='__LLVM'
+darwinSectionName='__llvm_bc'
+
+
 # Internal logger
 _logger = logging.getLogger(__name__)
 
@@ -182,6 +187,24 @@ class ArgumentListFilter(object):
             '-static' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nostdlib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
+            # darwin flags
+            '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
+            '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
+
+            # bd: need to warn the darwin user that these flags will rain on their parade
+            # (the Darwin ld is a bit single minded)
+            #
+            # 1) compilation with -fvisibility=hidden causes trouble when we try to
+            #    attach bitcode filenames to an object file. The global symbols in object 
+            #    files get turned into local symbols when we invoke 'ld -r'
+            #
+            # 2) all stripping commands (e.g., -dead_strip) remove the __LLVM segment after
+            #    linking
+            #
+            '-fvisibility=hidden' :  (0, ArgumentListFilter.darwinWarningCompileUnaryCallback),
+            '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
+            
            }
 
         #
@@ -310,6 +333,20 @@ class ArgumentListFilter(object):
     def compileUnaryCallback(self, flag):
         self.compileArgs.append(flag)
 
+    def darwinWarningCompileUnaryCallback(self, flag):
+        if sys.platform.startswith('darwin'):
+            _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
+            sys.exit(1)
+        else:
+            self.compileArgs.append(flag)
+
+    def darwinWarningLinkUnaryCallback(self, flag):
+        if sys.platform.startswith('darwin'):
+            _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
+            sys.exit(1)
+        else:
+            self.linkArgs.append(flag)
+
     def defaultBinaryCallback(self, flag, arg):
         _logger.warning('Ignoring compiler arg pair: "{0} {1}"'.format(flag, arg))
 
@@ -395,19 +432,32 @@ class FileType(object):
       output = fileP.communicate()[0]
       output = output.decode()
       if 'ELF' in output and 'executable' in output:
-          return cls.EXECUTABLE
+          return cls.ELF_EXECUTABLE
+      if 'Mach-O' in output and 'executable' in output:
+          return cls.MACH_EXECUTABLE
       elif 'ELF' in output and 'shared' in output:
-          return cls.SHARED
+          return cls.ELF_SHARED
+      elif 'Mach-O' in output and 'dynamically linked shared' in output:
+          return cls.MACH_SHARED
       elif 'current ar archive' in output:
           return cls.ARCHIVE
       elif 'ELF' in output and 'relocatable' in output:
-          return cls.OBJECT
+          return cls.ELF_OBJECT
+      elif 'Mach-O' in output and 'object' in output:
+          return cls.MACH_OBJECT
       else:
           return cls.UNKNOWN
 
   @classmethod
   def init(cls):
-      for (index, name) in enumerate(('UNKNOWN', 'EXECUTABLE', 'OBJECT', 'ARCHIVE', 'SHARED')):
+      for (index, name) in enumerate(('UNKNOWN',
+                                      'ELF_EXECUTABLE',
+                                      'ELF_OBJECT',
+                                      'ELF_SHARED',
+                                      'MACH_EXECUTABLE',
+                                      'MACH_OBJECT',
+                                      'MACH_SHARED',
+                                      'ARCHIVE')):
           setattr(cls, name, index)
           cls.revMap[index] = name
 
@@ -437,8 +487,12 @@ def attachBitcodePathToObject(bcPath, outFileName):
     os.fsync(f.fileno())
     f.close()
 
-    # Now write our .llvm_bc section
-    objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
+    
+    # Now write our bitcode section
+    if (sys.platform.startswith('darwin')):
+        objcopyCmd = ['ld', '-r', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName,  f.name, '-o', outFileName]
+    else:
+        objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
 
     try:
@@ -600,7 +654,7 @@ def buildAndAttachBitcode(builder):
         # "... -c -o foo.o" or even "... -c -o foo.So" which is OK, but we could also have
         # "... -c -o crazy-assed.objectfile" which we wouldn't get right (yet)
         # so we need to be careful with the objFile and bcFile
-        # maybe python-magic is in out future ...
+        # maybe python-magic is in our future ...
         srcFile = af.inputFiles[0]
         (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
         if af.outputFilename is not None:
