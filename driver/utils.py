@@ -118,6 +118,7 @@ class ArgumentListFilter(object):
             '-m3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
             '-mno-3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
 
+            
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -335,13 +336,6 @@ class ArgumentListFilter(object):
 
     def compileUnaryCallback(self, flag):
         self.compileArgs.append(flag)
-
-    def darwinWarningCompileUnaryCallback(self, flag):
-        if sys.platform.startswith('darwin'):
-            _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
-            sys.exit(1)
-        else:
-            self.compileArgs.append(flag)
 
     def darwinWarningLinkUnaryCallback(self, flag):
         if sys.platform.startswith('darwin'):
