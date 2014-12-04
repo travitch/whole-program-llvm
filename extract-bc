@@ -164,8 +164,6 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
     originalDir = os.getcwd() # This will be the destination
 
     arCmd.append(inputFile);
-    if verboseFlag:
-        arCmd.insert(1, '-v')
     
     # Make temporary directory to extract objects to
     tempDir = ''
@@ -344,7 +342,7 @@ def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
     extractor = extract_section_linux
-    arCmd     = ['ar','x']
+    arCmd   =  ['ar', 'xv'] if verboseFlag else ['ar', 'x']
     ofileType = FileType.ELF_OBJECT
 
     if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED:
@@ -364,7 +362,7 @@ def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
     extractor = extract_section_darwin
-    arCmd     = ['ar','-x']
+    arCmd   =  ['ar', '-x', '-v'] if verboseFlag else ['ar', '-x']
     ofileType = FileType.MACH_OBJECT
 
     if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED:
