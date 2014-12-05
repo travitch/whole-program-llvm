@@ -144,10 +144,9 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
     if outputFile == None:
         outputFile = inputFile + '.' + moduleExtension
         
-    linkCmd = [ llvmLinker, '-o', outputFile ]
-    
-    if verboseFlag:
-        linkCmd.insert(1, '-v')
+    linkCmd = [ llvmLinker, '-v' ] if verboseFlag else [ llvmLinker ]
+
+    linkCmd.extend(['-o', outputFile ])
     
     linkCmd.extend([x for x in fileNames if x != ''])
     logging.info('Writing output to {0}'.format(outputFile))
