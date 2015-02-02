@@ -118,6 +118,7 @@ class ArgumentListFilter(object):
             '-m3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
             '-mno-3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
 
+            
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -192,7 +193,8 @@ class ArgumentListFilter(object):
             '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
             '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
 
-            # bd: need to warn the darwin user that these flags will rain on their parade
+            #
+            # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
             #
             # 1) compilation with -fvisibility=hidden causes trouble when we try to
@@ -202,7 +204,9 @@ class ArgumentListFilter(object):
             # 2) all stripping commands (e.g., -dead_strip) remove the __LLVM segment after
             #    linking
             #
-            '-fvisibility=hidden' :  (0, ArgumentListFilter.darwinWarningCompileUnaryCallback),
+            # Update: found a fix for problem 1: add flag -keep_private_externs when
+            # calling ld -r.
+            #
             '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
             
            }
@@ -332,13 +336,6 @@ class ArgumentListFilter(object):
 
     def compileUnaryCallback(self, flag):
         self.compileArgs.append(flag)
-
-    def darwinWarningCompileUnaryCallback(self, flag):
-        if sys.platform.startswith('darwin'):
-            _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
-            sys.exit(1)
-        else:
-            self.compileArgs.append(flag)
 
     def darwinWarningLinkUnaryCallback(self, flag):
         if sys.platform.startswith('darwin'):
@@ -490,7 +487,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     
     # Now write our bitcode section
     if (sys.platform.startswith('darwin')):
-        objcopyCmd = ['ld', '-r', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName,  f.name, '-o', outFileName]
+        objcopyCmd = ['ld', '-r', '-keep_private_externs', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName,  f.name, '-o', outFileName]
     else:
         objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
@@ -683,8 +680,8 @@ def linkFiles(builder, objectFiles):
     af = builder.getBitcodeArglistFilter()
     outputFile = af.getOutputFilename()
     cc = builder.getCompiler()
-    cc.extend(af.objectFiles)
     cc.extend(objectFiles)
+    cc.extend(af.objectFiles)
     cc.extend(af.linkArgs)
     cc.extend(['-o', outputFile])
     proc = Popen(cc)
