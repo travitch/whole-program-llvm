@@ -8,6 +8,7 @@
 # library or executable.
 
 import sys
+import os
 from driver.utils import *
 import driver.logconfig
 
@@ -16,4 +17,5 @@ cmd = cmd[1:]
 
 builder = getBuilder(cmd, True)
 buildObject(builder)
-buildAndAttachBitcode(builder)
+if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+    buildAndAttachBitcode(builder)

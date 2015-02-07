@@ -54,6 +54,11 @@ In addition to the above environment variables the following can be optionally u
    variable.
    Example `LLVM_COMPILER_PATH=/home/user/llvm_and_clang/Debug+Asserts/bin`.
 
+*  `WLLVM_CONFIGURE_ONLY` can be set to anything, when set `wllvm` and `wllvm++`
+   will not carry out the second phase that involves the production of bitcode.
+   This may prevent configuration errors being cause by the unexpected production
+   of the hidden bitcode files.
+
 Example building bitcode module
 ===============================
 
@@ -87,6 +92,15 @@ Example building an Operating System
 
 To see how to build freeBSD 10.0 from scratch check out the guide 
 [here.](../master/README-freeBSD.md)
+
+
+Example configuring without building bitcode
+================================
+
+
+    WLLVM_CONFIGURE_ONLY=1 CC=wllvm ./configure
+    CC=wllvm make
+    
 
 Debugging
 =========
