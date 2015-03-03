@@ -10,12 +10,11 @@
 # (which was created in the first compilation phase by the real
 # compiler).  We'll link this together at a later stage.
 
-import os
-import sys
-from utils import *
+from __future__ import absolute_import
+
+from .utils import *
 from subprocess import *
-from popenwrapper import Popen
-import logconfig
+from .popenwrapper import Popen
 
 
 class BCFilter(ArgumentListFilter):

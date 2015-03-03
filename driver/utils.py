@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from subprocess import *
 import collections
 import pprint
@@ -7,26 +10,13 @@ import os
 import re
 import sys
 import tempfile
+from .popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
 
-# This is a bit hacky.
-# We cannot do
-# from .popenwrapper import Popen
-# OR
-# from driver.popenwrapper import Popen
-# because then 'as' will not succesfully import us (wllvm/wllvm++ can
-# successfully import however).
-#
-# Using
-# from popenwrapper import Popen
-# will allow 'as' to import us but then wllvm/wllvm++ will not be able to.
-#
-# The work around is to put this directory in the search path for modules.
-sys.path.insert(0,driverDir)
-from popenwrapper import Popen
+
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
 llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
@@ -391,15 +381,15 @@ class ArgumentListFilter(object):
 
     #iam: for printing our partitioning of the args
     def dump(self):
-        print "compileArgs: ", self.compileArgs
-        print "inputFiles: ", self.inputFiles
-        print "linkArgs: ", self.linkArgs
-        print "objectFiles: ", self.objectFiles
-        print "outputFilename: ", self.outputFilename
+        print("compileArgs: ", self.compileArgs)
+        print("inputFiles: ", self.inputFiles)
+        print("linkArgs: ", self.linkArgs)
+        print("objectFiles: ", self.objectFiles)
+        print("outputFilename: ", self.outputFilename)
         for srcFile in self.inputFiles:
-            print "srcFile: ", srcFile
+            print("srcFile: ", srcFile)
             (objFile, bcFile) = self.getArtifactNames(srcFile)
-            print "{0} ===> ({1}, {2})".format(srcFile, objFile, bcFile)
+            print("{0} ===> ({1}, {2})".format(srcFile, objFile, bcFile))
 
 
 
