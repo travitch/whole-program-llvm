@@ -67,7 +67,7 @@ to your shell startup (in '~/.profile' for bash):
 
     export LLVM_HOME=/usr/local/llvm-3.3
 
-Get LLVM and Clang version 3.5:
+Get LLVM and Clang version 3.3:
 
     svn co http://llvm.org/svn/llvm-project/llvm/branches/release_33 llvm
     cd llvm/tools
