@@ -214,7 +214,7 @@ class ArgumentListFilter(object):
             r'^.+\.(c|cc|cpp|C|cxx|i|s|S)$' : (0, ArgumentListFilter.inputFileCallback),
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
-            r'^.+\.(o|so|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
+            r'^.+\.(o|So|so|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
             r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
