@@ -2,12 +2,11 @@ language: python
 python:
   - "3.3"
   - "2.7"
-  - "2.6"
 
 # command to install dependencies
 install:
   - sudo apt-get update
-  - sudo apt-get install llvm-3.4
+  - sudo apt-get install llvm-3.4 clang-3.4 libapr1-dev libaprutil1-dev
   - export WLLVM_HOME=`pwd`
 
 # command to run tests
