@@ -10,7 +10,7 @@ export WLLVM_OUTPUT=WARNING
 wget http://apache.mirrors.pair.com//httpd/httpd-2.4.12.tar.gz
 tar xfz httpd-2.4.12.tar.gz
 cd httpd-2.4.12
-CC=wwlvm ./configure
+CC=wllvm ./configure
 make
 extract-bc httpd
 
