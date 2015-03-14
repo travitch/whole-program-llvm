@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.3"
+  - "2.7"
+  - "2.6"
+
+# command to install dependencies
+install:
+  - sudo apt-get update
+  - sudo apt-get install llvm-3.4
+  - export WLLVM_HOME=`pwd`
+
+# command to run tests
+script:
+  - ${WLLVM_HOME}/.travis/apache.sh
+
