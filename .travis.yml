@@ -2,6 +2,7 @@ language: python
 python:
   - "3.3"
   - "2.7"
+  - "2.6"
 
 # command to install dependencies
 install:
@@ -11,5 +12,6 @@ install:
 
 # command to run tests
 script:
+  # build apache (i.e. httpd-2.4.12) 
   - ${WLLVM_HOME}/.travis/apache.sh
 
