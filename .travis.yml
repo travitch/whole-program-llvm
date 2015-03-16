@@ -8,10 +8,15 @@ python:
 install:
   - sudo apt-get update
   - sudo apt-get install llvm-3.4 clang-3.4 libapr1-dev libaprutil1-dev
+  - sudo apt-get install dragonegg-4.8 llvm-3.3 llvm-gcc-4.8
+  - sudo ln -s /usr/bin/llvm-gcc-4.8 /usr/bin/llvm-gcc
   - export WLLVM_HOME=`pwd`
 
 # command to run tests
 script:
-  # build apache (i.e. httpd-2.4.12) 
-  - ${WLLVM_HOME}/.travis/apache.sh
+  # build apache with clang (i.e. httpd-2.4.12) 
+  - ${WLLVM_HOME}/.travis/apache_clang.sh
+  # when it works we can uncomment this puppy out
+  # - ${WLLVM_HOME}/.travis/apache_dragonegg.sh
+  
 
