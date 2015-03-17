@@ -3,10 +3,10 @@
 set -e
 
 
-export PATH=/usr/lib/llvm-3.3/bin:${WLLVM_HOME}:${PATH}
+export PATH=/usr/lib/llvm-3.0/bin:${WLLVM_HOME}:${PATH}
 export LLVM_COMPILER=dragonegg
 export LLVM_GCC_PREFIX=llvm-
-export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.8/plugin/dragonegg.so
+export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.6/plugin/dragonegg.so
 
 export WLLVM_OUTPUT=WARNING
 
