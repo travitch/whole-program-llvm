@@ -583,7 +583,6 @@ class DragoneggBuilder(BuilderBase):
         else:
             return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
 
-
     def getBitcodeArglistFilter(self):
         return ArgumentListFilter(self.cmd)
 
