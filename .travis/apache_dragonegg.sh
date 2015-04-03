@@ -2,6 +2,7 @@
 # Make sure we exit if there is a failure
 set -e
 
+export dragonegg_disable_version_check=true
 
 export PATH=/usr/lib/llvm-3.0/bin:${WLLVM_HOME}:${PATH}
 export LLVM_COMPILER=dragonegg

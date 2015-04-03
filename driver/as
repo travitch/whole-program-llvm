@@ -53,17 +53,14 @@ except AttributeError as e:
     logging.error('Output file argument not found.\nException message: ' + str(e))
     sys.exit(1)
 
-bcfilename = '.{0}.bc'.format(filename)
-bcPath = os.path.join(dirs, bcfilename)
-fakeAssembler = [llvmAssembler, infile, '-o', bcPath]
+fakeAssembler = [llvmAssembler, infile, '-o', argFilter.outFileName]
+
 asmProc = Popen(fakeAssembler)
 realRet = asmProc.wait()
 
 if realRet != 0:
     logging.error('llvm-as failed')
     sys.exit(realRet)
-
-attachBitcodePathToObject(bcPath, argFilter.outFileName)
 
 sys.exit(realRet)
 

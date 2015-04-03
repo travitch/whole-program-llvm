@@ -184,6 +184,9 @@ class ArgumentListFilter(object):
             '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
             '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
 
+            # dragonegg mystery argument
+            '--64' : (0, ArgumentListFilter.compileUnaryCallback),
+
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
@@ -455,6 +458,8 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
+    if DEBUG:
+        print('attachBitcodePathToObject: {0}  ===> {1} [ext = {2}]\n'.format(bcPath, outFileName, ext))
     #iam: this also looks very dodgey; we need a more reliable way to do this:
     if ext not in ('.o', '.lo', '.os', '.So', '.po'):
         _logger.warning('Cannot attach bitcode path to "{0} of type {1}"'.format(outFileName, FileType.getFileType(outFileName)))
@@ -520,6 +525,12 @@ class BuilderBase(object):
         else:
           self.prefixPath = ''
 
+    #clang and drogonegg share the same taste in bitcode filenames.
+    def getBitcodeFileName(self, argFilter):
+        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
+        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        return bcfilename
+
 class ClangBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
@@ -536,11 +547,6 @@ class ClangBuilder(BuilderBase):
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
-
-    def getBitcodeFileName(self, argFilter):
-        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
-        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        return bcfilename
 
     def extraBitcodeArgs(self, argFilter):
         bcPath = self.getBitcodeFileName(argFilter)
@@ -562,8 +568,10 @@ class DragoneggBuilder(BuilderBase):
         # We use '-B' to tell gcc where to look for an assembler.
         # When we build LLVM bitcode we do not want to use the GNU assembler,
         # instead we want gcc to use our own assembler (see driver/as).
-        return cc + ['-B', driverDir, '-fplugin={0}'.format(pth),
-                     '-fplugin-arg-dragonegg-emit-ir']
+        cmd = cc + ['-B', driverDir, '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
+        if DEBUG:
+            print(cmd)
+        return cmd
 
     def getCompiler(self):
         pfx = ''
@@ -574,6 +582,7 @@ class DragoneggBuilder(BuilderBase):
             return ['{0}{1}g++'.format(self.prefixPath, pfx)]
         else:
             return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
+
 
     def getBitcodeArglistFilter(self):
         return ArgumentListFilter(self.cmd)
@@ -687,6 +696,8 @@ def buildBitcodeFile(builder, srcFile, bcFile):
     bcc.extend(af.compileArgs)
     bcc.extend(['-c', srcFile])
     bcc.extend(['-o', bcFile])
+    if DEBUG:
+        print('buildBitcodeFile: {0}\n'.format(bcc))
     proc = Popen(bcc)
     rc = proc.wait()
     if rc != 0:
@@ -699,6 +710,8 @@ def buildObjectFile(builder, srcFile, objFile):
     cc.extend(af.compileArgs)
     cc.append(srcFile)
     cc.extend(['-c', '-o',  objFile])
+    if DEBUG:
+        print('buildObjectFile: {0}\n'.format(cc))
     proc = Popen(cc)
     rc = proc.wait()
     if rc != 0:
