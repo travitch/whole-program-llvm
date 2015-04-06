@@ -1,5 +1,7 @@
 
-[![Build Status](https://travis-ci.org/travitch/whole-program-llvm.svg?branch=master)](https://travis-ci.org/travitch/whole-program-llvm)
+[![Travitch's Build Status](https://travis-ci.org/SRI-CSL/whole-program-llvm.svg?branch=master)](https://travis-ci.org/SRI-CSL/whole-program-llvm)
+
+[![SRI's Build Status](https://travis-ci.org/travitch/whole-program-llvm.svg?branch=master)](https://travis-ci.org/travitch/whole-program-llvm)
 
 
 Introduction
