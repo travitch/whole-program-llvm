@@ -72,7 +72,7 @@ In addition to the above environment variables the following can be optionally u
    This may prevent configuration errors being cause by the unexpected production
    of the hidden bitcode files.
 
-Example building bitcode module with clang
+Building a bitcode module with clang
 ===============================
 
     export LLVM_COMPILER=clang
@@ -85,7 +85,7 @@ Example building bitcode module with clang
     # Produces pkg-config.bc
     extract-bc pkg-config
 
-Example building bitcode module with dragonegg
+Building a bitcode module with dragonegg
 ===============================
 
     export LLVM_COMPILER=dragonegg
@@ -101,7 +101,7 @@ Example building bitcode module with dragonegg
     extract-bc pkg-config
 
 
-Example building bitcode archive
+Building bitcode archive
 ================================
 
     export LLVM_COMPILER=clang
