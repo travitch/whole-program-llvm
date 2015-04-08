@@ -5,49 +5,42 @@
 Introduction
 ============
 
-This project, WLLVM,  provides tools for building whole-program (or
+This project, WLLVM, provides tools for building whole-program (or
 whole-library) LLVM bitcode files from an unmodified `C` or `C++`
 source package. It currently runs on `*nix` platforms such as Linux,
 FreeBSD, and Mac OS X.
 
-WLLVM provides python-based compiler wrappers that first
-invoke the compiler as normal to build a real object file.  The wrapper then
-invokes a bitcode compiler to generate the corresponding bitcode, and
-records the location of the bitcode file in a dedicated section of the actual
-object file.
-When object files are linked together, the contents of the dedicated 
-sections are concatenated (so we don't lose the locations of any
-of the constituent bitcode files). After the build process is finished,
-an WLLVM utility reads the
-contents of the dedicated section and links all of the bitcode into a single
-whole-program bitcode file. This utility can also be used when building
-native libraries to generate corresponding LLVM bitcode archives.
+WLLVM provides python-based compiler wrappers that work in two
+steps. The wrappers first invoke the compiler as normal. Then, for
+each object file, they call a bitcode compiler to produce LLVM
+bitcode. The wrappers also store the location of the generated bitcode
+file in a dedicated section of the object file.  When object files are
+linked together, the contents of the dedicated sections are
+concatenated (so we don't lose the locations of any of the constituent
+bitcode files). After the build completes, one can use an WLLVM
+utility to read the contents of the dedicated section and link all of
+the bitcode into a single whole-program bitcode file. This utility
+works for both executable and native libraries.
 
 Currently, WLLVM works with either `clang` or the `gcc` dragonegg plugin.
 
-
-
-
-
-This two-phase build process is slower and more elaborate than normal,
-but in practice is necessary to be a drop-in replacement for gcc in
-any build system.  Approaches using the LTO framework in gcc and the
-gold linker plugin work for many cases, but fail in the presence of
-static libraries in builds.  This approach has the distinct advantage
-of generating working binaries, in case some part of a build process
-actually requires that.
+This two-phase build process is necessary to be a drop-in replacement
+for gcc or g++ in any build system.  Using the LTO framework in gcc
+and the gold linker plugin works in many cases, but fails in the
+presence of static libraries in builds.  WLLVM's approach has the
+distinct advantage of generating working binaries, in case some part
+of a build process requires that.
 
 
 Usage
 =====
 
-The project provides a two wrappers, `wllvm`, for `CC` and `wllvm++`, for `CXX`
-and an auxillary tool `extract-bc`.
-
+WLLVM includes two python executables: `wllvm` for compiling C code
+and `wllvm++` for C++, and an auxiliary tool `extract-bc`.
 
 Three environment variables must be set to use these wrappers:
 
- * `LLVM_COMPILER` should be set to 'dragonegg' or 'clang'.
+ * `LLVM_COMPILER` should be set to either 'dragonegg' or 'clang'.
  * `LLVM_GCC_PREFIX` should be set to the prefix for the version of gcc that should
    be used with dragonegg.  This can be empty if there is no prefix.  This variable is
    not used if `$LLVM_COMPILER == clang`.
@@ -73,7 +66,7 @@ In addition to the above environment variables the following can be optionally u
    of the hidden bitcode files.
 
 Building a bitcode module with clang
-===============================
+====================================
 
     export LLVM_COMPILER=clang
 
@@ -86,7 +79,7 @@ Building a bitcode module with clang
     extract-bc pkg-config
 
 Building a bitcode module with dragonegg
-===============================
+========================================
 
     export LLVM_COMPILER=dragonegg
     export LLVM_GCC_PREFIX=llvm-
@@ -102,7 +95,7 @@ Building a bitcode module with dragonegg
 
 
 Building bitcode archive
-================================
+========================
 
     export LLVM_COMPILER=clang
     tar -xvf bullet-2.81-rev2613.tgz
@@ -114,11 +107,12 @@ Building bitcode archive
     # Produces src/LinearMath/libLinearMath.bca
     extract-bc src/LinearMath/libLinearMath.a
 
-Building an Operating System
-================================
 
-To see how to build freeBSD 10.0 from scratch check out the guide 
-[here.](../master/README-freeBSD.md)
+Building an Operating System
+============================
+
+To see how to build freeBSD 10.0 from scratch check out this 
+[guide.](../master/README-freeBSD.md)
 
 
 Configuring without building bitcode
@@ -127,7 +121,7 @@ Configuring without building bitcode
 
     WLLVM_CONFIGURE_ONLY=1 CC=wllvm ./configure
     CC=wllvm make
-    
+
 
 Debugging
 =========
