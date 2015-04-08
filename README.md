@@ -62,7 +62,7 @@ In addition to the above environment variables the following can be optionally u
 
 * `WLLVM_CONFIGURE_ONLY` can be set to anything. If it is set, `wllvm`
    and `wllvm++` behave like a normal C or C++ compiler. They do not
-   the produce bitcode.  Setting 'WLLVM_CONFIGURE_ONLY' may prevent
+   the produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
    configuration errors caused by the unexpected production of hidden
    bitcode files.
 
