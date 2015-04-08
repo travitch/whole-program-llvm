@@ -5,21 +5,29 @@
 Introduction
 ============
 
-This is a small python-based wrapper around a GCC-compatible compiler
-to make it easy to build whole-program (or whole-library) LLVM bitcode
-files.  The idea is that it first invokes the compiler as normal to
-build a real object file.  It then invokes a bitcode compiler to
-generate the corresponding bitcode, recording the location of the
-bitcode file in an ELF section of the actual object file.
+This project, WLLVM,  provides tools for building whole-program (or
+whole-library) LLVM bitcode files from an unmodified `C` or `C++`
+source package. It currently runs on `*nix` platforms such as Linux,
+FreeBSD, and Mac OS X.
 
-When object files are linked together, the contents of non-special ELF
-sections are just concatenated (so we don't lose the locations of any
-of the constituent bitcode files).
+WLLVM provides python-based compiler wrappers that first
+invoke the compiler as normal to build a real object file.  The wrapper then
+invokes a bitcode compiler to generate the corresponding bitcode, and
+records the location of the bitcode file in a dedicated section of the actual
+object file.
+When object files are linked together, the contents of the dedicated 
+sections are concatenated (so we don't lose the locations of any
+of the constituent bitcode files). After the build process is finished,
+an WLLVM utility reads the
+contents of the dedicated section and links all of the bitcode into a single
+whole-program bitcode file. This utility can also be used when building
+native libraries to generate corresponding LLVM bitcode archives.
 
-This package contains an extra utility, extract-bc, to read the
-contents of this ELF section and link all of the bitcode into a single
-whole-program bitcode file. This utility can also be used on built
-native static libraries to generate LLVM bitcode archives.
+Currently, WLLVM works with either `clang` or the `gcc` dragonegg plugin.
+
+
+
+
 
 This two-phase build process is slower and more elaborate than normal,
 but in practice is necessary to be a drop-in replacement for gcc in
@@ -29,14 +37,15 @@ static libraries in builds.  This approach has the distinct advantage
 of generating working binaries, in case some part of a build process
 actually requires that.
 
-Currently, this package only works using clang or the dragonegg plugin
-with gcc 4.5 (with the required patch for dragonegg).
 
 Usage
 =====
 
-There are three environment variables that must be set to use this
-wrapper script:
+The project provides a two wrappers, `wllvm`, for `CC` and `wllvm++`, for `CXX`
+and an auxillary tool `extract-bc`.
+
+
+Three environment variables must be set to use these wrappers:
 
  * `LLVM_COMPILER` should be set to 'dragonegg' or 'clang'.
  * `LLVM_GCC_PREFIX` should be set to the prefix for the version of gcc that should
@@ -45,7 +54,7 @@ wrapper script:
  * `LLVM_DRAGONEGG_PLUGIN` should be the full path to the dragonegg plugin.  This
    variable is not used if `$LLVM_COMPILER == clang`.
 
-Once the environment is set up, just use wllvm and wllvm++ as your C
+Once the environment is set up, just use `wllvm` and `wllvm++` as your C
 and C++ compilers, respectively.
 
 In addition to the above environment variables the following can be optionally used:
@@ -63,7 +72,20 @@ In addition to the above environment variables the following can be optionally u
    This may prevent configuration errors being cause by the unexpected production
    of the hidden bitcode files.
 
-Example building bitcode module
+Example building bitcode module with clang
+===============================
+
+    export LLVM_COMPILER=clang
+
+    tar xf pkg-config-0.26.tar.gz
+    cd pkg-config-0.26
+    CC=wllvm ./configure
+    make
+
+    # Produces pkg-config.bc
+    extract-bc pkg-config
+
+Example building bitcode module with dragonegg
 ===============================
 
     export LLVM_COMPILER=dragonegg
@@ -77,6 +99,7 @@ Example building bitcode module
 
     # Produces pkg-config.bc
     extract-bc pkg-config
+
 
 Example building bitcode archive
 ================================
