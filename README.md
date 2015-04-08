@@ -60,10 +60,12 @@ In addition to the above environment variables the following can be optionally u
    variable.
    Example `LLVM_COMPILER_PATH=/home/user/llvm_and_clang/Debug+Asserts/bin`.
 
-*  `WLLVM_CONFIGURE_ONLY` can be set to anything, when set `wllvm` and `wllvm++`
-   will not carry out the second phase that involves the production of bitcode.
-   This may prevent configuration errors being cause by the unexpected production
-   of the hidden bitcode files.
+* `WLLVM_CONFIGURE_ONLY` can be set to anything. If it is set, `wllvm`
+   and `wllvm++` behave like a normal C or C++ compiler. They do not
+   the produce bitcode.  Setting 'WLLVM_CONFIGURE_ONLY' may prevent
+   configuration errors caused by the unexpected production of hidden
+   bitcode files.
+
 
 Building a bitcode module with clang
 ====================================
