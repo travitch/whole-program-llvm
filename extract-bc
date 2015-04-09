@@ -293,6 +293,7 @@ def extract_bc_args(args):
     parsedArgs = parser.parse_args()
 
     inputFile  = parsedArgs.wllvm_binary
+    llvmArchiver = parsedArgs.archiver
     llvmLinker = parsedArgs.linker
     verboseFlag = parsedArgs.verbose
     
