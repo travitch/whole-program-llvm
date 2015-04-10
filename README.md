@@ -6,7 +6,7 @@ Introduction
 ============
 
 This project, WLLVM, provides tools for building whole-program (or
-whole-library) LLVM bitcode files from an unmodified `C` or `C++`
+whole-library) LLVM bitcode files from an unmodified C or C++
 source package. It currently runs on `*nix` platforms such as Linux,
 FreeBSD, and Mac OS X.
 
@@ -22,7 +22,7 @@ utility to read the contents of the dedicated section and link all of
 the bitcode into a single whole-program bitcode file. This utility
 works for both executable and native libraries.
 
-Currently, WLLVM works with either `clang` or the `gcc` dragonegg plugin.
+Currently, WLLVM works with either clang or the gcc dragonegg plugin.
 
 This two-phase build process is necessary to be a drop-in replacement
 for gcc or g++ in any build system.  Using the LTO framework in gcc
