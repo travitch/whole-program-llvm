@@ -32,8 +32,8 @@ darwinSectionName='__llvm_bc'
 # Internal logger
 _logger = logging.getLogger(__name__)
 
-# Flag for debugging
-DEBUG = False
+# Flag for dumping
+DUMPING = False
 
 
 # This class applies filters to GCC argument lists.  It has a few
@@ -179,10 +179,14 @@ class ArgumentListFilter(object):
             '-static' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nostdlib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-rdynamic' : (0, ArgumentListFilter.linkUnaryCallback),
             # darwin flags
             '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
             '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
+
+            # dragonegg mystery argument
+            '--64' : (0, ArgumentListFilter.compileUnaryCallback),
 
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
@@ -278,7 +282,7 @@ class ArgumentListFilter(object):
                     _logger.warning('Did not recognize the compiler flag "{0}"'.format(currentItem))
                     self.compileUnaryCallback(currentItem)
 
-        if DEBUG:
+        if DUMPING:
             self.dump()
 
     def _shiftArgs(self, nargs):
@@ -296,7 +300,7 @@ class ArgumentListFilter(object):
     def inputFileCallback(self, infile):
         _logger.debug('Input file: ' + infile)
         self.inputFiles.append(infile)
-        if re.search('\\.(s|S)', infile):
+        if re.search('\\.(s|S)$', infile):
             self.isAssembly = True
 
     def outputFileCallback(self, flag, filename):
@@ -364,7 +368,7 @@ class ArgumentListFilter(object):
 
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
     # the hidden flag determines whether the objectFile is hidden like the
-    # bitcodeFile is (starts with a '.'), use the DEBUG flag to get a sense
+    # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
     # of what is being written out.
     def getArtifactNames(self, srcFile, hidden=False):
         (srcpath, srcbase) = os.path.split(srcFile)
@@ -381,15 +385,15 @@ class ArgumentListFilter(object):
 
     #iam: for printing our partitioning of the args
     def dump(self):
-        print("compileArgs: ", self.compileArgs)
-        print("inputFiles: ", self.inputFiles)
-        print("linkArgs: ", self.linkArgs)
-        print("objectFiles: ", self.objectFiles)
-        print("outputFilename: ", self.outputFilename)
+        _logger.debug('compileArgs: {0}'.format(self.compileArgs))
+        _logger.debug('inputFiles: {0}'.format(self.inputFiles))
+        _logger.debug('linkArgs: {0}'.format(self.linkArgs))
+        _logger.debug('objectFiles: {0}'.format(self.objectFiles))
+        _logger.debug('outputFilename: {0}'.format(self.outputFilename))
         for srcFile in self.inputFiles:
-            print("srcFile: ", srcFile)
+            _logger.debug('srcFile: {0}'.format(srcFile))
             (objFile, bcFile) = self.getArtifactNames(srcFile)
-            print("{0} ===> ({1}, {2})".format(srcFile, objFile, bcFile))
+            _logger.debug('{0} ===> ({1}, {2})'.format(srcFile, objFile, bcFile))
 
 
 
@@ -455,6 +459,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
+    _logger.debug('attachBitcodePathToObject: {0}  ===> {1} [ext = {2}]\n'.format(bcPath, outFileName, ext))
     #iam: this also looks very dodgey; we need a more reliable way to do this:
     if ext not in ('.o', '.lo', '.os', '.So', '.po'):
         _logger.warning('Cannot attach bitcode path to "{0} of type {1}"'.format(outFileName, FileType.getFileType(outFileName)))
@@ -520,6 +525,12 @@ class BuilderBase(object):
         else:
           self.prefixPath = ''
 
+    #clang and drogonegg share the same taste in bitcode filenames.
+    def getBitcodeFileName(self, argFilter):
+        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
+        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        return bcfilename
+
 class ClangBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
@@ -536,11 +547,6 @@ class ClangBuilder(BuilderBase):
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
-
-    def getBitcodeFileName(self, argFilter):
-        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
-        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        return bcfilename
 
     def extraBitcodeArgs(self, argFilter):
         bcPath = self.getBitcodeFileName(argFilter)
@@ -562,8 +568,9 @@ class DragoneggBuilder(BuilderBase):
         # We use '-B' to tell gcc where to look for an assembler.
         # When we build LLVM bitcode we do not want to use the GNU assembler,
         # instead we want gcc to use our own assembler (see driver/as).
-        return cc + ['-B', driverDir, '-fplugin={0}'.format(pth),
-                     '-fplugin-arg-dragonegg-emit-ir']
+        cmd = cc + ['-B', driverDir, '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
+        _logger.debug(cmd)
+        return cmd
 
     def getCompiler(self):
         pfx = ''
@@ -687,6 +694,7 @@ def buildBitcodeFile(builder, srcFile, bcFile):
     bcc.extend(af.compileArgs)
     bcc.extend(['-c', srcFile])
     bcc.extend(['-o', bcFile])
+    _logger.debug('buildBitcodeFile: {0}\n'.format(bcc))
     proc = Popen(bcc)
     rc = proc.wait()
     if rc != 0:
@@ -699,6 +707,7 @@ def buildObjectFile(builder, srcFile, objFile):
     cc.extend(af.compileArgs)
     cc.append(srcFile)
     cc.extend(['-c', '-o',  objFile])
+    _logger.debug('buildObjectFile: {0}\n'.format(cc))
     proc = Popen(cc)
     rc = proc.wait()
     if rc != 0:

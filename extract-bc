@@ -344,7 +344,7 @@ def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
     arCmd   =  ['ar', 'xv'] if verboseFlag else ['ar', 'x']
     ofileType = FileType.ELF_OBJECT
 
-    if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED:
+    if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED or ft == FileType.ELF_OBJECT:
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
     elif ft == FileType.ARCHIVE:
@@ -364,7 +364,7 @@ def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
     arCmd   =  ['ar', '-x', '-v'] if verboseFlag else ['ar', '-x']
     ofileType = FileType.MACH_OBJECT
 
-    if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED:
+    if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED or ft == FileType.MACH_OBJECT:
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
     elif ft == FileType.ARCHIVE:
