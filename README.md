@@ -22,8 +22,6 @@ utility to read the contents of the dedicated section and link all of
 the bitcode into a single whole-program bitcode file. This utility
 works for both executable and native libraries.
 
-Currently, WLLVM works with either clang or the gcc dragonegg plugin.
-
 This two-phase build process is necessary to be a drop-in replacement
 for gcc or g++ in any build system.  Using the LTO framework in gcc
 and the gold linker plugin works in many cases, but fails in the
@@ -31,6 +29,7 @@ presence of static libraries in builds.  WLLVM's approach has the
 distinct advantage of generating working binaries, in case some part
 of a build process requires that.
 
+WLLVM works with either clang or the gcc dragonegg plugin.
 
 Usage
 =====
@@ -62,7 +61,7 @@ In addition to the above environment variables the following can be optionally u
 
 * `WLLVM_CONFIGURE_ONLY` can be set to anything. If it is set, `wllvm`
    and `wllvm++` behave like a normal C or C++ compiler. They do not
-   the produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
+   produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
    configuration errors caused by the unexpected production of hidden
    bitcode files.
 
