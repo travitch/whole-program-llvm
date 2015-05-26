@@ -135,7 +135,7 @@ Building a bitcode archive then extracting the bitcode
     mkdir bitcode
     cp src/.libs/libjansson.a bitcode
     cd bitcode
-    extract-bc src/.libs/libjansson.a
+    extract-bc libjansson.a
     llvm-ar x libjansson.bca
     ls -la
    
