@@ -124,6 +124,23 @@ Configuring without building bitcode
     CC=wllvm make
 
 
+Building a bitcode archive then extracting the bitcode
+========================
+
+    export LLVM_COMPILER=clang
+    tar xvfz jansson-2.7.tar.gz
+    cd jansson-2.7
+    CC=wllvm ./configure
+    make
+    mkdir bitcode
+    cp src/.libs/libjansson.a bitcode
+    cd bitcode
+    extract-bc src/.libs/libjansson.a
+    llvm-ar x libjansson.bca
+    ls -la
+   
+    
+
 Debugging
 =========
 
