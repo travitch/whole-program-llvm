@@ -80,6 +80,6 @@ I am only going to build apache, not apr, so I first install the prerequisites.
 -rw-r--r-- 1 vagrant vagrant 829960 Jun  1  2015 httpd.bc
 ```
 
-The extra command line argument to extract-bc is because apt
-installs llvm-link as llvm-link-3.4 so we need to tell extract-bc
+The extra command line argument to `extract-bc` is because `apt`
+installs `llvm-link` as `llvm-link-3.4` so we need to tell `extract-bc`
 to use that one.
