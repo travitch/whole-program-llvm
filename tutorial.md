@@ -79,6 +79,8 @@ This last step is an ugly hack to get
 
 >CC=wllvm ./configure
 
+>make
+
 >extract-bc httpd
 
 >ls -la httpd.bc
