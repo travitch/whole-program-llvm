@@ -73,7 +73,13 @@ I am only going to build apache, not apr, so I first install the prerequisites.
 >CC=wllvm ./configure
 
 >make
+```
 
+## Step 5.
+
+Extract the bitcode.
+
+```
 >extract-bc -l llvm-link-3.4 httpd
 
 >ls -la httpd.bc
