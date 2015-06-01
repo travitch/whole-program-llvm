@@ -48,13 +48,6 @@ I am only going to build apache, not apr, so I first install the prerequisites.
 
 >sudo apt-get install llvm-3.4 clang-3.4 libapr1-dev libaprutil1-dev
 
->sudo ln -s /usr/bin/llvm-link-3.4 /usr/bin/llvm-link
-```
-This last step is an ugly hack to get
-
-```
->which llvm-link
-/usr/bin/llvm-link
 ```
 
 ## Step 3.
@@ -81,8 +74,12 @@ This last step is an ugly hack to get
 
 >make
 
->extract-bc httpd
+>extract-bc -l llvm-link-3.4 httpd
 
 >ls -la httpd.bc
 -rw-r--r-- 1 vagrant vagrant 829960 Jun  1  2015 httpd.bc
 ```
+
+The extra command line argument to extract-bc is because apt
+installs llvm-link as llvm-link-3.4 so we need to tell extract-bc
+to use that one.
