@@ -79,6 +79,9 @@ Building a bitcode module with clang
     # Produces pkg-config.bc
     extract-bc pkg-config
 
+A gentler set of instructions on building apache can be found
+[here.](../master/tutorial.md)
+
 Building a bitcode module with dragonegg
 ========================================
 
