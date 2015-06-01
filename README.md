@@ -80,7 +80,7 @@ Building a bitcode module with clang
     extract-bc pkg-config
 
 A gentler set of instructions on building apache can be found
-[here.](../master/tutorial.md)
+[here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/tutorial.md)
 
 Building a bitcode module with dragonegg
 ========================================
