@@ -189,7 +189,10 @@ class ArgumentListFilter(object):
             '--64' : (0, ArgumentListFilter.compileUnaryCallback),
 
             # binutils nonsense
-            '-print-prog-name=ld' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-multi-directory' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-multi-lib' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-libgcc-file-name' : (0, ArgumentListFilter.compileUnaryCallback),
+
 
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
@@ -230,6 +233,9 @@ class ArgumentListFilter(object):
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            
         }
 
         #iam: try and keep track of the files, input object, and output
