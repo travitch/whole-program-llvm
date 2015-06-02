@@ -188,6 +188,9 @@ class ArgumentListFilter(object):
             # dragonegg mystery argument
             '--64' : (0, ArgumentListFilter.compileUnaryCallback),
 
+            # binutils nonsense
+            '-print-prog-name=ld' : (0, ArgumentListFilter.compileUnaryCallback),
+
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
