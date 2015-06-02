@@ -4,7 +4,7 @@
 On a clean 14.04 machine I will build apache.
 
 ```
-> pwd
+>pwd
 
 /vagrant
 
@@ -56,6 +56,7 @@ I am only going to build apache, not apr, so I first install the prerequisites.
 
 ```
 >export LLVM_COMPILER=clang
+
 >export WLLVM_OUTPUT=WARNING
 ```
 
