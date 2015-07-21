@@ -543,16 +543,24 @@ class BuilderBase(object):
 class ClangBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
-
+        
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
         return cc + ['-emit-llvm']
 
     def getCompiler(self):
         if self.isCxx:
-            return ['{0}clang++'.format(self.prefixPath)]
+            cxx =  os.getenv('LLVM_CXX_NAME')
+            if cxx:
+                return ['{0}{1}'.format(self.prefixPath, cxx)]
+            else:
+                return ['{0}clang++'.format(self.prefixPath)]
         else:
-            return ['{0}clang'.format(self.prefixPath)]
+            cc =  os.getenv('LLVM_CC_NAME')
+            if cc:
+                return ['{0}{1}'.format(self.prefixPath, cc)]
+            else:
+                return ['{0}clang'.format(self.prefixPath)]
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
@@ -566,7 +574,6 @@ class ClangBuilder(BuilderBase):
         outFile = argFilter.getOutputFilename()
         attachBitcodePathToObject(bcname, outFile)
 
-#iam: this should join the dodo soon, yes?
 class DragoneggBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)
