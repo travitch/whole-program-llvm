@@ -54,7 +54,7 @@ In addition to the above environment variables the following can be optionally u
 
  * `LLVM_CC_NAME` can be set if your clang compiler is not called `clang` but
     something like `clang-3.7`. Similarly `LLVM_CXX_NAME` can be used to describe
-    what the C++ is called. Note that in these sorts of cases, the environment
+    what the C++ compiler is called. Note that in these sorts of cases, the environment
     variable `LLVM_COMPILER` should still be set to `clang` not `clang-3.7` etc.
 
  * `LLVM_COMPILER_PATH` can be set to the absolute path to the folder that
