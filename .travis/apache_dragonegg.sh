@@ -11,7 +11,7 @@ export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.6/plugin/dragonegg.
 
 export WLLVM_OUTPUT=WARNING
 
-wget http://apache.mirrors.pair.com//httpd/httpd-2.4.12.tar.gz
+wget http://www.csl.sri.com/~iam/httpd-2.4.12.tar.gz
 tar xfz httpd-2.4.12.tar.gz
 mv httpd-2.4.12 apache_dragonegg
 cd apache_dragonegg
