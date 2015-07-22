@@ -150,9 +150,19 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
     
     linkCmd.extend([x for x in fileNames if x != ''])
     logging.info('Writing output to {0}'.format(outputFile))
-    linkProc = Popen(linkCmd)
-    exitCode = linkProc.wait()
-    logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
+    try:
+        linkProc = Popen(linkCmd)
+    except OSError as e:
+        if e.errno == 2:
+            errorMsg = "Your llvm-link doesn't seem to be easy to find.\nEither install it or use the -l llvmLinker option."
+        else:
+            errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+        logging.error(errorMsg)
+        raise Exception(errorMsg)
+
+    else:
+        exitCode = linkProc.wait()
+        logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
     return exitCode
 
 
@@ -173,7 +183,16 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
         os.chdir(tempDir)
 
         # Extract objects from archive
-        arP = Popen(arCmd)
+        try:
+            arP = Popen(arCmd)
+        except OSError as e:
+            if e.errno == 2:
+                errorMsg = "Your llvm-ar doesn't seem to be easy to find.\nEither install it or use the -a llvmArchiver option."
+            else:
+                errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+            logging.error(errorMsg)
+            raise Exception(errorMsg)
+
         arPE = arP.wait()
 
         if arPE != 0:
@@ -294,6 +313,7 @@ def extract_bc_args(args):
 
     inputFile  = parsedArgs.wllvm_binary
     llvmLinker = parsedArgs.linker
+    llvmArchiver = parsedArgs.archiver
     verboseFlag = parsedArgs.verbose
     
     # Check file exists
