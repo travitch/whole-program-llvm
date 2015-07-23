@@ -166,6 +166,18 @@ For example
 
     export WLLVM_OUTPUT=DEBUG
 
+
+Sanity Checking
+=========
+
+Too many environment variables? Try doing a sanity check:
+
+```
+wllvm-sanity-checker
+```
+it might point out what is wrong.
+
+
 License
 =======
 
