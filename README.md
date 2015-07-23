@@ -39,7 +39,7 @@ and `wllvm++` for C++, and an auxiliary tool `extract-bc`.
 
 Three environment variables must be set to use these wrappers:
 
- * `LLVM_COMPILER` should be set to either 'dragonegg' or 'clang'.
+ * `LLVM_COMPILER` should be set to either `dragonegg` or `clang`.
  * `LLVM_GCC_PREFIX` should be set to the prefix for the version of gcc that should
    be used with dragonegg.  This can be empty if there is no prefix.  This variable is
    not used if `$LLVM_COMPILER == clang`.
