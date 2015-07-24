@@ -9,19 +9,8 @@ from sanity.checker import *
 
 def main(args):
 
-    checker = Checker()
+    return Checker().check()
 
-    if not checker.checkOS():
-        print 'I do not think we support your OS. Sorry.'
-        return 1
-
-    success = checker.checkCompiler()
-
-    if success:
-        checker.checkAuxiliaries()
-    
-    return 0 if success else 1
-    
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

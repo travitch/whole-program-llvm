@@ -21,6 +21,20 @@ class Checker(object):
 
         self.path = path if path else ''
 
+    def check(self):
+        if not self.checkOS():
+            print 'I do not think we support your OS. Sorry.'
+            return 1
+
+        success = self.checkCompiler()
+
+        if success:
+            self.checkAuxiliaries()
+    
+        return 0 if success else 1
+
+        
+
     def checkOS(self):
         return (sys.platform.startswith('freebsd') or
                 sys.platform.startswith('linux') or 
