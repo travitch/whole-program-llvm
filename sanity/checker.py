@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess as sp
 
@@ -19,7 +20,12 @@ class Checker(object):
             path = path + os.path.sep
 
         self.path = path if path else ''
-        
+
+    def checkOS(self):
+        return (sys.platform.startswith('freebsd') or
+                sys.platform.startswith('linux') or 
+                sys.platform.startswith('darwin'))
+    
             
     def checkSwitch(self):
         compiler_type = os.getenv('LLVM_COMPILER')

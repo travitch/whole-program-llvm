@@ -5,20 +5,15 @@
 #
 
 import sys
-import os
 from sanity.checker import *
 
 def main(args):
 
-    
-    if not (sys.platform.startswith('freebsd') or
-             sys.platform.startswith('linux') or 
-             sys.platform.startswith('darwin')):
-        print 'I do not think we support your OS. Sorry.'
-        return 1
-
     checker = Checker()
 
+    if not checker.checkOS():
+        print 'I do not think we support your OS. Sorry.'
+        return 1
 
     success = checker.checkCompiler()
 
