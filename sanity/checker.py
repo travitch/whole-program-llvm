@@ -3,13 +3,44 @@ import os
 import subprocess as sp
 
 explain_LLVM_COMPILER = """
+
 The environment variable 'LLVM_COMPILER' is a switch. It should either
 be set to 'clang' or 'dragonegg'. Anything else will cause an error.
+
 """
 
 explain_LLVM_DRAGONEGG_PLUGIN = """
-You need to set the environment variable LLVM_DRAGONEGG_PLUGIN to the full path
-to your dragonegg plugin. Thanks.
+
+You need to set the environment variable LLVM_DRAGONEGG_PLUGIN to the
+full path to your dragonegg plugin. Thanks.
+
+"""
+
+explain_LLVM_CC_NAME = """
+
+If your clang compiler is not called clang, but something else, then
+you will need to set the environment variable LLVM_CC_NAME to the
+appropriate string. For example if your clang is called clang-3.5 then
+LLVM_CC_NAME should be set to clang-3.5.
+
+"""
+
+explain_LLVM_CXX_NAME = """
+
+If your clang++ compiler is not called clang++, but something else,
+then you will need to set the environment variable LLVM_CXX_NAME to
+the appropriate string. For example if your clang++ is called ++clang
+then LLVM_CC_NAME should be set to ++clang.
+
+"""
+
+explain_LLVM_COMPILER_PATH = """
+
+Your compiler should either be in your PATH, or else located where the
+environment variable LLVM_COMPILER_PATH indicates. It can also be used
+to indicatethe directory that contains the other LLVM tools such as
+llvm-link, and llvm-ar.
+
 """
 
 class Checker(object):
@@ -74,9 +105,6 @@ class Checker(object):
         cc  = '{0}{1}gcc'.format(self.path, pfx)
         cxx = '{0}{1}g++'.format(self.path, pfx)
 
-        (ccOk, ccVersion) = self.checkExecutable(cc)
-        (cxxOk, cxxVersion) = self.checkExecutable(cxx)
-
         return self.checkCompilers(cc, cxx)
 
     
@@ -130,7 +158,16 @@ class Checker(object):
         if not cxxOk:
             print 'The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx)
         else:
-            print 'The C++ compiler {0} is:\n{1}\n'.format(cxx, cxxVersion)
+            print 'The C++ compiler {0} is:\n\n{1}\n'.format(cxx, cxxVersion)
+
+        if not ccOk or  not cxxOk:
+            print  explain_LLVM_COMPILER_PATH
+            if not ccOk:
+                print  explain_LLVM_CC_NAME
+            if not cxxOk:
+                print  explain_LLVM_CXX_NAME
+               
+
         
         return ccOk or cxxOk
         
@@ -142,7 +179,12 @@ class Checker(object):
             output = compiler.communicate()
             compilerOutput = '{0}{1}'.format(output[0], output[1])
         except OSError as e:
-            return (False, '{0} not found or not executable'.format(exe))
+            if e.errno == errno.EPERM:
+                return (False, '{0} not executable'.format(exe))
+            elif e.errno == errno.ENOENT:
+                return (False, '{0} not found'.format(exe))
+            else:
+                return (False, '{0} not sure why, errno is {1}'.format(exe, e.errno))
         else:
             return (True, compilerOutput)
         
@@ -159,11 +201,11 @@ class Checker(object):
         if not linkOk:
             print 'The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link)
         else:
-            print 'The bitcode linker {0} is:\n{1}\n'.format(link, linkVersion)
+            print 'The bitcode linker {0} is:\n\n{1}\n'.format(link, linkVersion)
 
         if not arOk:
             print 'The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar)
         else:
-            print 'The bitcode archiver {0} is:\n{1}\n'.format(ar, arVersion)
+            print 'The bitcode archiver {0} is:\n\n{1}\n'.format(ar, arVersion)
 
         
