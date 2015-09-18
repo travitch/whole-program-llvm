@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+#
+# This does some simple sanity checks on the configuration, and tries to print informative
+# results of that check. Hopefully never dumping a python stack trace.
+#
+
+import sys
+from sanity.checker import *
+
+def main(args):
+
+    return Checker().check()
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
+
+
+    

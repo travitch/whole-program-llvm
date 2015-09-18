@@ -1,0 +1,21 @@
+language: python
+python:
+  - "3.3"
+  - "2.7"
+  - "2.6"
+
+# command to install dependencies
+install:
+  - sudo apt-get update
+  - sudo apt-get install llvm-3.4 clang-3.4 libapr1-dev libaprutil1-dev
+  - sudo apt-get install dragonegg llvm-3.0 llvm-gcc
+  - export WLLVM_HOME=`pwd`
+
+# command to run tests
+script:
+  # build apache with clang (i.e. httpd-2.4.12) 
+  - ${WLLVM_HOME}/.travis/apache_clang.sh
+  # build apache with gcc and dragonegg (i.e. httpd-2.4.12) 
+  - ${WLLVM_HOME}/.travis/apache_dragonegg.sh
+  
+

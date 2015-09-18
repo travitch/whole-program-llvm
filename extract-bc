@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """This tool can be used two ways.
 
-If the passed in file is a binary executable it will extract the
-bitcode section from the provided ELF or MACH-O object and reassemble
-it into an actual bitcode file.  The ELF or MACH-Osection contains
+The ELF or MACH-O section contains
 absolute paths to all of its constituent bitcode files.  This utility
 reads the section and links together all of the named bitcode files.
+
+If the passed in file is a binary executable it will extract the
+file paths in the bitcode section from the provided ELF or MACH-O object 
+and assemble them into an actual bitcode file.  
 
 If the passed in file is a static library it will extract the
 constituent ELF or MACH-O objects and read their bitcode sections and
@@ -150,9 +152,19 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
     
     linkCmd.extend([x for x in fileNames if x != ''])
     logging.info('Writing output to {0}'.format(outputFile))
-    linkProc = Popen(linkCmd)
-    exitCode = linkProc.wait()
-    logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
+    try:
+        linkProc = Popen(linkCmd)
+    except OSError as e:
+        if e.errno == 2:
+            errorMsg = "Your llvm-link doesn't seem to be easy to find.\nEither install it or use the -l llvmLinker option."
+        else:
+            errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+        logging.error(errorMsg)
+        raise Exception(errorMsg)
+
+    else:
+        exitCode = linkProc.wait()
+        logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
     return exitCode
 
 
@@ -173,7 +185,16 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
         os.chdir(tempDir)
 
         # Extract objects from archive
-        arP = Popen(arCmd)
+        try:
+            arP = Popen(arCmd)
+        except OSError as e:
+            if e.errno == 2:
+                errorMsg = "Your llvm-ar doesn't seem to be easy to find.\nEither install it or use the -a llvmArchiver option."
+            else:
+                errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+            logging.error(errorMsg)
+            raise Exception(errorMsg)
+
         arPE = arP.wait()
 
         if arPE != 0:
@@ -294,6 +315,7 @@ def extract_bc_args(args):
 
     inputFile  = parsedArgs.wllvm_binary
     llvmLinker = parsedArgs.linker
+    llvmArchiver = parsedArgs.archiver
     verboseFlag = parsedArgs.verbose
     
     # Check file exists
@@ -344,7 +366,7 @@ def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
     arCmd   =  ['ar', 'xv'] if verboseFlag else ['ar', 'x']
     ofileType = FileType.ELF_OBJECT
 
-    if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED:
+    if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED or ft == FileType.ELF_OBJECT:
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
     elif ft == FileType.ARCHIVE:
@@ -364,7 +386,7 @@ def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
     arCmd   =  ['ar', '-x', '-v'] if verboseFlag else ['ar', '-x']
     ofileType = FileType.MACH_OBJECT
 
-    if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED:
+    if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED or ft == FileType.MACH_OBJECT:
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
     elif ft == FileType.ARCHIVE:

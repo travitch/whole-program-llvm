@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from subprocess import *
 import collections
 import pprint
@@ -7,26 +10,13 @@ import os
 import re
 import sys
 import tempfile
+from .popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
 
-# This is a bit hacky.
-# We cannot do
-# from .popenwrapper import Popen
-# OR
-# from driver.popenwrapper import Popen
-# because then 'as' will not succesfully import us (wllvm/wllvm++ can
-# successfully import however).
-#
-# Using
-# from popenwrapper import Popen
-# will allow 'as' to import us but then wllvm/wllvm++ will not be able to.
-#
-# The work around is to put this directory in the search path for modules.
-sys.path.insert(0,driverDir)
-from popenwrapper import Popen
+
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
 llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
@@ -42,8 +32,8 @@ darwinSectionName='__llvm_bc'
 # Internal logger
 _logger = logging.getLogger(__name__)
 
-# Flag for debugging
-DEBUG = True #False
+# Flag for dumping
+DUMPING = False
 
 
 # This class applies filters to GCC argument lists.  It has a few
@@ -78,6 +68,7 @@ class ArgumentListFilter(object):
 
             #iam: presumably the len(inputFiles) == 0 in this case
             '--version' : (0, ArgumentListFilter.compileOnlyCallback),
+            '-v' : (0, ArgumentListFilter.compileOnlyCallback),
 
             #warnings (apart from the regex below)
             '-w' : (0, ArgumentListFilter.compileOnlyCallback),
@@ -188,10 +179,20 @@ class ArgumentListFilter(object):
             '-static' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nostdlib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-rdynamic' : (0, ArgumentListFilter.linkUnaryCallback),
             # darwin flags
             '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
             '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
+
+            # dragonegg mystery argument
+            '--64' : (0, ArgumentListFilter.compileUnaryCallback),
+
+            # binutils nonsense
+            '-print-multi-directory' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-multi-lib' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-libgcc-file-name' : (0, ArgumentListFilter.compileUnaryCallback),
+
 
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
@@ -224,15 +225,17 @@ class ArgumentListFilter(object):
             r'^.+\.(c|cc|cpp|C|cxx|i|s|S)$' : (0, ArgumentListFilter.inputFileCallback),
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
-            r'^.+\.(o|So|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
+            r'^.+\.(o|lo|So|so|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
             r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
-            #iam: hopefully the order of these is preserved, time will tell
             r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
-            r'^-W.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            
         }
 
         #iam: try and keep track of the files, input object, and output
@@ -288,7 +291,7 @@ class ArgumentListFilter(object):
                     _logger.warning('Did not recognize the compiler flag "{0}"'.format(currentItem))
                     self.compileUnaryCallback(currentItem)
 
-        if DEBUG:
+        if DUMPING:
             self.dump()
 
     def _shiftArgs(self, nargs):
@@ -306,7 +309,7 @@ class ArgumentListFilter(object):
     def inputFileCallback(self, infile):
         _logger.debug('Input file: ' + infile)
         self.inputFiles.append(infile)
-        if re.search('\\.(s|S)', infile):
+        if re.search('\\.(s|S)$', infile):
             self.isAssembly = True
 
     def outputFileCallback(self, flag, filename):
@@ -374,7 +377,7 @@ class ArgumentListFilter(object):
 
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
     # the hidden flag determines whether the objectFile is hidden like the
-    # bitcodeFile is (starts with a '.'), use the DEBUG flag to get a sense
+    # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
     # of what is being written out.
     def getArtifactNames(self, srcFile, hidden=False):
         (srcpath, srcbase) = os.path.split(srcFile)
@@ -391,15 +394,15 @@ class ArgumentListFilter(object):
 
     #iam: for printing our partitioning of the args
     def dump(self):
-        print "compileArgs: ", self.compileArgs
-        print "inputFiles: ", self.inputFiles
-        print "linkArgs: ", self.linkArgs
-        print "objectFiles: ", self.objectFiles
-        print "outputFilename: ", self.outputFilename
+        _logger.debug('compileArgs: {0}'.format(self.compileArgs))
+        _logger.debug('inputFiles: {0}'.format(self.inputFiles))
+        _logger.debug('linkArgs: {0}'.format(self.linkArgs))
+        _logger.debug('objectFiles: {0}'.format(self.objectFiles))
+        _logger.debug('outputFilename: {0}'.format(self.outputFilename))
         for srcFile in self.inputFiles:
-            print "srcFile: ", srcFile
+            _logger.debug('srcFile: {0}'.format(srcFile))
             (objFile, bcFile) = self.getArtifactNames(srcFile)
-            print "{0} ===> ({1}, {2})".format(srcFile, objFile, bcFile)
+            _logger.debug('{0} ===> ({1}, {2})'.format(srcFile, objFile, bcFile))
 
 
 
@@ -465,6 +468,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
     # that won't work.
     (root, ext) = os.path.splitext(outFileName)
+    _logger.debug('attachBitcodePathToObject: {0}  ===> {1} [ext = {2}]\n'.format(bcPath, outFileName, ext))
     #iam: this also looks very dodgey; we need a more reliable way to do this:
     if ext not in ('.o', '.lo', '.os', '.So', '.po'):
         _logger.warning('Cannot attach bitcode path to "{0} of type {1}"'.format(outFileName, FileType.getFileType(outFileName)))
@@ -530,27 +534,36 @@ class BuilderBase(object):
         else:
           self.prefixPath = ''
 
+    #clang and drogonegg share the same taste in bitcode filenames.
+    def getBitcodeFileName(self, argFilter):
+        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
+        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        return bcfilename
+
 class ClangBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
-
+        
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
         return cc + ['-emit-llvm']
 
     def getCompiler(self):
         if self.isCxx:
-            return ['{0}clang++'.format(self.prefixPath)]
+            cxx =  os.getenv('LLVM_CXX_NAME')
+            if cxx:
+                return ['{0}{1}'.format(self.prefixPath, cxx)]
+            else:
+                return ['{0}clang++'.format(self.prefixPath)]
         else:
-            return ['{0}clang'.format(self.prefixPath)]
+            cc =  os.getenv('LLVM_CC_NAME')
+            if cc:
+                return ['{0}{1}'.format(self.prefixPath, cc)]
+            else:
+                return ['{0}clang'.format(self.prefixPath)]
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
-
-    def getBitcodeFileName(self, argFilter):
-        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
-        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        return bcfilename
 
     def extraBitcodeArgs(self, argFilter):
         bcPath = self.getBitcodeFileName(argFilter)
@@ -561,7 +574,6 @@ class ClangBuilder(BuilderBase):
         outFile = argFilter.getOutputFilename()
         attachBitcodePathToObject(bcname, outFile)
 
-#iam: this should join the dodo soon, yes?
 class DragoneggBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)
@@ -572,8 +584,9 @@ class DragoneggBuilder(BuilderBase):
         # We use '-B' to tell gcc where to look for an assembler.
         # When we build LLVM bitcode we do not want to use the GNU assembler,
         # instead we want gcc to use our own assembler (see driver/as).
-        return cc + ['-B', driverDir, '-fplugin={0}'.format(pth),
-                     '-fplugin-arg-dragonegg-emit-ir']
+        cmd = cc + ['-B', driverDir, '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
+        _logger.debug(cmd)
+        return cmd
 
     def getCompiler(self):
         pfx = ''
@@ -697,8 +710,7 @@ def buildBitcodeFile(builder, srcFile, bcFile):
     bcc.extend(af.compileArgs)
     bcc.extend(['-c', srcFile])
     bcc.extend(['-o', bcFile])
-    if DEBUG:
-        print bcc
+    _logger.debug('buildBitcodeFile: {0}\n'.format(bcc))
     proc = Popen(bcc)
     rc = proc.wait()
     if rc != 0:
@@ -711,6 +723,7 @@ def buildObjectFile(builder, srcFile, objFile):
     cc.extend(af.compileArgs)
     cc.append(srcFile)
     cc.extend(['-c', '-o',  objFile])
+    _logger.debug('buildObjectFile: {0}\n'.format(cc))
     proc = Popen(cc)
     rc = proc.wait()
     if rc != 0:

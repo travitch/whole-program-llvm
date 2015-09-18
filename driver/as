@@ -10,13 +10,18 @@
 # (which was created in the first compilation phase by the real
 # compiler).  We'll link this together at a later stage.
 
-import os
+from __future__ import absolute_import
 import sys
-from utils import *
-from subprocess import *
-from popenwrapper import Popen
-import logconfig
+import os
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from driver.utils import *
+from subprocess import *
+from driver.popenwrapper import Popen
+
+import logging
+logging.basicConfig()
 
 class BCFilter(ArgumentListFilter):
     def __init__(self, arglist):
@@ -48,17 +53,14 @@ except AttributeError as e:
     logging.error('Output file argument not found.\nException message: ' + str(e))
     sys.exit(1)
 
-bcfilename = '.{0}.bc'.format(filename)
-bcPath = os.path.join(dirs, bcfilename)
-fakeAssembler = [llvmAssembler, infile, '-o', bcPath]
+fakeAssembler = [llvmAssembler, infile, '-o', argFilter.outFileName]
+
 asmProc = Popen(fakeAssembler)
 realRet = asmProc.wait()
 
 if realRet != 0:
     logging.error('llvm-as failed')
     sys.exit(realRet)
-
-attachBitcodePathToObject(bcPath, argFilter.outFileName)
 
 sys.exit(realRet)
 
