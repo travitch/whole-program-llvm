@@ -43,7 +43,7 @@ darwinSectionName='__llvm_bc'
 _logger = logging.getLogger(__name__)
 
 # Flag for debugging
-DEBUG = False
+DEBUG = True #False
 
 
 # This class applies filters to GCC argument lists.  It has a few
@@ -170,7 +170,7 @@ class ArgumentListFilter(object):
             '-Ofast' : (0, ArgumentListFilter.compileUnaryCallback),
             '-Og' : (0, ArgumentListFilter.compileUnaryCallback),
             # Component-specifiers
-            '-Xclang' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '-Xclang' : (1, ArgumentListFilter.compileBinaryCallback),
             '-Xpreprocessor' : (1, ArgumentListFilter.defaultBinaryCallback),
             '-Xassembler' : (1, ArgumentListFilter.defaultBinaryCallback),
             '-Xlinker' : (1, ArgumentListFilter.defaultBinaryCallback),
@@ -697,6 +697,8 @@ def buildBitcodeFile(builder, srcFile, bcFile):
     bcc.extend(af.compileArgs)
     bcc.extend(['-c', srcFile])
     bcc.extend(['-o', bcFile])
+    if DEBUG:
+        print bcc
     proc = Popen(bcc)
     rc = proc.wait()
     if rc != 0:
