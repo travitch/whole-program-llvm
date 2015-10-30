@@ -55,6 +55,7 @@ DUMPING = False
 # is specified.  Try to avoid overlapping patterns.
 class ArgumentListFilter(object):
     def __init__(self, inputList, exactMatches={}, patternMatches={}):
+        self.inputList = inputList
         defaultArgExactMatches = {
 
             '-o' : (1, ArgumentListFilter.outputFileCallback),
