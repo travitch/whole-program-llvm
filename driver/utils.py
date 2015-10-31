@@ -55,7 +55,6 @@ DUMPING = False
 # is specified.  Try to avoid overlapping patterns.
 class ArgumentListFilter(object):
     def __init__(self, inputList, exactMatches={}, patternMatches={}):
-        self.inputList = inputList
         defaultArgExactMatches = {
 
             '-o' : (1, ArgumentListFilter.outputFileCallback),
@@ -239,11 +238,13 @@ class ArgumentListFilter(object):
             
         }
 
+
         #iam: try and keep track of the files, input object, and output
+        self.inputList = inputList
         self.inputFiles = []
         self.objectFiles = []
         self.outputFilename = None
-
+        
         #iam: try and split the args into linker and compiler switches
         self.compileArgs = []
         self.linkArgs = []
