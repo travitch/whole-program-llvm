@@ -229,6 +229,8 @@ class ArgumentListFilter(object):
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
         }
 
+        self.inputList = inputList
+
         #iam: try and keep track of the files, input object, and output
         self.inputFiles = []
         self.objectFiles = []
