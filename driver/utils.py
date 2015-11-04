@@ -223,6 +223,7 @@ class ArgumentListFilter(object):
             r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-U.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
