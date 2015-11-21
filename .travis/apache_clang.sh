@@ -12,7 +12,6 @@ wget http://apache.mirrors.pair.com//httpd/httpd-${APACHE_VER}.tar.gz
 tar xfz httpd-${APACHE_VER}.tar.gz
 mv httpd-${APACHE_VER} apache_clang
 
-
 cd apache_clang
 CC=wllvm ./configure
 make

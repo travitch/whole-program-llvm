@@ -88,6 +88,10 @@ class ArgumentListFilter(object):
             '-integrated-as' : (0, ArgumentListFilter.compileUnaryCallback),
             #iam: gcc uses this in both compile and link, but clang only in compile
             '-pthread' : (0, ArgumentListFilter.compileUnaryCallback),
+            # I think this is a compiler search path flag.  It is
+            # clang only, so I don't think it counts as a separate CPP
+            # flag.  Android uses this flag with its clang builds.
+            '-nostdlibinc': (0, ArgumentListFilter.compileUnaryCallback),
 
             #iam: arm stuff
             '-mno-omit-leaf-frame-pointer' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -108,8 +112,10 @@ class ArgumentListFilter(object):
             '-msoft-float' : (0, ArgumentListFilter.compileUnaryCallback),
             '-m3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
             '-mno-3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-m32': (0, ArgumentListFilter.compileUnaryCallback),
+            '-m64': (0, ArgumentListFilter.compileUnaryCallback),
+            '-mstackrealign': (0, ArgumentListFilter.compileUnaryCallback),
 
-            
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -229,6 +235,7 @@ class ArgumentListFilter(object):
             r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-U.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -237,7 +244,6 @@ class ArgumentListFilter(object):
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             
         }
-
 
         #iam: try and keep track of the files, input object, and output
         self.inputList = inputList
