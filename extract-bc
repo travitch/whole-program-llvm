@@ -287,12 +287,23 @@ def extract_bc_args(args):
     import argparse
 
     global verboseFlag
-    
+
+    # do we need a path in front?
     llvmToolPrefix = os.getenv(llvmCompilerPathEnv)
     if not llvmToolPrefix:
-      llvmToolPrefix = ''
-    llvmLinker = os.path.join(llvmToolPrefix, 'llvm-link')
-    llvmArchiver = os.path.join(llvmToolPrefix, 'llvm-ar')
+        llvmToolPrefix = ''
+
+    # is our linker called something different?
+    llvmLinkerName = os.getenv('LLVM_LINK_NAME')
+    if not llvmLinkerName:
+        llvmLinkerName = 'llvm-link'
+    llvmLinker = os.path.join(llvmToolPrefix, llvmLinkerName)
+    
+    # is our archiver called something different?
+    llvmArchiverName = os.getenv('LLVM_AR_NAME')
+    if not llvmArchiverName:
+        llvmArchiverName = 'llvm-ar'
+    llvmArchiver = os.path.join(llvmToolPrefix, llvmArchiverName)
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("wllvm_binary", help="A binary produced by wllvm/wllvm++")
