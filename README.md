@@ -56,6 +56,8 @@ In addition to the above environment variables the following can be optionally u
     something like `clang-3.7`. Similarly `LLVM_CXX_NAME` can be used to describe
     what the C++ compiler is called. Note that in these sorts of cases, the environment
     variable `LLVM_COMPILER` should still be set to `clang` not `clang-3.7` etc.
+    We also pay attention to `LLVM_LINK_NAME` and `LLVM_AR_NAME` since they too
+    get adorned with suffixes in various Linux distributions.
 
  * `LLVM_COMPILER_PATH` can be set to the absolute path to the folder that
    contains the compiler and other LLVM tools such as `llvm-link` to be used.

@@ -44,6 +44,24 @@ llvm-link, and llvm-ar.
 
 """
 
+explain_LLVM_LINK_NAME = """
+
+If your llvm linker is not called llvm-link, but something else, then
+you will need to set the environment variable LLVM_LINK_NAME to the
+appropriate string. For example if your llvm-link is called llvm-link-3.5 then
+LLVM_LINK_NAME should be set to llvm-link-3.5.
+
+"""
+
+explain_LLVM_AR_NAME = """
+
+If your llvm archiver is not called llvm-ar, but something else,
+then you will need to set the environment variable LLVM_AR_NAME to
+the appropriate string. For example if your llvm-ar is called llvm-ar-3.5
+then LLVM_AR_NAME should be set to llvm-ar-3.5.
+
+"""
+
 class Checker(object):
     def __init__(self):
         path = os.getenv('LLVM_COMPILER_PATH')
@@ -192,8 +210,17 @@ class Checker(object):
 
     
     def checkAuxiliaries(self):
-        link = '{0}llvm-link'.format(self.path) if self.path else 'llvm-link'  #LLVM_LINKER_NAME
-        ar = '{0}llvm-ar'.format(self.path) if self.path else 'llvm-ar'        #LLVM_ARCHIVER_NAME
+        link_name = os.getenv('LLVM_LINK_NAME')
+        ar_name = os.getenv('LLVM_AR_NAME')
+
+        if not link_name:
+            link_name = 'llvm-link'
+
+        if not ar_name:
+            ar_name = 'llvm-ar'
+        
+        link = '{0}{1}'.format(self.path,link_name) if self.path else link_name
+        ar = '{0}{1}'.format(self.path,ar_name) if self.path else ar_name
 
         (linkOk, linkVersion) = self.checkExecutable(link, '-version') 
 
@@ -201,11 +228,13 @@ class Checker(object):
 
         if not linkOk:
             print 'The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link)
+            print  explain_LLVM_LINK_NAME
         else:
             print 'The bitcode linker {0} is:\n\n{1}\n'.format(link, linkVersion)
 
         if not arOk:
             print 'The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar)
+            print  explain_LLVM_AR_NAME
         else:
             print 'The bitcode archiver {0} is:\n\n{1}\n'.format(ar, arVersion)
 
