@@ -39,7 +39,7 @@ explain_LLVM_COMPILER_PATH = """
 
 Your compiler should either be in your PATH, or else located where the
 environment variable LLVM_COMPILER_PATH indicates. It can also be used
-to indicatethe directory that contains the other LLVM tools such as
+to indicate the directory that contains the other LLVM tools such as
 llvm-link, and llvm-ar.
 
 """
@@ -94,9 +94,9 @@ class Checker(object):
     def checkSwitch(self):
         compiler_type = os.getenv('LLVM_COMPILER')
         if compiler_type == 'clang':
-            return (1, 'Good, we are using clang.\n')
+            return (1, '\nGood, we are using clang.\n')
         elif compiler_type == 'dragonegg':
-            return (2, 'OK, we are using dragonegg.\n')
+            return (2, '\nOK, we are using dragonegg.\n')
         else:
             return (0, explain_LLVM_COMPILER)
 
