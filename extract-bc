@@ -17,6 +17,9 @@ The above language is deliberately vague, since ELF contains a
 .llvm_bc section, whereas the MACH-O contains a segment called __LLVM
 that contains a section called __llvm_bc.
 
+(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment
+name to __WLLVM).
+
 """
 
 import os
@@ -102,7 +105,7 @@ def getSectionContent(size, offset, filename):
 #use otool to extract the segment and section
 #iam: "xxd -r" would just refuse to play nice, so it got tossed.
 # if any one can get
-#    otool -X -s __LLVM __llvm_bc inputFile | xxd -r
+#    otool -X -s __WLLVM __llvm_bc inputFile | xxd -r
 # to work this can be simplified.
 def extract_section_darwin(inputFile):
 

@@ -25,7 +25,9 @@ llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 elfSectionName='.llvm_bc'
 
 # These are the MACH_O segment and section name
-darwinSegmentName='__LLVM'
+# The SegmentName was __LLVM. Changed to __WLLVM to avoid clashing
+# with a segment that ld now uses (since MacOS X 10.11.3?)
+darwinSegmentName='__WLLVM'
 darwinSectionName='__llvm_bc'
 
 
