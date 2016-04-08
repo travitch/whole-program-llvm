@@ -223,7 +223,7 @@ class ArgumentListFilter(object):
         #
         # Patterns for other command-line arguments:
         # - inputFiles
-        # - objecFiles (suffix .o)
+        # - objectFiles (suffix .o)
         # - libraries + linker options as in -lxxx -Lpath or -Wl,xxxx
         # - preprocessor options as in -DXXX -Ipath
         # - compiler warning options: -W....
@@ -233,7 +233,7 @@ class ArgumentListFilter(object):
             r'^.+\.(c|cc|cpp|C|cxx|i|s|S)$' : (0, ArgumentListFilter.inputFileCallback),
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
-            r'^.+\.(o|lo|So|so|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
+            r'^.+\.(o|lo|So|so|po|a|dylib)$' : (0, ArgumentListFilter.objectFileCallback),
             r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
