@@ -14,5 +14,5 @@ def Popen(*pargs, **kwargs):
     try:
         return subprocess.Popen(*pargs,**kwargs)
     except OSError:
-        _logger.error("WWLVM Failed to execute:\n" + pprint.pformat(pargs[0]))
+        _logger.error("WLLVM Failed to execute:\n" + pprint.pformat(pargs[0]))
         raise
