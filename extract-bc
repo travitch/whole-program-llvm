@@ -146,6 +146,12 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
     if not fileNames:
         return 1
 
+    manifestFile = '{0}.occcam.manifest'.format(inputFile)
+    
+    with open(manifestFile, 'w') as output:
+        for f in fileNames:
+            output.write('{0}\n'.format(f))
+
     if outputFile == None:
         outputFile = inputFile + '.' + moduleExtension
         
