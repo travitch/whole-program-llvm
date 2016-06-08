@@ -147,7 +147,7 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker, manifestFlag)
         return 1
     
     if manifestFlag:
-        manifestFile = '{0}.occcam.manifest'.format(inputFile)
+        manifestFile = '{0}.wllvm.manifest'.format(inputFile)
         with open(manifestFile, 'w') as output:
             for f in fileNames:
                 output.write('{0}\n'.format(f))
