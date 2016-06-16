@@ -226,6 +226,9 @@ class ArgumentListFilter(object):
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
             r'^.+\.(o|lo|So|so|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
+            #iam: library.so.4.5.6 probably need a similar pattern for .dylib too.
+            r'^.+\.dylib(\.\d)+$' : (0, ArgumentListFilter.objectFileCallback),
+            r'^.+\.(So|so)(\.\d)+$' : (0, ArgumentListFilter.objectFileCallback),
             r'^-(l|L).+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-I.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-D.+$' : (0, ArgumentListFilter.compileUnaryCallback),
