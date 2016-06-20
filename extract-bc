@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """This tool can be used two ways.
 
-If the passed in file is a binary executable it will extract the
-bitcode section from the provided ELF or MACH-O object and reassemble
-it into an actual bitcode file.  The ELF or MACH-Osection contains
+The ELF or MACH-O section contains
 absolute paths to all of its constituent bitcode files.  This utility
 reads the section and links together all of the named bitcode files.
+
+If the passed in file is a binary executable it will extract the
+file paths in the bitcode section from the provided ELF or MACH-O object 
+and assemble them into an actual bitcode file.  
 
 If the passed in file is a static library it will extract the
 constituent ELF or MACH-O objects and read their bitcode sections and
@@ -14,6 +16,9 @@ create a LLVM Bitcode archive from the bitcode files.
 The above language is deliberately vague, since ELF contains a
 .llvm_bc section, whereas the MACH-O contains a segment called __LLVM
 that contains a section called __llvm_bc.
+
+(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment
+name to __WLLVM).
 
 """
 
@@ -100,7 +105,7 @@ def getSectionContent(size, offset, filename):
 #use otool to extract the segment and section
 #iam: "xxd -r" would just refuse to play nice, so it got tossed.
 # if any one can get
-#    otool -X -s __LLVM __llvm_bc inputFile | xxd -r
+#    otool -X -s __WLLVM __llvm_bc inputFile | xxd -r
 # to work this can be simplified.
 def extract_section_darwin(inputFile):
 
@@ -134,12 +139,18 @@ def extract_section_linux(inputFile):
     return contents
 
 
-def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
+def handleExecutable(inputFile, outputFile, extractor, llvmLinker, manifestFlag):
 
     fileNames = extractor(inputFile)
 
     if not fileNames:
         return 1
+    
+    if manifestFlag:
+        manifestFile = '{0}.wllvm.manifest'.format(inputFile)
+        with open(manifestFile, 'w') as output:
+            for f in fileNames:
+                output.write('{0}\n'.format(f))
 
     if outputFile == None:
         outputFile = inputFile + '.' + moduleExtension
@@ -150,15 +161,25 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker):
     
     linkCmd.extend([x for x in fileNames if x != ''])
     logging.info('Writing output to {0}'.format(outputFile))
-    linkProc = Popen(linkCmd)
-    exitCode = linkProc.wait()
-    logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
+    try:
+        linkProc = Popen(linkCmd)
+    except OSError as e:
+        if e.errno == 2:
+            errorMsg = "Your llvm-link doesn't seem to be easy to find.\nEither install it or use the -l llvmLinker option."
+        else:
+            errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+        logging.error(errorMsg)
+        raise Exception(errorMsg)
+
+    else:
+        exitCode = linkProc.wait()
+        logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
     return exitCode
 
 
 
 
-def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchiver):
+def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchiver, manifestFlag):
     inputFile = os.path.abspath(inputFile)
     originalDir = os.getcwd() # This will be the destination
 
@@ -173,7 +194,16 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
         os.chdir(tempDir)
 
         # Extract objects from archive
-        arP = Popen(arCmd)
+        try:
+            arP = Popen(arCmd)
+        except OSError as e:
+            if e.errno == 2:
+                errorMsg = "Your llvm-ar doesn't seem to be easy to find.\nEither install it or use the -a llvmArchiver option."
+            else:
+                errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+            logging.error(errorMsg)
+            raise Exception(errorMsg)
+
         arPE = arP.wait()
 
         if arPE != 0:
@@ -207,6 +237,13 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
         # Delete the temporary folder
         logging.debug('Deleting temporary folder "{0}"'.format(tempDir))
         shutil.rmtree(tempDir)
+        
+    #write the manifest file if asked for
+    if manifestFlag:
+        manifestFile = '{0}.occcam.manifest'.format(inputFile)
+        with open(manifestFile, 'w') as output:
+            for f in bitCodeFiles:
+                output.write('{0}\n'.format(f))
 
     # Build bitcode archive
     os.chdir(originalDir)
@@ -266,12 +303,23 @@ def extract_bc_args(args):
     import argparse
 
     global verboseFlag
-    
+
+    # do we need a path in front?
     llvmToolPrefix = os.getenv(llvmCompilerPathEnv)
     if not llvmToolPrefix:
-      llvmToolPrefix = ''
-    llvmLinker = os.path.join(llvmToolPrefix, 'llvm-link')
-    llvmArchiver = os.path.join(llvmToolPrefix, 'llvm-ar')
+        llvmToolPrefix = ''
+
+    # is our linker called something different?
+    llvmLinkerName = os.getenv('LLVM_LINK_NAME')
+    if not llvmLinkerName:
+        llvmLinkerName = 'llvm-link'
+    llvmLinker = os.path.join(llvmToolPrefix, llvmLinkerName)
+    
+    # is our archiver called something different?
+    llvmArchiverName = os.getenv('LLVM_AR_NAME')
+    if not llvmArchiverName:
+        llvmArchiverName = 'llvm-ar'
+    llvmArchiver = os.path.join(llvmToolPrefix, llvmArchiverName)
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("wllvm_binary", help="A binary produced by wllvm/wllvm++")
@@ -284,6 +332,9 @@ def extract_bc_args(args):
     parser.add_argument("--verbose","-v",
                         help='Call the external procedures in verbose mode.',
                         action="store_true")
+    parser.add_argument("--manifest","-m",
+                        help='Write a manifest file listing all the .bc files used.',
+                        action="store_true")
     parser.add_argument("--output","-o",
                         help='The output file. Defaults to a file in the same directory ' +
                              'as the input with the same name as the input but with an ' +
@@ -294,12 +345,14 @@ def extract_bc_args(args):
 
     inputFile  = parsedArgs.wllvm_binary
     llvmLinker = parsedArgs.linker
+    llvmArchiver = parsedArgs.archiver
     verboseFlag = parsedArgs.verbose
-    
+    manifestFlag = parsedArgs.manifest
+
     # Check file exists
     if not os.path.exists(inputFile):
         logging.error('File "{0}" does not exist.'.format(inputFile))
-        return (False, inputFile, '', llvmLinker, llvmArchiver)
+        return (False, inputFile, '', llvmLinker, llvmArchiver, manifestFlag)
 
     # Check output destitionation if set
     outputFile = parsedArgs.output
@@ -309,14 +362,14 @@ def extract_bc_args(args):
       if not os.path.exists(os.path.dirname(outputFile)):
         logging.error('Output directory "{0}" does not exist.'.format(
                       os.path.dirname(outputFile)))
-        return (False, inputFile, '', llvmLinker, llvmArchiver)
+        return (False, inputFile, '', llvmLinker, llvmArchiver, manifestFlag)
 
-    return (True, inputFile, outputFile, llvmLinker, llvmArchiver)
+    return (True, inputFile, outputFile, llvmLinker, llvmArchiver, manifestFlag)
     
 
 def main(args):
 
-    (success, inputFile, outputFile, llvmLinker, llvmArchiver) = extract_bc_args(args)
+    (success, inputFile, outputFile, llvmLinker, llvmArchiver, manifestFlag) = extract_bc_args(args)
 
     if not success:
         return 1
@@ -324,11 +377,11 @@ def main(args):
     if ( sys.platform.startswith('freebsd') or
          sys.platform.startswith('linux') ):
 
-        process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver)
+        process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver, manifestFlag)
 
     elif sys.platform.startswith('darwin'):
 
-        process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver)
+        process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver, manifestFlag)
 
     else:
         #iam: do we work on anything else? 
@@ -336,7 +389,7 @@ def main(args):
         return 1
 
     
-def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
+def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver, manifestFlag):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
@@ -346,17 +399,17 @@ def process_file_unix(inputFile, outputFile, llvmLinker, llvmArchiver):
 
     if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED or ft == FileType.ELF_OBJECT:
         logging.info('Generating LLVM Bitcode module')
-        return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
+        return handleExecutable(inputFile, outputFile, extractor, llvmLinker, manifestFlag)
     elif ft == FileType.ARCHIVE:
         logging.info('Generating LLVM Bitcode archive')
-        return handleArchive(inputFile, outputFile, arCmd, ofileType, extractor, llvmArchiver)
+        return handleArchive(inputFile, outputFile, arCmd, ofileType, extractor, llvmArchiver, manifestFlag)
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(inputFile,FileType.revMap[ft]))
         return 1
 
     
 
-def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
+def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver, manifestFlag):
     ft = FileType.getFileType(inputFile)
     logging.debug('Detected file type is {0}'.format(FileType.revMap[ft]))
 
@@ -366,10 +419,10 @@ def process_file_darwin(inputFile, outputFile, llvmLinker, llvmArchiver):
 
     if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED or ft == FileType.MACH_OBJECT:
         logging.info('Generating LLVM Bitcode module')
-        return handleExecutable(inputFile, outputFile, extractor, llvmLinker)
+        return handleExecutable(inputFile, outputFile, extractor, llvmLinker, manifestFlag)
     elif ft == FileType.ARCHIVE:
         logging.info('Generating LLVM Bitcode archive')
-        return handleArchive(inputFile, outputFile, arCmd, ofileType, extractor, llvmArchiver)
+        return handleArchive(inputFile, outputFile, arCmd, ofileType, extractor, llvmArchiver, manifestFlag)
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(inputFile,FileType.revMap[ft]))
         return 1

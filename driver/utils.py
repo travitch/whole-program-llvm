@@ -25,7 +25,9 @@ llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 elfSectionName='.llvm_bc'
 
 # These are the MACH_O segment and section name
-darwinSegmentName='__LLVM'
+# The SegmentName was __LLVM. Changed to __WLLVM to avoid clashing
+# with a segment that ld now uses (since MacOS X 10.11.3?)
+darwinSegmentName='__WLLVM'
 darwinSectionName='__llvm_bc'
 
 
@@ -167,7 +169,7 @@ class ArgumentListFilter(object):
             '-Ofast' : (0, ArgumentListFilter.compileUnaryCallback),
             '-Og' : (0, ArgumentListFilter.compileUnaryCallback),
             # Component-specifiers
-            '-Xclang' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '-Xclang' : (1, ArgumentListFilter.compileBinaryCallback),
             '-Xpreprocessor' : (1, ArgumentListFilter.defaultBinaryCallback),
             '-Xassembler' : (1, ArgumentListFilter.defaultBinaryCallback),
             '-Xlinker' : (1, ArgumentListFilter.defaultBinaryCallback),
@@ -194,6 +196,12 @@ class ArgumentListFilter(object):
             # dragonegg mystery argument
             '--64' : (0, ArgumentListFilter.compileUnaryCallback),
 
+            # binutils nonsense
+            '-print-multi-directory' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-multi-lib' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-print-libgcc-file-name' : (0, ArgumentListFilter.compileUnaryCallback),
+
+
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
@@ -215,7 +223,7 @@ class ArgumentListFilter(object):
         #
         # Patterns for other command-line arguments:
         # - inputFiles
-        # - objecFiles (suffix .o)
+        # - objectFiles (suffix .o)
         # - libraries + linker options as in -lxxx -Lpath or -Wl,xxxx
         # - preprocessor options as in -DXXX -Ipath
         # - compiler warning options: -W....
@@ -225,7 +233,7 @@ class ArgumentListFilter(object):
             r'^.+\.(c|cc|cpp|C|cxx|i|s|S)$' : (0, ArgumentListFilter.inputFileCallback),
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
-            r'^.+\.(o|lo|So|so|po|a)$' : (0, ArgumentListFilter.objectFileCallback),
+            r'^.+\.(o|lo|So|so|po|a|dylib)$' : (0, ArgumentListFilter.objectFileCallback),
             #iam: library.so.4.5.6 probably need a similar pattern for .dylib too.
             r'^.+\.dylib(\.\d)+$' : (0, ArgumentListFilter.objectFileCallback),
             r'^.+\.(So|so)(\.\d)+$' : (0, ArgumentListFilter.objectFileCallback),
@@ -237,15 +245,17 @@ class ArgumentListFilter(object):
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            
         }
 
-        self.inputList = inputList
-
         #iam: try and keep track of the files, input object, and output
+        self.inputList = inputList
         self.inputFiles = []
         self.objectFiles = []
         self.outputFilename = None
-
+        
         #iam: try and split the args into linker and compiler switches
         self.compileArgs = []
         self.linkArgs = []
@@ -546,16 +556,24 @@ class BuilderBase(object):
 class ClangBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
-
+        
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
         return cc + ['-emit-llvm']
 
     def getCompiler(self):
         if self.isCxx:
-            return ['{0}clang++'.format(self.prefixPath)]
+            cxx =  os.getenv('LLVM_CXX_NAME')
+            if cxx:
+                return ['{0}{1}'.format(self.prefixPath, cxx)]
+            else:
+                return ['{0}clang++'.format(self.prefixPath)]
         else:
-            return ['{0}clang'.format(self.prefixPath)]
+            cc =  os.getenv('LLVM_CC_NAME')
+            if cc:
+                return ['{0}{1}'.format(self.prefixPath, cc)]
+            else:
+                return ['{0}clang'.format(self.prefixPath)]
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
@@ -569,7 +587,6 @@ class ClangBuilder(BuilderBase):
         outFile = argFilter.getOutputFilename()
         attachBitcodePathToObject(bcname, outFile)
 
-#iam: this should join the dodo soon, yes?
 class DragoneggBuilder(BuilderBase):
     def __init__(self, cmd, isCxx, prefixPath=None):
         super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)

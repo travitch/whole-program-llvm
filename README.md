@@ -22,8 +22,6 @@ utility to read the contents of the dedicated section and link all of
 the bitcode into a single whole-program bitcode file. This utility
 works for both executable and native libraries.
 
-Currently, WLLVM works with either clang or the gcc dragonegg plugin.
-
 This two-phase build process is necessary to be a drop-in replacement
 for gcc or g++ in any build system.  Using the LTO framework in gcc
 and the gold linker plugin works in many cases, but fails in the
@@ -31,6 +29,7 @@ presence of static libraries in builds.  WLLVM's approach has the
 distinct advantage of generating working binaries, in case some part
 of a build process requires that.
 
+WLLVM works with either clang or the gcc dragonegg plugin.
 
 Usage
 =====
@@ -40,7 +39,7 @@ and `wllvm++` for C++, and an auxiliary tool `extract-bc`.
 
 Three environment variables must be set to use these wrappers:
 
- * `LLVM_COMPILER` should be set to either 'dragonegg' or 'clang'.
+ * `LLVM_COMPILER` should be set to either `dragonegg` or `clang`.
  * `LLVM_GCC_PREFIX` should be set to the prefix for the version of gcc that should
    be used with dragonegg.  This can be empty if there is no prefix.  This variable is
    not used if `$LLVM_COMPILER == clang`.
@@ -50,7 +49,15 @@ Three environment variables must be set to use these wrappers:
 Once the environment is set up, just use `wllvm` and `wllvm++` as your C
 and C++ compilers, respectively.
 
+
 In addition to the above environment variables the following can be optionally used:
+
+ * `LLVM_CC_NAME` can be set if your clang compiler is not called `clang` but
+    something like `clang-3.7`. Similarly `LLVM_CXX_NAME` can be used to describe
+    what the C++ compiler is called. Note that in these sorts of cases, the environment
+    variable `LLVM_COMPILER` should still be set to `clang` not `clang-3.7` etc.
+    We also pay attention to the environment variables `LLVM_LINK_NAME` and `LLVM_AR_NAME` in an
+    analagous way,  since they too get adorned with suffixes in various Linux distributions.
 
  * `LLVM_COMPILER_PATH` can be set to the absolute path to the folder that
    contains the compiler and other LLVM tools such as `llvm-link` to be used.
@@ -62,7 +69,7 @@ In addition to the above environment variables the following can be optionally u
 
 * `WLLVM_CONFIGURE_ONLY` can be set to anything. If it is set, `wllvm`
    and `wllvm++` behave like a normal C or C++ compiler. They do not
-   the produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
+   produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
    configuration errors caused by the unexpected production of hidden
    bitcode files.
 
@@ -79,6 +86,9 @@ Building a bitcode module with clang
 
     # Produces pkg-config.bc
     extract-bc pkg-config
+
+A gentler set of instructions on building apache can be found
+[here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/tutorial.md)
 
 Building a bitcode module with dragonegg
 ========================================
@@ -125,6 +135,23 @@ Configuring without building bitcode
     CC=wllvm make
 
 
+Building a bitcode archive then extracting the bitcode
+========================
+
+    export LLVM_COMPILER=clang
+    tar xvfz jansson-2.7.tar.gz
+    cd jansson-2.7
+    CC=wllvm ./configure
+    make
+    mkdir bitcode
+    cp src/.libs/libjansson.a bitcode
+    cd bitcode
+    extract-bc libjansson.a
+    llvm-ar x libjansson.bca
+    ls -la
+   
+    
+
 Debugging
 =========
 
@@ -140,6 +167,18 @@ To show this output set WLLVM_OUTPUT to one of the following levels:
 For example
 
     export WLLVM_OUTPUT=DEBUG
+
+
+Sanity Checking
+=========
+
+Too many environment variables? Try doing a sanity check:
+
+```
+wllvm-sanity-checker
+```
+it might point out what is wrong.
+
 
 License
 =======
