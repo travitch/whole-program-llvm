@@ -31,6 +31,11 @@ of a build process requires that.
 
 WLLVM works with either clang or the gcc dragonegg plugin.
 
+Tutorial
+====
+
+See the tutorial markdown files for detailed instructions on how to compile apache with wllvm on Ubuntu.
+
 Usage
 =====
 
