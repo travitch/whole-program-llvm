@@ -149,11 +149,14 @@ class ArgumentListFilter(object):
 
             # Language
             '-ansi' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-pedantic' : (0, ArgumentListFilter.compileUnaryCallback),
             '-x' : (1, ArgumentListFilter.compileBinaryCallback),
 
             # Debug
             '-g' : (0, ArgumentListFilter.compileUnaryCallback),
             '-g0' : (0, ArgumentListFilter.compileUnaryCallback),     #iam: clang not gcc
+            '-ggdb' : (0, ArgumentListFilter.compileUnaryCallback), 
+            '-ggdb3' : (0, ArgumentListFilter.compileUnaryCallback), 
             '-gdwarf-2' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gdwarf-3' : (0, ArgumentListFilter.compileUnaryCallback),
             '-p' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -245,6 +248,7 @@ class ArgumentListFilter(object):
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             
