@@ -188,6 +188,7 @@ class ArgumentListFilter(object):
             # iam: showed up in buildkernel
             '-shared' : (0, ArgumentListFilter.linkUnaryCallback),
             '-static' : (0, ArgumentListFilter.linkUnaryCallback),
+            '-pie' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nostdlib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-nodefaultlibs' : (0, ArgumentListFilter.linkUnaryCallback),
             '-rdynamic' : (0, ArgumentListFilter.linkUnaryCallback),
