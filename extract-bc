@@ -77,12 +77,10 @@ def getSectionSizeAndOffset(sectionName, filename):
             return (size, offset)
         except ValueError:
             continue
-
-    # The needed section could not be found
-    raise Exception('Could not find "{0}" ELF section in "{1}"'.format(
-                    sectionName,
-                    filename)
-                   )
+    
+    # The needed section could not be found 
+    logging.error('Could not find "{0}" ELF section in "{1}"'.format(sectionName,filename))
+    return None
 
 # Read the entire content of an ELF section into a string
 def getSectionContent(size, offset, filename):
@@ -131,7 +129,10 @@ def extract_section_darwin(inputFile):
 # os independent abstraction (*nix version)
 #analagous procedure for linux (relying on getSectionSizeAndOffset and getSectionContent)
 def extract_section_linux(inputFile):
-    (sectionSize, sectionOffset) = getSectionSizeAndOffset(elfSectionName, inputFile)
+    val = getSectionSizeAndOffset(elfSectionName, inputFile)
+    if val is None:
+        return []
+    (sectionSize, sectionOffset) = val
     content = getSectionContent(sectionSize, sectionOffset, inputFile)
     contents = content.split('\n')
     if not contents:
@@ -198,7 +199,7 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
             arP = Popen(arCmd)
         except OSError as e:
             if e.errno == 2:
-                errorMsg = "Your llvm-ar doesn't seem to be easy to find.\nEither install it or use the -a llvmArchiver option."
+                errorMsg = "Your ar doesn't seem to be easy to find.\n"
             else:
                 errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
             logging.error(errorMsg)
@@ -240,7 +241,7 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
         
     #write the manifest file if asked for
     if manifestFlag:
-        manifestFile = '{0}.occcam.manifest'.format(inputFile)
+        manifestFile = '{0}.llvm.manifest'.format(inputFile)
         with open(manifestFile, 'w') as output:
             for f in bitCodeFiles:
                 output.write('{0}\n'.format(f))
