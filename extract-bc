@@ -79,7 +79,7 @@ def getSectionSizeAndOffset(sectionName, filename):
             continue
     
     # The needed section could not be found 
-    logging.error('Could not find "{0}" ELF section in "{1}"'.format(sectionName,filename))
+    logging.warning('Could not find "{0}" ELF section in "{1}", so skipping this entry.'.format(sectionName,filename))
     return None
 
 # Read the entire content of an ELF section into a string
@@ -140,6 +140,67 @@ def extract_section_linux(inputFile):
     return contents
 
 
+def linkFiles(outputFile, llvmLinker, fileNames):
+    linkCmd = [ llvmLinker, '-v' ] if verboseFlag else [ llvmLinker ]
+    
+    linkCmd.extend(['-o', outputFile ])
+    
+    linkCmd.extend([x for x in fileNames if x != ''])
+    logging.info('Writing output to {0}'.format(outputFile))
+    try:
+        linkProc = Popen(linkCmd)
+    except OSError as e:
+        if e.errno == 2:
+            errorMsg = "Your llvm-link doesn't seem to be easy to find.\nEither install it or use the -l llvmLinker option."
+        else:
+            errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
+        logging.error(errorMsg)
+        raise Exception(errorMsg)
+    
+    else:
+        exitCode = linkProc.wait()
+        logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
+    return exitCode
+
+    
+def archiveFiles(outputFile, llvmArchiver, fileNames):
+    retCode = 0
+    # We do not want full paths in the archive so we need to chdir into each
+    # bitcode's folder. Handle this by calling llvm-ar once for all bitcode
+    # files in the same directory
+
+    # Map of directory names to list of bitcode files in that directory
+    dirToBCMap = {}
+    for bitCodeFile in fileNames:
+        dirName = os.path.dirname(bitCodeFile)
+        basename = os.path.basename(bitCodeFile)
+        if dirName in dirToBCMap:
+            dirToBCMap[dirName].append(basename)
+        else:
+            dirToBCMap[dirName] = [ basename ]
+
+    logging.debug('Built up directory to bitcode file list map:\n{0}'.format(
+                   pprint.pformat(dirToBCMap)))
+
+    for (dirname, bcList) in dirToBCMap.items():
+        logging.debug('Changing directory to "{0}"'.format(dirname))
+        os.chdir(dirname)
+        larCmd = [llvmArchiver, 'rs', outputFile ] + bcList
+        larProc = Popen(larCmd)
+        retCode = larProc.wait()
+        if retCode != 0:
+          logging.error('Failed to execute:\n{0}'.format(pprint.pformat(larCmd)))
+          break
+
+    if retCode == 0:
+        logging.info('Generated LLVM bitcode archive {0}'.format(outputFile))
+    else:
+        logging.error('Failed to generate LLVM bitcode archive')
+
+    return retCode
+    pass
+
+
 def handleExecutable(inputFile, outputFile, extractor, llvmLinker, manifestFlag):
 
     fileNames = extractor(inputFile)
@@ -155,27 +216,8 @@ def handleExecutable(inputFile, outputFile, extractor, llvmLinker, manifestFlag)
 
     if outputFile == None:
         outputFile = inputFile + '.' + moduleExtension
-        
-    linkCmd = [ llvmLinker, '-v' ] if verboseFlag else [ llvmLinker ]
 
-    linkCmd.extend(['-o', outputFile ])
-    
-    linkCmd.extend([x for x in fileNames if x != ''])
-    logging.info('Writing output to {0}'.format(outputFile))
-    try:
-        linkProc = Popen(linkCmd)
-    except OSError as e:
-        if e.errno == 2:
-            errorMsg = "Your llvm-link doesn't seem to be easy to find.\nEither install it or use the -l llvmLinker option."
-        else:
-            errorMsg = "OS error({0}): {1}".format(e.errno, e.strerror)
-        logging.error(errorMsg)
-        raise Exception(errorMsg)
-
-    else:
-        exitCode = linkProc.wait()
-        logging.info('{0} returned {1}'.format(llvmLinker, str(exitCode)))
-    return exitCode
+    return linkFiles(outputFile, llvmLinker, fileNames)
 
 
 
@@ -252,7 +294,6 @@ def handleArchive(inputFile, outputFile, arCmd, fileType, extractor, llvmArchive
     return buildArchive(inputFile, outputFile, llvmArchiver, bitCodeFiles)
 
 def buildArchive(inputFile, outputFile, llvmArchiver, bitCodeFiles):
-    retCode=0
     # Pick output file path if outputFile not set
     if outputFile == None:
       if inputFile.endswith('.a'):
@@ -264,39 +305,7 @@ def buildArchive(inputFile, outputFile, llvmArchiver, bitCodeFiles):
 
     logging.info('Writing output to {0}'.format(outputFile))
 
-    # We do not want full paths in the archive so we need to chdir into each
-    # bitcode's folder. Handle this by calling llvm-ar once for all bitcode
-    # files in the same directory
-
-    # Map of directory names to list of bitcode files in that directory
-    dirToBCMap = {}
-    for bitCodeFile in bitCodeFiles:
-        dirName = os.path.dirname(bitCodeFile)
-        basename = os.path.basename(bitCodeFile)
-        if dirName in dirToBCMap:
-            dirToBCMap[dirName].append(basename)
-        else:
-            dirToBCMap[dirName] = [ basename ]
-
-    logging.debug('Built up directory to bitcode file list map:\n{0}'.format(
-                   pprint.pformat(dirToBCMap)))
-
-    for (dirname, bcList) in dirToBCMap.items():
-        logging.debug('Changing directory to "{0}"'.format(dirname))
-        os.chdir(dirname)
-        larCmd = [llvmArchiver, 'rs', outputFile ] + bcList
-        larProc = Popen(larCmd)
-        retCode = larProc.wait()
-        if retCode != 0:
-          logging.error('Failed to execute:\n{0}'.format(pprint.pformat(larCmd)))
-          break
-
-    if retCode == 0:
-        logging.info('Generated LLVM bitcode archive {0}'.format(outputFile))
-    else:
-        logging.error('Failed to generate LLVM bitcode archive')
-
-    return retCode
+    return archiveFiles(outputFile, llvmArchiver, bitCodeFiles)
 
     
 
