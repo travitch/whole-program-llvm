@@ -208,7 +208,7 @@ def handleExecutable(pArgs):
         return 1
     
     if pArgs.manifestFlag:
-        manifestFile = '{0}.wllvm.manifest'.format(pArgs.inputFile)
+        manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
         with open(manifestFile, 'w') as output:
             for f in fileNames:
                 output.write('{0}\n'.format(f))
@@ -293,18 +293,30 @@ def handleArchive(pArgs):
     return buildArchive(pArgs, bitCodeFiles)
 
 def buildArchive(pArgs, bitCodeFiles):
-    # Pick output file path if outputFile not set
-    if pArgs.outputFile == None:
-      if pArgs.inputFile.endswith('.a'):
-        # Strip off .a suffix
-        pArgs.outputFile = pArgs.inputFile[:-2]
-      else:
-        pArgs.outputFile = pArgs.inputFile
-      pArgs.outputFile +='.' + bitCodeArchiveExtension
 
-    logging.info('Writing output to {0}'.format(pArgs.outputFile))
+    if pArgs.bitcodeModuleFlag:
 
-    return archiveFiles(pArgs, bitCodeFiles)
+        # Pick output file path if outputFile not set
+        if pArgs.outputFile == None:
+            pArgs.outputFile = pArgs.inputFile
+            pArgs.outputFile += '.' + moduleExtension
+        
+        logging.info('Writing output to {0}'.format(pArgs.outputFile))
+
+        return linkFiles(pArgs, bitCodeFiles)
+
+    else:
+            
+        # Pick output file path if outputFile not set
+        if pArgs.outputFile == None:
+            if pArgs.inputFile.endswith('.a'):
+                # Strip off .a suffix
+                pArgs.outputFile = pArgs.inputFile[:-2]
+                pArgs.outputFile += '.' + bitCodeArchiveExtension
+        
+        logging.info('Writing output to {0}'.format(pArgs.outputFile))
+
+        return archiveFiles(pArgs, bitCodeFiles)
 
 
 class ExtractedArgs:
@@ -354,9 +366,9 @@ def extract_bc_args(args):
                         dest='manifestFlag', 
                         help='Write a manifest file listing all the .bc files used.',
                         action='store_true')
-    parser.add_argument('--bytecode', '-b',
-                        dest='bytecodeModuleFlag', 
-                        help='Extract a bytecode module rather than an archive. ' +
+    parser.add_argument('--bitcode', '-b',
+                        dest='bitcodeModuleFlag', 
+                        help='Extract a bitcode module rather than an archive. ' +
                         'Only useful when extracting from an archive.',
                         action='store_true')
     parser.add_argument('--output','-o',
@@ -425,7 +437,10 @@ def process_file_unix(pArgs):
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        logging.info('Generating LLVM Bitcode archive')
+        if pArgs.bitcodeModuleFlag:
+            logging.info('Generating LLVM Bitcode module from an archive')
+        else:
+            logging.info('Generating LLVM Bitcode archive from an archive')
         return handleArchive(pArgs)
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(pArgs.inputFile, FileType.revMap[ft]))
@@ -446,7 +461,10 @@ def process_file_darwin(pArgs):
         logging.info('Generating LLVM Bitcode module')
         return handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        logging.info('Generating LLVM Bitcode archive')
+        if pArgs.bitcodeModuleFlag:
+            logging.info('Generating LLVM Bitcode module from an archive')
+        else:
+            logging.info('Generating LLVM Bitcode archive from an archive')
         return handleArchive(pArgs)
     else:
         logging.error('File "{0}" of type {1} cannot be used'.format(pArgs.inputFile, FileType.revMap[ft]))
