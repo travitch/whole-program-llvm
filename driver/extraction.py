@@ -17,10 +17,8 @@ import tempfile
 import shutil
 import argparse
 
-"""This tool can be used two ways.
-
-(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment
-name to __WLLVM).
+"""
+(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment name to __WLLVM).
 
 """
 

@@ -11,7 +11,9 @@ and assemble them into an actual bitcode file.
 
 If the passed in file is a static library it will extract the
 constituent ELF or MACH-O objects and read their bitcode sections and
-create a LLVM Bitcode archive from the bitcode files.
+create a LLVM Bitcode archive from the bitcode files. That said, there 
+is a command line option (--bitcode -b) that allows one to extract the
+bitcode into a module rather than an archive.
 
 The above language is deliberately vague, since ELF contains a
 .llvm_bc section, whereas the MACH-O contains a segment called __LLVM
