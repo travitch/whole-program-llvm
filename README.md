@@ -92,8 +92,10 @@ Building a bitcode module with clang
     # Produces pkg-config.bc
     extract-bc pkg-config
 
-A gentler set of instructions on building apache can be found
-[here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/tutorial.md)
+A gentler set of instructions on building apache in a vagrant Ubuntu 14.04 can be found
+[here,](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial.md) and
+for Ubuntu 16.04
+[here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-ubuntu-16.04.md)
 
 Building a bitcode module with dragonegg
 ========================================
@@ -129,7 +131,7 @@ Building an Operating System
 ============================
 
 To see how to build freeBSD 10.0 from scratch check out this 
-[guide.](../master/README-freeBSD.md)
+[guide.](../master/doc/tutorial-freeBSD.md)
 
 
 Configuring without building bitcode

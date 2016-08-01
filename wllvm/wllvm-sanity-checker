@@ -7,14 +7,14 @@ Hopefully never dumping a python stack trace.
 """
 
 import sys
-from sanity.checker import *
 
-def main(args):
+sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
+
+from wllvm.checker import *
+
+def main():
     return Checker().check()
 
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv))
 
 
     

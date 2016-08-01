@@ -22,7 +22,11 @@ that contains a section called __llvm_bc.
 """
 
 import sys
-from driver.extraction import *
 
-if __name__ == '__main__':
-    sys.exit(extraction(sys.argv))
+sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
+
+from wllvm.extraction import *
+
+def main():
+    return extraction(sys.argv)
+

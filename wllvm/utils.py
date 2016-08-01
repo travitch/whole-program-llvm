@@ -16,6 +16,12 @@ fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
 
+# Freeping Creaturism:
+#
+# this is the all important version number used by pip.
+#
+#
+wllvm_version='1.0.0.dev0'
 
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)

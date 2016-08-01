@@ -12,13 +12,21 @@ linked into a library or executable.
 
 import sys
 import os
-from driver.utils import *
-import driver.logconfig
 
-cmd = list(sys.argv)
-cmd = cmd[1:]
+sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
 
-builder = getBuilder(cmd, False)
-buildObject(builder)
-if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-    buildAndAttachBitcode(builder)
+
+from wllvm.utils import *
+import wllvm.logconfig
+
+
+def main():
+    cmd = list(sys.argv)
+    cmd = cmd[1:]
+
+    builder = getBuilder(cmd, False)
+    buildObject(builder)
+    if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+        buildAndAttachBitcode(builder)
+
+    return 0

@@ -10,8 +10,11 @@ into a library or executable.
 
 import sys
 import os
-from driver.utils import *
-import driver.logconfig
+
+sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
+
+from wllvm.utils import *
+import wllvm.logconfig
 
 cmd = list(sys.argv)
 cmd = cmd[1:]
