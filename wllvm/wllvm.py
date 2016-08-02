@@ -15,9 +15,9 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
 
+from utils import *
 
-from wllvm.utils import *
-import wllvm.logconfig
+import logconfig
 
 
 def main():
@@ -30,3 +30,7 @@ def main():
         buildAndAttachBitcode(builder)
 
     return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -2,14 +2,14 @@ import os
 import sys
 import subprocess as sp
 
-from driver.utils import llvmCompilerPathEnv
-from driver.popenwrapper import Popen
-from driver.utils import elfSectionName
-from driver.utils import darwinSegmentName
-from driver.utils import darwinSectionName
-from driver.utils import FileType
+from utils import llvmCompilerPathEnv
+from popenwrapper import Popen
+from utils import elfSectionName
+from utils import darwinSegmentName
+from utils import darwinSectionName
+from utils import FileType
 
-import driver.logconfig
+import logconfig
 
 import logging
 import pprint

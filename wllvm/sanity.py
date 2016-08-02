@@ -6,15 +6,15 @@ Hopefully never dumping a python stack trace.
 
 """
 
-import sys
+import sys, os
 
 sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
 
-from wllvm.checker import *
+from checker import *
 
 def main():
     return Checker().check()
 
-
-
     
+if __name__ == '__main__':
+    sys.exit(main())

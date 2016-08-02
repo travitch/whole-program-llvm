@@ -1,6 +1,10 @@
 
 all:
-	@echo 'To ...'
+	@echo 'To develop       :    "make develop"'
+	@echo 'To test install  :    "make testinstall"'
+	@echo 'To install       :    "make install"'
+	@echo 'To test publish  :    "make testpublish"'
+	@echo 'To publish       :    "make publish"'
 
 
 #local editable install for developing
@@ -12,7 +16,7 @@ dist: clean
 	python setup.py bdist_wheel
 
 # If you need to push this project again,
-# INCREASE the version number in wllvm/util.py,
+# INCREASE the version number in wllvm/version.py,
 # otherwise the server will give you an error. 
 
 testpublish: dist

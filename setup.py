@@ -13,7 +13,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # use the in house version number so we stay in synch with ourselves.
-from wllvm.util import wllvm_version
+from wllvm.version import wllvm_version
     
 setup(
     name='wllvm',
@@ -21,18 +21,17 @@ setup(
     description='Whole Program LLVM',
     long_description=long_description,
     url='https://github.com/SRI-CSL/whole-program-llvm',
-    author='Ian A. Mason, ...',
+    author='Ian A. Mason, Tristan Ravitch, Dan Liew, Bruno Dutertre, ...',
     author_email='iam@csl.sri.com',
-    
 
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(exclude=['test', 'doc' ]),
     
     entry_points = {
         'console_scripts': [
             'wllvm = wllvm.wllvm:main',
-            'wllvm++ = wllvm.wllvm++:main',
-            'wllvm-sanity-checker = wllvm.wllvm-sanity-checker:main',
-            'extract-bc = wllvm.extract-bc:main',
+            'wllvm++ = wllvm.wllvmpp:main',
+            'wllvm-sanity-checker = wllvm.sanity:main',
+            'extract-bc = wllvm.extractor:main',
         ],
     },
 
@@ -41,14 +40,19 @@ setup(
     license='MIT',
     
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Natural Language :: English',
+        'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
-        'Topic :: System :: Distributed Computing',
+        'Topic :: Software Development :: Compilers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
+        'Operating System :: MacOS',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: POSIX :: BSD',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
     ],
 )

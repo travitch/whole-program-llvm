@@ -13,13 +13,20 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
 
-from wllvm.utils import *
-import wllvm.logconfig
+from utils import *
+import logconfig
 
-cmd = list(sys.argv)
-cmd = cmd[1:]
+def main():
+    cmd = list(sys.argv)
+    cmd = cmd[1:]
 
-builder = getBuilder(cmd, True)
-buildObject(builder)
-if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-    buildAndAttachBitcode(builder)
+    builder = getBuilder(cmd, True)
+    buildObject(builder)
+    if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+        buildAndAttachBitcode(builder)
+
+
+    
+if __name__ == '__main__':
+    sys.exit(main())
+        

@@ -21,12 +21,14 @@ that contains a section called __llvm_bc.
 
 """
 
-import sys
+import sys, os
 
 sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
 
-from wllvm.extraction import *
+from extraction import *
 
 def main():
     return extraction(sys.argv)
 
+if __name__ == '__main__':
+    sys.exit(main())
