@@ -10,7 +10,7 @@ install:
   - sudo apt-get install -y python-pip
   - sudo apt-get install llvm-3.4 clang-3.4 libapr1-dev libaprutil1-dev
   - sudo apt-get install dragonegg llvm-3.0 llvm-gcc
-  - pip install -e .
+  - sudo pip install -e .
   - export WLLVM_HOME=`pwd`
 
 # command to run tests
