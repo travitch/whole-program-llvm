@@ -7,7 +7,7 @@ export dragonegg_disable_version_check=true
 export PATH=/usr/lib/llvm-${LLVM_VERSION}/bin:${PATH}
 export LLVM_COMPILER=dragonegg
 export LLVM_GCC_PREFIX=llvm-
-export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.6/plugin/dragonegg.so
+export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.7/plugin/dragonegg.so
 
 export WLLVM_OUTPUT=WARNING
 
