@@ -31,10 +31,20 @@ of a build process requires that.
 
 WLLVM works with either clang or the gcc dragonegg plugin.
 
-Tutorial
-====
+Installation
+============
 
-See the tutorial markdown files for detailed instructions on how to compile apache with wllvm on Ubuntu.
+WLLVM is now a pip package. You can just do:
+
+    pip install wllvm
+
+
+If you want to develop or use the development version:
+
+    git clone https://github.com/SRI-CSL/whole-program-llvm
+    cd wllvm
+    pip install -e .
+
 
 Usage
 =====
@@ -79,6 +89,9 @@ In addition to the above environment variables the following can be optionally u
    bitcode files.
 
 
+
+
+
 Building a bitcode module with clang
 ====================================
 
@@ -91,6 +104,9 @@ Building a bitcode module with clang
 
     # Produces pkg-config.bc
     extract-bc pkg-config
+
+Tutorials
+=========
 
 A gentler set of instructions on building apache in a vagrant Ubuntu 14.04 can be found
 [here,](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial.md) and

@@ -21,9 +21,7 @@ that contains a section called __llvm_bc.
 
 """
 
-import sys, os
-
-sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
+import sys
 
 from extraction import *
 

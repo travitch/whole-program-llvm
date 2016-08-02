@@ -2,6 +2,14 @@ import sys
 import os
 import subprocess as sp
 import errno
+"""
+Module support for the wllvm-sanity-checker tool.
+
+The wllvm-sanity-checker tool examines the users
+environment to see if it makes sense from the
+wllvm point of view. Useful first step in trying to
+debug a failure.
+"""
 
 explain_LLVM_COMPILER = """
 
@@ -72,6 +80,15 @@ class Checker(object):
         self.path = path if path else ''
 
     def check(self):
+        """Performs the environmental sanity check.
+
+        Performs the following checks in order:
+
+        1. Check that the OS is supported.
+        2. Checks that the compiler settings make sense.
+        3. Checks that the needed LLVM utilities exists.
+        """
+        
         if not self.checkOS():
             print 'I do not think we support your OS. Sorry.'
             return 1
@@ -86,12 +103,14 @@ class Checker(object):
         
 
     def checkOS(self):
+        """Returns True if we support the OS."""
         return (sys.platform.startswith('freebsd') or
                 sys.platform.startswith('linux') or 
                 sys.platform.startswith('darwin'))
     
             
     def checkSwitch(self):
+        """Checks the correctness of the LLVM_COMPILER env var."""
         compiler_type = os.getenv('LLVM_COMPILER')
         if compiler_type == 'clang':
             return (1, '\nGood, we are using clang.\n')
@@ -102,7 +121,7 @@ class Checker(object):
 
 
     def checkClang(self):
-
+        """Checks for clang and clang++."""
         cc_name = os.getenv('LLVM_CC_NAME')
         cxx_name = os.getenv('LLVM_CXX_NAME')
 
@@ -113,7 +132,7 @@ class Checker(object):
 
     
     def checkDragonegg(self):
-
+        """Checks for gcc, g++ and the dragonegg plugin."""
         if not self.checkDragoneggPlugin():
             return False
 
@@ -128,6 +147,7 @@ class Checker(object):
 
     
     def checkDragoneggPlugin(self):
+        """Checks for the dragonegg plugin."""
         plugin = os.getenv('LLVM_DRAGONEGG_PLUGIN')
 
         if not plugin:
@@ -148,6 +168,7 @@ class Checker(object):
         
 
     def checkCompiler(self):
+        """Determines the chosen compiler, and checks it."""
         (code, comment) = self.checkSwitch()
 
         if code == 0:
@@ -165,7 +186,7 @@ class Checker(object):
 
 
     def checkCompilers(self, cc, cxx):
-
+        """Tests that the compilers actually exist."""
         (ccOk, ccVersion) = self.checkExecutable(cc)
         (cxxOk, cxxVersion) = self.checkExecutable(cxx)
 
@@ -192,6 +213,7 @@ class Checker(object):
         
 
     def checkExecutable(self, exe, version_switch='-v'):
+        """Checks that an executable exists, and is executable."""
         cmd = [exe, version_switch]
         try:
             compiler = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
@@ -210,6 +232,7 @@ class Checker(object):
 
     
     def checkAuxiliaries(self):
+        """Checks for the archiver and linker."""
         link_name = os.getenv('LLVM_LINK_NAME')
         ar_name = os.getenv('LLVM_AR_NAME')
 

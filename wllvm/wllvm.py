@@ -11,9 +11,6 @@ linked into a library or executable.
 """
 
 import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
 
 from utils import *
 

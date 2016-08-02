@@ -6,9 +6,7 @@ Hopefully never dumping a python stack trace.
 
 """
 
-import sys, os
-
-sys.path.append(os.path.abspath(os.path.join(__file__, '..')))
+import sys
 
 from checker import *
 
