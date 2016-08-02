@@ -3,11 +3,10 @@
 set -e
 
 
-export PATH=/usr/lib/llvm-3.4/bin:${PATH}
+export PATH=/usr/lib/llvm-3.5/bin:${PATH}
 export LLVM_COMPILER=clang
 export WLLVM_OUTPUT=WARNING
 
-APACHE_VER=2.4.18
 wget https://archive.apache.org/dist/httpd/httpd-${APACHE_VER}.tar.gz
 
 tar xfz httpd-${APACHE_VER}.tar.gz
