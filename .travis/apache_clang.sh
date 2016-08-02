@@ -3,7 +3,7 @@
 set -e
 
 
-export PATH=/usr/lib/llvm-3.5/bin:${PATH}
+export PATH=/usr/lib/llvm-${LLVM_VERSION}/bin:${PATH}
 export LLVM_COMPILER=clang
 export WLLVM_OUTPUT=WARNING
 
