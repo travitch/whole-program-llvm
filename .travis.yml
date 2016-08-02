@@ -13,9 +13,9 @@ python:
 install:
   - sudo apt-get update
   - sudo apt-get install -y python-pip
-  - export LLVM_VERSION=3.4
-  - sudo apt-get install  -y llvm-${LLVM_VERSION} clang-${LLVM_VERSION} libapr1-dev libaprutil1-dev
-  - sudo apt-get install  -y dragonegg llvm-${LLVM_VERSION} llvm-gcc-4.7
+  - sudo apt-get install  -y llvm-3.5 clang-3.5 libapr1-dev libaprutil1-dev
+  # dragonegg uses 3.3
+  - sudo apt-get install  -y llvm-3.3 llvm-gcc-4.7
   - sudo pip install -e .
   - export WLLVM_HOME=`pwd`
   - export APACHE_VER=2.4.18
@@ -23,9 +23,9 @@ install:
 
 # command to run tests
 script:
-  # build apache with clang (i.e. httpd-2.4.12) 
+  # build apache with clang
   - ${WLLVM_HOME}/.travis/apache_clang.sh
-  # build apache with gcc and dragonegg (i.e. httpd-2.4.12) 
+  # build apache with gcc and dragonegg
   - ${WLLVM_HOME}/.travis/apache_dragonegg.sh
   
 

@@ -24,10 +24,14 @@ setup(
     author='Ian A. Mason, Tristan Ravitch, Dan Liew, Bruno Dutertre, ...',
     author_email='iam@csl.sri.com',
 
+
+    include_package_data=True,
+    
     packages=find_packages(exclude=['test', 'doc' ]),
     
     entry_points = {
         'console_scripts': [
+            'wllvm-as = wllvm.as:main',
             'wllvm = wllvm.wllvm:main',
             'wllvm++ = wllvm.wllvmpp:main',
             'wllvm-sanity-checker = wllvm.sanity:main',
@@ -35,8 +39,6 @@ setup(
         ],
     },
 
-
-    
     license='MIT',
     
     classifiers=[

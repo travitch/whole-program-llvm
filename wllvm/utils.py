@@ -10,11 +10,14 @@ import os
 import re
 import sys
 import tempfile
+
+
 from .popenwrapper import Popen
 
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
+asDir = os.path.abspath(os.path.join(driverDir, '..', 'dragonegg_as')
 
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
@@ -600,8 +603,8 @@ class DragoneggBuilder(BuilderBase):
         cc = self.getCompiler()
         # We use '-B' to tell gcc where to look for an assembler.
         # When we build LLVM bitcode we do not want to use the GNU assembler,
-        # instead we want gcc to use our own assembler (see driver/as).
-        cmd = cc + ['-B', driverDir, '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
+        # instead we want gcc to use our own assembler (see as.py).
+        cmd = cc + ['-B', asDir, '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
         _logger.debug(cmd)
         return cmd
 
