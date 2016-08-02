@@ -17,7 +17,7 @@ from .popenwrapper import Popen
 fullSelfPath = os.path.realpath(__file__)
 prefix = os.path.dirname(fullSelfPath)
 driverDir = prefix
-asDir = os.path.abspath(os.path.join(driverDir, '..', 'dragonegg_as')
+asDir = os.path.abspath(os.path.join(driverDir, '..', 'dragonegg_as'))
 
 
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
