@@ -34,7 +34,7 @@ WLLVM works with either clang or the gcc dragonegg plugin.
 Installation
 ============
 
-WLLVM is now a pip package. You can just do:
+As of August 2016 WLLVM is now a pip package. You can just do:
 
     pip install wllvm
 

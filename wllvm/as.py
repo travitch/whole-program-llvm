@@ -12,17 +12,16 @@ compilation phase by the real compiler).  We'll link this together at
 a later stage.
 
 In the pip version the main below is a console script called wllvm-as.
-Since we cannot tell gcc what our assember is called, only which directory
-it should look for as in, we have to make a "hidden" directory that we
-can use to pass gcc. It needs to be hidden since we do not want our
-assembler to override the users assembler.
+Since we cannot tell gcc what our assember is called, only which
+directory it should look for the assembler "as" in, we have to make a
+"hidden" directory that we can use to pass gcc. It needs to be hidden
+since we do not want our assembler to override the users assembler.
 
 This should explain:
 
 ../dragonegg_as/as
 
 in the pip egg, and in the repository.
-
 
 """
 
