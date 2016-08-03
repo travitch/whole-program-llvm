@@ -42,7 +42,7 @@ As of August 2016 WLLVM is now a pip package. You can just do:
 If you want to develop or use the development version:
 
     git clone https://github.com/SRI-CSL/whole-program-llvm
-    cd wllvm
+    cd whole-program-llvm
     pip install -e .
 
 
