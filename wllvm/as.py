@@ -1,16 +1,29 @@
 #!/usr/bin/env python
-"""
-This is the assembler phase.  
+"""This is the assembler phase.  
 
-This variant is only invoked during
-the second compilation where we are building bitcode.  The compiler
-has already been instructed to generate LLVM IR; the compiler then
-tries to assemble it into an object file.  The standard assembler
-doesn't understand LLVM bitcode, so we interpose and use the llvm-as
-command to build a bitcode file.  We leave the bitcode in place, but
-record its full absolute path in the corresponding object file
-(which was created in the first compilation phase by the real
-compiler).  We'll link this together at a later stage.
+This variant is only invoked during the second compilation where we
+are building bitcode.  The compiler has already been instructed to
+generate LLVM IR; the compiler then tries to assemble it into an
+object file.  The standard assembler doesn't understand LLVM bitcode,
+so we interpose and use the llvm-as command to build a bitcode file.
+We leave the bitcode in place, but record its full absolute path in
+the corresponding object file (which was created in the first
+compilation phase by the real compiler).  We'll link this together at
+a later stage.
+
+In the pip version the main below is a console script called wllvm-as.
+Since we cannot tell gcc what our assember is called, only which directory
+it should look for as in, we have to make a "hidden" directory that we
+can use to pass gcc. It needs to be hidden since we do not want our
+assembler to override the users assembler.
+
+This should explain:
+
+../dragonegg_as/as
+
+in the pip egg, and in the repository.
+
+
 """
 
 from __future__ import absolute_import
