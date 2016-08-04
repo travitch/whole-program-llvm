@@ -20,5 +20,5 @@ Version History:
 
 
 """
-wllvm_version='1.0.3'
+wllvm_version='1.0.4.dev1'
 
