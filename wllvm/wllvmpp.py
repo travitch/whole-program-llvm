@@ -14,14 +14,17 @@ from utils import *
 import logconfig
 
 def main():
-    cmd = list(sys.argv)
-    cmd = cmd[1:]
+    try:
+        cmd = list(sys.argv)
+        cmd = cmd[1:]
 
-    builder = getBuilder(cmd, True)
-    buildObject(builder)
-    if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-        buildAndAttachBitcode(builder)
-
+        builder = getBuilder(cmd, True)
+        buildObject(builder)
+        if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+            buildAndAttachBitcode(builder)
+    except:
+        return 1
+    return 0
 
     
 if __name__ == '__main__':

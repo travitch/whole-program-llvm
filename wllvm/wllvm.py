@@ -18,14 +18,16 @@ import logconfig
 
 
 def main():
-    cmd = list(sys.argv)
-    cmd = cmd[1:]
+    try:
+        cmd = list(sys.argv)
+        cmd = cmd[1:]
 
-    builder = getBuilder(cmd, False)
-    buildObject(builder)
-    if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-        buildAndAttachBitcode(builder)
-
+        builder = getBuilder(cmd, False)
+        buildObject(builder)
+        if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+            buildAndAttachBitcode(builder)
+    except:
+        return 1
     return 0
 
 

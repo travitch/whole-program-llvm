@@ -142,6 +142,11 @@ Building bitcode archive
     # Produces src/LinearMath/libLinearMath.bca
     extract-bc src/LinearMath/libLinearMath.a
 
+    # Produces src/LinearMath/libLinearMath.a.bc
+    extract-bc -b src/LinearMath/libLinearMath.a
+
+
+
 
 Building an Operating System
 ============================

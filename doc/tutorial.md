@@ -17,26 +17,18 @@ DISTRIB_DESCRIPTION="Ubuntu 14.04.2 LTS"
 ```
 
 
-## Step 0.
-
-Checkout the wllvm repository
-
-```
->git clone https://github.com/SRI-CSL/whole-program-llvm.git
-```
-
 ## Step 1.
 
-Set up the environment 
+
+Install `wllvm`.
 
 ```
->export WLLVM_HOME=/vagrant/whole-program-llvm
+>sudo apt-get update
 
->export PATH=${WLLVM_HOME}:${PATH}
+>sudo apt-get install python-pip
 
->which wllvm
+>sudo pip install wllvm
 
-/vagrant/whole-program-llvm/wllvm
 ```
 
 ## Step 2.
@@ -44,11 +36,13 @@ Set up the environment
 I am only going to build apache, not apr, so I first install the prerequisites.
 
 ```
->sudo apt-get update
-
 >sudo apt-get install llvm-3.4 clang-3.4 libapr1-dev libaprutil1-dev
 
-```
+``` Note `wllvm` is agnostic with respect to llvm versions, when you
+use clang, so feel free to install a more recent version if you
+wish. However, if you are going to use dragonegg the llvm version is
+tightly coupled to the gcc and plugin versions you are using.
+
 
 ## Step 3.
 
@@ -60,16 +54,17 @@ I am only going to build apache, not apr, so I first install the prerequisites.
 >export WLLVM_OUTPUT=WARNING
 ```
 
+
 ## Step 4.
 
  Fetch apache, untar, configure, then build:
 
 ```
->wget http://apache.mirrors.pair.com//httpd/httpd-2.4.12.tar.gz
+>wget https://archive.apache.org/dist/httpd/httpd-2.4.18.tar.gz
 
->tar xfz httpd-2.4.12.tar.gz
+>tar xfz httpd-2.4.18.tar.gz
 
->cd httpd-2.4.12
+>cd httpd-2.4.18
 
 >CC=wllvm ./configure
 
@@ -84,7 +79,7 @@ Extract the bitcode.
 >extract-bc -l llvm-link-3.4 httpd
 
 >ls -la httpd.bc
--rw-r--r-- 1 vagrant vagrant 829960 Jun  1  2015 httpd.bc
+-rw-rw-r--  1 vagrant vagrant  860608 Aug  4 16:55 httpd.bc
 ```
 
 The extra command line argument to `extract-bc` is because `apt`
