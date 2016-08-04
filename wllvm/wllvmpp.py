@@ -23,7 +23,7 @@ def main():
         if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except:
-        return 1
+        pass
     return 0
 
     

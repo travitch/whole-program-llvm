@@ -29,7 +29,7 @@ def main():
     try:
         extraction(sys.argv)
     except:
-        return 1
+        pass
     return 0
     
 if __name__ == '__main__':
