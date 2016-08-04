@@ -4,10 +4,6 @@
 On a clean 16.04 server machine I will build apache.  Desktop instructions should be no different.
 
 ```
->pwd
-
-/home/me/
-
 >more /etc/lsb-release
 
 DISTRIB_ID=Ubuntu
@@ -17,26 +13,16 @@ DISTRIB_DESCRIPTION="Ubuntu 16.04 LTS"
 ```
 
 
-## Step 0.
-
-Checkout the wllvm repository
-
-```
->git clone https://github.com/SRI-CSL/whole-program-llvm.git
-```
-
 ## Step 1.
 
-Set up the environment 
+Install wllvm
 
 ```
->export WLLVM_HOME=/home/me/whole-program-llvm
+>sudo apt-get update
 
->export PATH=${WLLVM_HOME}:${PATH}
+>sudo install python-pip
 
->which wllvm
-
-/home/me/whole-program-llvm/wllvm
+>sudo pip install wllvm
 ```
 
 ## Step 2.
@@ -44,13 +30,12 @@ Set up the environment
 I am only going to build apache, not apr, so I first install the prerequisites.
 
 ```
->sudo apt-get update
-
->sudo apt-get install llvm clang libapr1-dev libaprutil1-dev libpcre3-dev gcc make
+>sudo apt-get install llvm clang libapr1-dev libaprutil1-dev libpcre3-dev make
 
 ```
 
-At this point, you should check your clang version with `which clang` and `ls -l /usr/bin/clang`.  It should be clang-3.8.
+At this point, you could check your clang version with `which clang` and `ls -l /usr/bin/clang`.
+It should be at least clang-3.8.
 
 ## Step 3.
 
@@ -67,13 +52,10 @@ At this point, you should check your clang version with `which clang` and `ls -l
  Fetch apache, untar, configure, then build:
 
 ```
->cd && pwd
 
-/home/me
+>wget https://archive.apache.org/dist/httpd/httpd-2.4.23.tar.gz
 
->wget http://apache.mirrors.pair.com/httpd/httpd-2.4.23.tar.gz
-
->tar xfz httpd-2.4.12.tar.gz
+>tar xfz httpd-2.4.23.tar.gz
 
 >cd httpd-2.4.23
 
@@ -87,22 +69,17 @@ At this point, you should check your clang version with `which clang` and `ls -l
 Extract the bitcode.
 
 ```
->extract-bc -l llvm-link-3.8 httpd
+>extract-bc httpd
 
 >ls -la httpd.bc
--rw-r--r-- 1 vagrant vagrant 829960 Jun  1  2015 httpd.bc
+-rw-r--r-- 1 vagrant vagrant 1119584 Aug  4 20:02 httpd.bc
 ```
-
-The extra command line argument to `extract-bc` is because `apt`
-installs `llvm-link` as `llvm-link-3.8` so we need to tell `extract-bc`
-to use that one.
 
 ## Step 6.  
 
 Turn the bitcode into a second executable binary. (optional -- just for fun and sanity checking)
 
 ```
-llgc httpd.bc -o httpd.s
-as httpd.s -o httpd.o
+llc -filetype=obj httpd.bc
 gcc httpd.o -lpthread -lapr-1 -laprutil-1 -lpcre -o httpd.new
 ```
