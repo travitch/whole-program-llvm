@@ -33,6 +33,10 @@ publish: dist
 install:
 	pip install 
 
+check_clang:
+	cd test; python -m unittest -v test_base_driver test_clang_driver
+
+
 clean:
 	rm -f  wllvm/*.pyc wllvm/*~
 

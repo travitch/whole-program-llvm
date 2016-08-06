@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""This is the assembler phase.  
+"""This is the (dragonegg) assembler phase.  
 
 This variant is only invoked during the second compilation where we
 are building bitcode.  The compiler has already been instructed to
@@ -15,11 +15,12 @@ In the pip version the main below is a console script called wllvm-as.
 Since we cannot tell gcc what our assember is called, only which
 directory it should look for the assembler "as" in, we have to make a
 "hidden" directory that we can use to pass gcc. It needs to be hidden
-since we do not want our assembler to override the users assembler.
+since we have no control over the user's PATH and certainly do not
+want our assembler to accidently override the user's assembler.
 
 This should explain:
 
-../dragonegg_as/as
+./dragonegg_as/as
 
 in the pip egg, and in the repository.
 
