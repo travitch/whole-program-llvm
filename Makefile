@@ -1,10 +1,17 @@
 
 all:
-	@echo 'To develop       :    "make develop"'
-	@echo 'To test install  :    "make testinstall"'
-	@echo 'To install       :    "make install"'
-	@echo 'To test publish  :    "make testpublish"'
-	@echo 'To publish       :    "make publish"'
+	@echo ''
+	@echo 'Here are the targets:'
+	@echo ''
+	@echo 'To develop          :    "make develop"'
+	@echo 'To test install     :    "make testinstall"'
+	@echo 'To install          :    "make install"'
+	@echo 'To test publish     :    "make testpublish"'
+	@echo 'To publish          :    "make publish"'
+
+	@echo 'To check clang      :    "make check_clang"'
+	@echo 'To check dragonegg  :    "make check_dragonegg"'
+	@echo ''
 
 
 #local editable install for developing
@@ -35,6 +42,9 @@ install:
 
 check_clang:
 	cd test; python -m unittest -v test_base_driver test_clang_driver
+
+check_dragonegg:
+	cd test; python -m unittest -v test_base_driver test_dragonegg_driver
 
 
 clean:

@@ -50,7 +50,10 @@ Usage
 =====
 
 WLLVM includes two python executables: `wllvm` for compiling C code
-and `wllvm++` for C++, and an auxiliary tool `extract-bc`.
+and `wllvm++` for compiling C++, and an auxiliary tool `extract-bc` for
+extracting the bitcode from a build product (object file, executable, library
+or archive). There is also a sanity checker, `wllvm-sanity-checker` for detecting
+configuration oversights.
 
 Three environment variables must be set to use these wrappers:
 
