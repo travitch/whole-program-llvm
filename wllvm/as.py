@@ -66,12 +66,10 @@ def main():
 
     # Now compile this llvm assembly file into a bitcode file.  The output
     # filename is the same as the object with a .bc appended
-    try:
-        (dirs, filename) = os.path.split(argFilter.outFileName)
-    except AttributeError as e:
-        logging.error('Output file argument not found.\nException message: ' + str(e))
+    if not argFilter.outFileName:
+        logging.error('Output file argument not found.')
         sys.exit(1)
-
+     
     fakeAssembler = [llvmAssembler, infile, '-o', argFilter.outFileName]
 
     asmProc = Popen(fakeAssembler)
