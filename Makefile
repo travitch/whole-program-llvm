@@ -12,6 +12,11 @@ all:
 	@echo 'To check clang      :    "make check_clang"'
 	@echo 'To check dragonegg  :    "make check_dragonegg"'
 	@echo ''
+	@echo 'To turn md 2 html   :    "make zippity"'
+	@echo ''
+	@echo 'then upload the zip file to https://pypi.python.org/pypi'
+	@echo ''
+
 
 
 #local editable install for developing
@@ -46,6 +51,11 @@ check_clang:
 check_dragonegg:
 	cd test; python -m unittest -v test_base_driver test_dragonegg_driver
 
+
+zippity:
+	rm -rf doczip*; mkdir doczip;
+	cat README.md | pandoc -f markdown_github > doczip/index.html
+	zip -r -j doczip.zip doczip
 
 clean:
 	rm -f  wllvm/*.pyc wllvm/*~
