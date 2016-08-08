@@ -10,7 +10,12 @@ all:
 	@echo 'To publish          :    "make publish"'
 
 	@echo 'To check clang      :    "make check_clang"'
+	@echo ''
+	@echo 'e.g. on linux: LLVM_COMPILER_PATH=/usr/lib/llvm-3.5/bin/ make check_clang'
+	@echo ''
 	@echo 'To check dragonegg  :    "make check_dragonegg"'
+	@echo ''
+	@echo 'e.g. on linux: PATH=/usr/lib/llvm-3.3/bin:... make check_dragonegg'
 	@echo ''
 	@echo 'To turn md 2 html   :    "make zippity"'
 	@echo ''
