@@ -7,13 +7,11 @@ records the location of the bitcode in an ELF section of the object
 file so that it can be found later after all of the objects are linked
 into a library or executable.
 """
-from __future__ import absolute_import
-
 import sys, os
 
-from .utils import getBuilder, buildObject, buildAndAttachBitcode, logging
+from utils import getBuilder, buildObject, buildAndAttachBitcode, logging
 
-import .logconfig
+import logconfig
 
 _logger = logging.getLogger(__name__)
 
