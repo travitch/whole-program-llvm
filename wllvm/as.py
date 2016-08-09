@@ -36,6 +36,8 @@ from wllvm.utils import *
 
 from wllvm.popenwrapper import Popen
 
+from wllvm.argumentlistfilter import ArgumentListFilter
+
 import logging
 logging.basicConfig()
 

@@ -3,11 +3,14 @@ import sys
 import subprocess as sp
 
 from utils import llvmCompilerPathEnv
+
 from popenwrapper import Popen
+
 from utils import elfSectionName
 from utils import darwinSegmentName
 from utils import darwinSectionName
-from utils import FileType
+
+from filetype import FileType
 
 import logconfig
 

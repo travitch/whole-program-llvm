@@ -10,12 +10,14 @@ found later after all of the objects are
 linked into a library or executable.
 """
 
-import sys
 
-from utils import *
+import sys, os
+
+from utils import getBuilder, buildObject, buildAndAttachBitcode, logging
 
 import logconfig
 
+_logger = logging.getLogger(__name__)
 
 def main():
     try:
@@ -26,7 +28,8 @@ def main():
         rc = buildObject(builder)
         if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
-    except:
+    except Exception as e:
+        _logger.debug('wllvm: exception case: {0}\n'.format(e))
         pass
     return rc
 
