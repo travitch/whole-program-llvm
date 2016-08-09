@@ -159,6 +159,8 @@ class ArgumentListFilter(object):
             '-ggdb3' : (0, ArgumentListFilter.compileUnaryCallback), 
             '-gdwarf-2' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gdwarf-3' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-gline-tables-only' : (0, ArgumentListFilter.compileUnaryCallback),
+
             '-p' : (0, ArgumentListFilter.compileUnaryCallback),
             '-pg' : (0, ArgumentListFilter.compileUnaryCallback),
 
@@ -250,6 +252,7 @@ class ArgumentListFilter(object):
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             
