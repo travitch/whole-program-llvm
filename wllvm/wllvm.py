@@ -11,14 +11,25 @@ linked into a library or executable.
 """
 
 import sys
-import os
-from driver.utils import *
-import driver.logconfig
 
-cmd = list(sys.argv)
-cmd = cmd[1:]
+from utils import *
 
-builder = getBuilder(cmd, False)
-buildObject(builder)
-if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-    buildAndAttachBitcode(builder)
+import logconfig
+
+
+def main():
+    try:
+        cmd = list(sys.argv)
+        cmd = cmd[1:]
+
+        builder = getBuilder(cmd, False)
+        buildObject(builder)
+        if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+            buildAndAttachBitcode(builder)
+    except:
+        pass
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

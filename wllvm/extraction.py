@@ -2,14 +2,14 @@ import os
 import sys
 import subprocess as sp
 
-from driver.utils import llvmCompilerPathEnv
-from driver.popenwrapper import Popen
-from driver.utils import elfSectionName
-from driver.utils import darwinSegmentName
-from driver.utils import darwinSectionName
-from driver.utils import FileType
+from utils import llvmCompilerPathEnv
+from popenwrapper import Popen
+from utils import elfSectionName
+from utils import darwinSegmentName
+from utils import darwinSectionName
+from utils import FileType
 
-import driver.logconfig
+import logconfig
 
 import logging
 import pprint
@@ -17,10 +17,8 @@ import tempfile
 import shutil
 import argparse
 
-"""This tool can be used two ways.
-
-(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment
-name to __WLLVM).
+"""
+(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment name to __WLLVM).
 
 """
 
@@ -36,10 +34,13 @@ except NameError:
 bitCodeArchiveExtension='bca'
 moduleExtension='bc'
 
-# Use objdump on the provided binary; parse out the fields
-# to find the given section.  Return the size and offset of
-# that section (in bytes)
 def getSectionSizeAndOffset(sectionName, filename):
+    """Returns the size and offset of the section, both in bytes.
+
+    Use objdump on the provided binary; parse out the fields
+    to find the given section.  Parses the output,and 
+    extracts thesize and offset of that section (in bytes).
+    """
     objdumpCmd = ['objdump', '-h', '-w', filename]
     objdumpProc = Popen(objdumpCmd, stdout=sp.PIPE)
 
@@ -66,8 +67,8 @@ def getSectionSizeAndOffset(sectionName, filename):
     logging.warning('Could not find "{0}" ELF section in "{1}", so skipping this entry.'.format(sectionName,filename))
     return None
 
-# Read the entire content of an ELF section into a string
 def getSectionContent(size, offset, filename):
+    """Reads the entire content of an ELF section into a string."""
     with open(filename, mode='rb') as f:
         f.seek(offset)
         d = ''
@@ -83,13 +84,12 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return d.replace('\0', '')
 
-# os independent abstraction (darwin version)
-#use otool to extract the segment and section
-#iam: "xxd -r" would just refuse to play nice, so it got tossed.
-# if any one can get
-#    otool -X -s __WLLVM __llvm_bc inputFile | xxd -r
-# to work this can be simplified.
 def extract_section_darwin(inputFile):
+    """Extracts the section as a string, the darwin version.
+
+    Uses otool to extract the section, then processes it
+    to a usable state.
+    """
 
     otoolCmd  = ['otool', '-X', '-s', darwinSegmentName, darwinSectionName, inputFile]
     otoolProc = Popen(otoolCmd, stdout=sp.PIPE)
@@ -110,9 +110,8 @@ def extract_section_darwin(inputFile):
         logging.error('{0} contained no {1} segment'.format(inputFile, darwinSegmentName))
     return contents
 
-# os independent abstraction (*nix version)
-#analagous procedure for linux (relying on getSectionSizeAndOffset and getSectionContent)
 def extract_section_linux(inputFile):
+    """Extracts the section as a string, the *nix version."""
     val = getSectionSizeAndOffset(elfSectionName, inputFile)
     if val is None:
         return []

@@ -31,11 +31,29 @@ of a build process requires that.
 
 WLLVM works with either clang or the gcc dragonegg plugin.
 
+Installation
+============
+
+As of August 2016 WLLVM is now a pip package. You can just do:
+
+    pip install wllvm
+
+
+If you want to develop or use the development version:
+
+    git clone https://github.com/SRI-CSL/whole-program-llvm
+    cd whole-program-llvm
+    pip install -e .
+
+
 Usage
 =====
 
 WLLVM includes two python executables: `wllvm` for compiling C code
-and `wllvm++` for C++, and an auxiliary tool `extract-bc`.
+and `wllvm++` for compiling C++, and an auxiliary tool `extract-bc` for
+extracting the bitcode from a build product (object file, executable, library
+or archive). There is also a sanity checker, `wllvm-sanity-checker` for detecting
+configuration oversights.
 
 Three environment variables must be set to use these wrappers:
 
@@ -74,6 +92,9 @@ In addition to the above environment variables the following can be optionally u
    bitcode files.
 
 
+
+
+
 Building a bitcode module with clang
 ====================================
 
@@ -84,11 +105,18 @@ Building a bitcode module with clang
     CC=wllvm ./configure
     make
 
-    # Produces pkg-config.bc
+This should produce the executable `pkg-config`. To extract the bitcode:
+
     extract-bc pkg-config
 
-A gentler set of instructions on building apache can be found
-[here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/tutorial.md)
+which will produce the bitcode module `pkg-config.bc`.
+
+
+Tutorials
+=========
+
+A gentler set of instructions on building apache in a vagrant Ubuntu 14.04 can be found
+[here,](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial.md) and for Ubuntu 16.04 [here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-ubuntu-16.04.md)
 
 Building a bitcode module with dragonegg
 ========================================
@@ -102,8 +130,11 @@ Building a bitcode module with dragonegg
     CC=wllvm ./configure
     make
 
-    # Produces pkg-config.bc
+Again, this should produce the executable `pkg-config`. To extract the bitcode:
+
     extract-bc pkg-config
+
+which will produce the bitcode module `pkg-config.bc`.
 
 
 Building bitcode archive
@@ -119,17 +150,30 @@ Building bitcode archive
     # Produces src/LinearMath/libLinearMath.bca
     extract-bc src/LinearMath/libLinearMath.a
 
+Note that by default extracting bitcode from an archive produces
+an archive of bitcode. You can also extract the bitcode directly into a module.
+
+    extract-bc -b src/LinearMath/libLinearMath.a
+
+produces `src/LinearMath/libLinearMath.a.bc`.
+
+
 
 Building an Operating System
 ============================
 
-To see how to build freeBSD 10.0 from scratch check out this 
-[guide.](../master/README-freeBSD.md)
+To see how to build freeBSD 10.0 from scratch check out this
+[guide.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-freeBSD.md)
 
 
 Configuring without building bitcode
 ================================
 
+Sometimes it is necessary to disable the production of bitcode.
+Typically this is during configuration, where the production
+of unexpected files can confuse the configure script. For this
+we have a flag `WLLVM_CONFIGURE_ONLY` which can be used as
+follows:
 
     WLLVM_CONFIGURE_ONLY=1 CC=wllvm ./configure
     CC=wllvm make
@@ -149,8 +193,10 @@ Building a bitcode archive then extracting the bitcode
     extract-bc libjansson.a
     llvm-ar x libjansson.bca
     ls -la
-   
+
     
+
+
 
 Debugging
 =========
@@ -183,4 +229,4 @@ it might point out what is wrong.
 License
 =======
 
-WLLVM is released under the MIT license. See the file `LICENSE` for details.
+WLLVM is released under the MIT license. See the file `LICENSE` for [details.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/LICENSE)

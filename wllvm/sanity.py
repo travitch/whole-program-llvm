@@ -7,14 +7,12 @@ Hopefully never dumping a python stack trace.
 """
 
 import sys
-from sanity.checker import *
 
-def main(args):
+from checker import *
+
+def main():
     return Checker().check()
 
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv))
-
-
     
+if __name__ == '__main__':
+    sys.exit(main())
