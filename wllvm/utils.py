@@ -659,8 +659,9 @@ def buildObject(builder):
     objCompiler.extend(builder.cmd)
     proc = Popen(objCompiler)
     rc = proc.wait()
-    if rc != 0:
-        sys.exit(rc)
+    _logger.debug('buildObject rc = {0}'.format(rc))
+    return rc
+
 
 # This command does not have the executable with it
 def buildAndAttachBitcode(builder):

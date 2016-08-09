@@ -15,16 +15,16 @@ import logconfig
 
 def main():
     try:
+        rc = 1
         cmd = list(sys.argv)
         cmd = cmd[1:]
-
         builder = getBuilder(cmd, True)
-        buildObject(builder)
-        if not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+        rc = buildObject(builder)
+        if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except:
         pass
-    return 0
+    return rc
 
     
 if __name__ == '__main__':
