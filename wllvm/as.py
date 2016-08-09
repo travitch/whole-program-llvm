@@ -27,6 +27,7 @@ in the pip egg, and in the repository.
 """
 
 from __future__ import absolute_import
+
 import sys
 import os
 
@@ -36,7 +37,7 @@ from wllvm.utils import *
 
 from wllvm.popenwrapper import Popen
 
-from wllvm.argumentlistfilter import ArgumentListFilter
+from wllvm.arglistfilter import ArgumentListFilter
 
 import logging
 logging.basicConfig()
