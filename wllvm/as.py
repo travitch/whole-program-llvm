@@ -27,16 +27,17 @@ in the pip egg, and in the repository.
 """
 
 from __future__ import absolute_import
+
 import sys
 import os
 
 from subprocess import *
 
-from wllvm.utils import *
+from .utils import *
 
-from wllvm.popenwrapper import Popen
+from .popenwrapper import Popen
 
-from wllvm.argumentlistfilter import ArgumentListFilter
+from .arglistfilter import ArgumentListFilter
 
 import logging
 logging.basicConfig()

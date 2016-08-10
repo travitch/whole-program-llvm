@@ -20,10 +20,11 @@ The above language is deliberately vague, since ELF contains a
 that contains a section called __llvm_bc.
 
 """
+from __future__ import absolute_import
 
 import sys
 
-from extraction import *
+from .extraction import *
 
 def main():
     try:

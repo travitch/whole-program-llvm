@@ -20,9 +20,13 @@ Version History:
 
 1.0.5   - 8/4/2016 exit value was upsetting travis.
 
+1.0.6   - 8/9/2016 exit codes preserved; important for configure scripts like musl libc.
 
+1.0.7   - 8/9/2016 logical restructuring; smaller bites.
+
+1.0.8   - 8/9/2016 test and doc subdirectories are no longer included.
 
 
 """
-wllvm_version='1.0.5'
+wllvm_version='1.0.8'
 
