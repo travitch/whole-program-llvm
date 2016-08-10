@@ -1,4 +1,4 @@
 include wllvm/dragonegg_as/as
 
 recursive-exclude test *
-recursive-exclude doc *
+exclude doc
