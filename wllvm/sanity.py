@@ -8,7 +8,7 @@ Hopefully never dumping a python stack trace.
 
 import sys
 
-from checker import *
+from checker import Checker
 
 def main():
     return Checker().check()
