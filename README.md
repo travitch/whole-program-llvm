@@ -17,7 +17,7 @@ bitcode. The wrappers also store the location of the generated bitcode
 file in a dedicated section of the object file.  When object files are
 linked together, the contents of the dedicated sections are
 concatenated (so we don't lose the locations of any of the constituent
-bitcode files). After the build completes, one can use an WLLVM
+bitcode files). After the build completes, one can use a WLLVM
 utility to read the contents of the dedicated section and link all of
 the bitcode into a single whole-program bitcode file. This utility
 works for both executable and native libraries.
@@ -49,10 +49,10 @@ If you want to develop or use the development version:
 Usage
 =====
 
-WLLVM includes two python executables: `wllvm` for compiling C code
-and `wllvm++` for compiling C++, and an auxiliary tool `extract-bc` for
+WLLVM includes four python executables: `wllvm` for compiling C code
+and `wllvm++` for compiling C++, an auxiliary tool `extract-bc` for
 extracting the bitcode from a build product (object file, executable, library
-or archive). There is also a sanity checker, `wllvm-sanity-checker` for detecting
+or archive), and a sanity checker, `wllvm-sanity-checker` for detecting
 configuration oversights.
 
 Three environment variables must be set to use these wrappers:
@@ -89,7 +89,7 @@ In addition to the above environment variables the following can be optionally u
    and `wllvm++` behave like a normal C or C++ compiler. They do not
    produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
    configuration errors caused by the unexpected production of hidden
-   bitcode files.
+   bitcode files. It is sometimes required when configuring a build.
 
 
 
