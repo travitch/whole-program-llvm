@@ -45,7 +45,7 @@ The quick way to do this is:
      cd ../../security/sudo && make -DBATCH install clean && \
      cd ../../ftp/wget && make -DBATCH install clean
 
-(Python27 is installed as a prerequisite of Subversion.)
+(The package python27 is installed as a prerequisite of git.)
 
 Below we assume the shell being used is bash, that is:
 
@@ -97,7 +97,7 @@ So to make life easier, so that extract-bc can find it do:
 
 ### 4. Install whole-program-wllvm.
 
-    pip install wllvm
+    sudo pip install wllvm
 
 
 This next one is a hack (make buildworld doesn't find python with /usr/bin/env without it)
