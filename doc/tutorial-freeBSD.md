@@ -31,7 +31,7 @@ Upgrade the ports collection (as 'root'):
 
 Install the following ports using the BSD port tree: 
 
-    bash git subversion python27 sudo wget
+    bash git subversion python27 pip sudo wget
 
 (See the FreeBSD Handbook Chapter 5 for instructions.)
 The quick way to do this is:
@@ -40,6 +40,7 @@ The quick way to do this is:
     cd /usr/ports
     cd shells/bash && make -DBATCH install clean && \
      cd ../../devel/git && make -DBATCH install clean && \
+     cd ../../devel/py-pip && make -DBATCH install clean && \
      cd ../../devel/subversion && make -DBATCH install clean && \
      cd ../../security/sudo && make -DBATCH install clean && \
      cd ../../ftp/wget && make -DBATCH install clean
@@ -94,20 +95,10 @@ So to make life easier, so that extract-bc can find it do:
     sudo ln -s $LLVM_HOME/bin/llvm-link /usr/bin/llvm-link
   
 
-### 4. Download whole-program-wllvm.
+### 4. Install whole-program-wllvm.
 
-    cd ${HOME}
-    git clone https://github.com/travitch/whole-program-llvm
+    pip install wllvm
 
-Create the hooks for interposing on compiler calls.
-
-    cd ${HOME}
-    mkdir ${HOME}/wllvm.bin
-    cd wllvm.bin
-    ln -s ${HOME}/whole-program-llvm/wllvm cc
-    ln -s ${HOME}/whole-program-llvm/wllvm++ c++
-    ln -s ${HOME}/whole-program-llvm/wllvm clang
-    ln -s ${HOME}/whole-program-llvm/wllvm++ clang++
 
 This next one is a hack (make buildworld doesn't find python with /usr/bin/env without it)
 
