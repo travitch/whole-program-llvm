@@ -38,6 +38,12 @@ As of August 2016 WLLVM is now a pip package. You can just do:
 
     pip install wllvm
 
+or 
+
+    sudo pip install wllvm
+
+depending on your machines permissions.
+
 
 If you want to develop or use the development version:
 
