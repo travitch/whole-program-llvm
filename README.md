@@ -42,7 +42,7 @@ or
 
     sudo pip install wllvm
 
-depending on your machines permissions.
+depending on your machine's permissions.
 
 
 If you want to develop or use the development version:
