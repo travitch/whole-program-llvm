@@ -20,7 +20,7 @@ setup(
     description='Whole Program LLVM',
     long_description=long_description,
     url='https://github.com/SRI-CSL/whole-program-llvm',
-    author='Ian A. Mason, Tristan Ravitch, Dan Liew, Bruno Dutertre, Benjamin Schubert, Berkeley Churchill, Marko Dimjasevic, Ben Liblit, Fabian Mager.',
+    author='Ian A. Mason, Tristan Ravitch, Dan Liew, Bruno Dutertre, Benjamin Schubert, Berkeley Churchill, Marko Dimjasevic, Will Dietz, Fabian Mager, Ben Liblit.',
     author_email='iam@csl.sri.com',
 
 
