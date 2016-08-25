@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""This is a wrapper around the real compiler.  
+"""This is a wrapper around the real compiler.
 
 It first invokes a real compiler to generate an object file.  Then it
 invokes a bitcode compiler to generate a parallel bitcode file.  It
@@ -9,9 +9,9 @@ into a library or executable.
 """
 import sys, os
 
-from utils import getBuilder, buildObject, buildAndAttachBitcode, logging
+from .utils import getBuilder, buildObject, buildAndAttachBitcode, logging
 
-import logconfig
+from .logconfig import *
 
 _logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def main():
         builder = getBuilder(cmd, True)
         rc = buildObject(builder)
 
- 
+
         if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except Exception as e:
@@ -31,7 +31,7 @@ def main():
         pass
     return rc
 
-    
+
 if __name__ == '__main__':
     sys.exit(main())
-        
+

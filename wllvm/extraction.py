@@ -2,17 +2,17 @@ import os
 import sys
 import subprocess as sp
 
-from utils import llvmCompilerPathEnv
+from .utils import llvmCompilerPathEnv
 
-from popenwrapper import Popen
+from .popenwrapper import Popen
 
-from utils import elfSectionName
-from utils import darwinSegmentName
-from utils import darwinSectionName
+from .utils import elfSectionName
+from .utils import darwinSegmentName
+from .utils import darwinSectionName
 
-from filetype import FileType
+from .filetype import FileType
 
-import logconfig
+from .logconfig import *
 
 import logging
 import pprint
@@ -25,7 +25,7 @@ import argparse
 
 """
 
-    
+
 
 # Python 2 does not have exceptions automatically
 # imported whereas python 3 does. Handle this
@@ -41,7 +41,7 @@ def getSectionSizeAndOffset(sectionName, filename):
     """Returns the size and offset of the section, both in bytes.
 
     Use objdump on the provided binary; parse out the fields
-    to find the given section.  Parses the output,and 
+    to find the given section.  Parses the output,and
     extracts thesize and offset of that section (in bytes).
     """
     objdumpCmd = ['objdump', '-h', '-w', filename]
@@ -65,8 +65,8 @@ def getSectionSizeAndOffset(sectionName, filename):
             return (size, offset)
         except ValueError:
             continue
-    
-    # The needed section could not be found 
+
+    # The needed section could not be found
     logging.warning('Could not find "{0}" ELF section in "{1}", so skipping this entry.'.format(sectionName,filename))
     return None
 
@@ -128,9 +128,9 @@ def extract_section_linux(inputFile):
 
 def linkFiles(pArgs, fileNames):
     linkCmd = [ pArgs.llvmLinker, '-v' ] if pArgs.verboseFlag else [ pArgs.llvmLinker ]
-    
+
     linkCmd.extend(['-o', pArgs.outputFile ])
-    
+
     linkCmd.extend([x for x in fileNames if x != ''])
     logging.info('Writing output to {0}'.format(pArgs.outputFile))
     try:
@@ -142,13 +142,13 @@ def linkFiles(pArgs, fileNames):
             errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
         logging.error(errorMsg)
         raise Exception(errorMsg)
-    
+
     else:
         exitCode = linkProc.wait()
         logging.info('{0} returned {1}'.format(pArgs.llvmLinker, str(exitCode)))
     return exitCode
 
-    
+
 def archiveFiles(pArgs, fileNames):
     retCode = 0
     # We do not want full paths in the archive so we need to chdir into each
@@ -192,7 +192,7 @@ def handleExecutable(pArgs):
 
     if not fileNames:
         return 1
-    
+
     if pArgs.manifestFlag:
         manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
         with open(manifestFile, 'w') as output:
@@ -212,7 +212,7 @@ def handleArchive(pArgs):
     originalDir = os.getcwd() # This will be the destination
 
     pArgs.arCmd.append(pArgs.inputFile)
-    
+
     # Make temporary directory to extract objects to
     tempDir = ''
     bitCodeFiles = [ ]
@@ -265,7 +265,7 @@ def handleArchive(pArgs):
         # Delete the temporary folder
         logging.debug('Deleting temporary folder "{0}"'.format(tempDir))
         shutil.rmtree(tempDir)
-        
+
     #write the manifest file if asked for
     if pArgs.manifestFlag:
         manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
@@ -286,20 +286,20 @@ def buildArchive(pArgs, bitCodeFiles):
         if pArgs.outputFile == None:
             pArgs.outputFile = pArgs.inputFile
             pArgs.outputFile += '.' + moduleExtension
-        
+
         logging.info('Writing output to {0}'.format(pArgs.outputFile))
 
         return linkFiles(pArgs, bitCodeFiles)
 
     else:
-            
+
         # Pick output file path if outputFile not set
         if pArgs.outputFile == None:
             if pArgs.inputFile.endswith('.a'):
                 # Strip off .a suffix
                 pArgs.outputFile = pArgs.inputFile[:-2]
                 pArgs.outputFile += '.' + bitCodeArchiveExtension
-        
+
         logging.info('Writing output to {0}'.format(pArgs.outputFile))
 
         return archiveFiles(pArgs, bitCodeFiles)
@@ -312,7 +312,7 @@ class ExtractedArgs:
     extractor = None
 
     arCmd = None
-    
+
 
 def extract_bc_args(args):
 
@@ -326,7 +326,7 @@ def extract_bc_args(args):
     if not llvmLinkerName:
         llvmLinkerName = 'llvm-link'
     llvmLinker = os.path.join(llvmToolPrefix, llvmLinkerName)
-    
+
     # is our archiver called something different?
     llvmArchiverName = os.getenv('LLVM_AR_NAME')
     if not llvmArchiverName:
@@ -349,11 +349,11 @@ def extract_bc_args(args):
                         help='Call the external procedures in verbose mode.',
                         action="store_true")
     parser.add_argument('--manifest', '-m',
-                        dest='manifestFlag', 
+                        dest='manifestFlag',
                         help='Write a manifest file listing all the .bc files used.',
                         action='store_true')
     parser.add_argument('--bitcode', '-b',
-                        dest='bitcodeModuleFlag', 
+                        dest='bitcodeModuleFlag',
                         help='Extract a bitcode module rather than an archive. ' +
                         'Only useful when extracting from an archive.',
                         action='store_true')
@@ -374,7 +374,7 @@ def extract_bc_args(args):
 
     pArgs.inputFile = os.path.abspath(pArgs.inputFile)
 
-    
+
     # Check output destitionation if set
     outputFile = pArgs.outputFile
     if outputFile != None:
@@ -385,7 +385,7 @@ def extract_bc_args(args):
         return (False, None)
 
     pArgs.output = outputFile
-    
+
     return (True, pArgs)
 
 
@@ -405,11 +405,11 @@ def extraction(args):
         process_file_darwin(pArgs)
 
     else:
-        #iam: do we work on anything else? 
+        #iam: do we work on anything else?
         logging.error('Unsupported or unrecognized platform: {0}'.format(sys.platform))
         return 1
 
-    
+
 def process_file_unix(pArgs):
 
     ft = FileType.getFileType(pArgs.inputFile)
@@ -432,7 +432,7 @@ def process_file_unix(pArgs):
         logging.error('File "{0}" of type {1} cannot be used'.format(pArgs.inputFile, FileType.revMap[ft]))
         return 1
 
-    
+
 
 def process_file_darwin(pArgs):
 
