@@ -26,7 +26,8 @@ Version History:
 
 1.0.8   - 8/9/2016 test and doc subdirectories are no longer included.
 
+1.0.9   - 8/25/2016  Python 3.0 import fixes (Will Dietz)
 
 """
-wllvm_version='1.0.8'
+wllvm_version='1.0.9'
 
