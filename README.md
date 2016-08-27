@@ -1,4 +1,4 @@
-![WLLVM](https://raw.githubusercontent.com/SRI-CSL/bixie/gh-pages/img/bixie_small.png) Whole Program LLVM
+![WLLVM](https://github.com/SRI-CSL/whole-program-llvm/blob/master/img/dragon128x128.png?raw=true) Whole Program LLVM
 
 [![PyPI version](https://badge.fury.io/py/wllvm.svg)](https://badge.fury.io/py/wllvm)
 [![Build Status](https://travis-ci.org/SRI-CSL/whole-program-llvm.svg?branch=master)](https://travis-ci.org/SRI-CSL/whole-program-llvm)
