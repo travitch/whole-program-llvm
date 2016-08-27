@@ -5,7 +5,7 @@
 
 
 Introduction
-============
+------------
 
 This project, WLLVM, provides tools for building whole-program (or
 whole-library) LLVM bitcode files from an unmodified C or C++
@@ -34,7 +34,7 @@ of a build process requires that.
 WLLVM works with either clang or the gcc dragonegg plugin.
 
 Installation
-============
+------------
 
 As of August 2016 WLLVM is now a pip package. You can just do:
 
@@ -55,7 +55,7 @@ If you want to develop or use the development version:
 
 
 Usage
-=====
+-----
 
 WLLVM includes four python executables: `wllvm` for compiling C code
 and `wllvm++` for compiling C++, an auxiliary tool `extract-bc` for
@@ -104,7 +104,7 @@ In addition to the above environment variables the following can be optionally u
 
 
 Building a bitcode module with clang
-====================================
+------------------------------------
 
     export LLVM_COMPILER=clang
 
@@ -121,13 +121,13 @@ which will produce the bitcode module `pkg-config.bc`.
 
 
 Tutorials
-=========
+---------
 
 A gentler set of instructions on building apache in a vagrant Ubuntu 14.04 can be found
 [here,](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial.md) and for Ubuntu 16.04 [here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-ubuntu-16.04.md)
 
 Building a bitcode module with dragonegg
-========================================
+----------------------------------------
 
     export LLVM_COMPILER=dragonegg
     export LLVM_GCC_PREFIX=llvm-
@@ -146,7 +146,7 @@ which will produce the bitcode module `pkg-config.bc`.
 
 
 Building bitcode archive
-========================
+------------------------
 
     export LLVM_COMPILER=clang
     tar -xvf bullet-2.81-rev2613.tgz
@@ -168,14 +168,14 @@ produces `src/LinearMath/libLinearMath.a.bc`.
 
 
 Building an Operating System
-============================
+----------------------------
 
 To see how to build freeBSD 10.0 from scratch check out this
 [guide.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-freeBSD.md)
 
 
 Configuring without building bitcode
-================================
+------------------------------------
 
 Sometimes it is necessary to disable the production of bitcode.
 Typically this is during configuration, where the production
@@ -188,7 +188,7 @@ follows:
 
 
 Building a bitcode archive then extracting the bitcode
-========================
+------------------------------------------------------
 
     export LLVM_COMPILER=clang
     tar xvfz jansson-2.7.tar.gz
@@ -207,7 +207,7 @@ Building a bitcode archive then extracting the bitcode
 
 
 Debugging
-=========
+---------
 
 The WLLVM tools can show various levels of output to aid with debugging.
 To show this output set WLLVM_OUTPUT to one of the following levels:
@@ -224,7 +224,7 @@ For example
 
 
 Sanity Checking
-=========
+---------------
 
 Too many environment variables? Try doing a sanity check:
 
@@ -235,6 +235,6 @@ it might point out what is wrong.
 
 
 License
-=======
+-------
 
 WLLVM is released under the MIT license. See the file `LICENSE` for [details.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/LICENSE)
