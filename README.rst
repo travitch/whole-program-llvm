@@ -31,8 +31,11 @@ WLLVM works with either ``clang`` or the ``gcc dragonegg`` plugin.
 Usage
 -----
 
-WLLVM includes two python executables: ``wllvm`` for compiling C code
-and ``wllvm++`` for C++, and an auxiliary tool ``extract-bc``.
+WLLVM includes four python executables: ``wllvm`` for compiling C code
+and ``wllvm++`` for compiling C++, an auxiliary tool ``extract-bc`` for
+extracting the bitcode from a build product (object file, executable, library
+or archive), and a sanity checker, ``wllvm-sanity-checker`` for detecting
+configuration oversights.
 
 Three environment variables must be set to use these wrappers:
 
