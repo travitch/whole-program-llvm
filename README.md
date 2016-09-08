@@ -31,6 +31,20 @@ of a build process requires that.
 
 WLLVM works with either clang or the gcc dragonegg plugin.
 
+Installation
+------------
+
+As of August 2016 WLLVM is now a pip package. You can just do:
+
+    pip install wllvm
+
+or 
+
+    sudo pip install wllvm
+
+depending on your machine's permissions.
+
+
 Tutorial
 ====
 
