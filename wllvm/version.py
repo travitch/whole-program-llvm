@@ -28,6 +28,9 @@ Version History:
 
 1.0.9   - 8/25/2016  Python 3.0 import fixes (Will Dietz)
 
+1.0.10   - 9/26/2016  Apple's otool just gets biggier and buggier.
+
+
 """
-wllvm_version='1.0.9'
+wllvm_version='1.0.10'
 

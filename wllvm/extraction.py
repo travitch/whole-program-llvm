@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess as sp
-
+import re
 from .utils import llvmCompilerPathEnv
 
 from .popenwrapper import Popen
@@ -87,11 +87,23 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return d.replace('\0', '')
 
+def appleQualityControl(lines):
+    hexdata = re.compile('^[0-9a-f\s]+$', re.IGNORECASE)
+    flines = []
+    for line in lines:
+        if hexdata.match(line):
+            flines.append(line)
+    return flines
+    
 def extract_section_darwin(inputFile):
     """Extracts the section as a string, the darwin version.
 
     Uses otool to extract the section, then processes it
     to a usable state.
+
+    Quality control at Apple seems lax. The -X flags effect on the
+    output seems to be deteriorating. So there is a hack here to
+    repair that.
     """
 
     otoolCmd  = ['otool', '-X', '-s', darwinSegmentName, darwinSectionName, inputFile]
@@ -103,6 +115,9 @@ def extract_section_darwin(inputFile):
         sys.exit(-1)
 
     lines = otoolOutput.splitlines()
+
+    lines = appleQualityControl(lines)
+
     octets = []
     for line in lines:
         (_, octetline) = line.split('\t')
