@@ -87,14 +87,6 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return d.replace('\0', '')
 
-def appleQualityControl(lines):
-    hexdata = re.compile('^[0-9a-f\s]+$', re.IGNORECASE)
-    flines = []
-    for line in lines:
-        if hexdata.match(line):
-            flines.append(line)
-    return flines
-    
 def extract_section_darwin(inputFile):
     """Extracts the section as a string, the darwin version.
 
@@ -105,7 +97,8 @@ def extract_section_darwin(inputFile):
     output seems to be deteriorating. So there is a hack here to
     repair that.
     """
-
+    retval = None
+    
     otoolCmd  = ['otool', '-X', '-s', darwinSegmentName, darwinSectionName, inputFile]
     otoolProc = Popen(otoolCmd, stdout=sp.PIPE)
 
@@ -116,17 +109,20 @@ def extract_section_darwin(inputFile):
 
     lines = otoolOutput.splitlines()
 
-    lines = appleQualityControl(lines)
-
-    octets = []
-    for line in lines:
-        (_, octetline) = line.split('\t')
-        octets.extend(octetline.split())
-    octets = ''.join(octets)
-    contents = octets.decode('hex').splitlines()
-    if not contents:
-        logging.error('{0} contained no {1} segment'.format(inputFile, darwinSegmentName))
-    return contents
+    try:
+        octets = []
+        for line in lines:
+            splat = line.split('\t')
+            if len(splat) is 2:
+                (_, octetline) = splat
+                octets.extend(octetline.split())
+        octets = ''.join(octets)
+        retval = octets.decode('hex').splitlines()
+        if not retval:
+            logging.error('{0} contained no {1} segment'.format(inputFile, darwinSegmentName))
+    except Exception as e:
+        logging.error('{0}'.format(str(e)))
+    return retval
 
 def extract_section_linux(inputFile):
     """Extracts the section as a string, the *nix version."""
