@@ -30,7 +30,9 @@ Version History:
 
 1.0.10   - 9/26/2016  Apple's otool just gets biggier and buggier.
 
+1.0.11   - 9/27/2016  Improved Apple's otool fix.
+
 
 """
-wllvm_version='1.0.10'
+wllvm_version='1.0.11'
 
