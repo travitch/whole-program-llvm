@@ -87,6 +87,15 @@ def getSectionContent(size, offset, filename):
         # nulls.
         return d.replace('\0', '')
 
+
+"""
+otool hexdata pattern. Note that the initial address is optional, even though we use -X option,
+otool ignores this and proveides addresses. We also get headers in more recent versions of otool. So we
+should revisit this when XCode gets updated.
+"""
+otool_hexdata = re.compile('^(?:[0-9a-f]{8,16}\t)?([0-9a-f\s]+)$', re.IGNORECASE)
+
+
 def extract_section_darwin(inputFile):
     """Extracts the section as a string, the darwin version.
 
@@ -94,8 +103,7 @@ def extract_section_darwin(inputFile):
     to a usable state.
 
     Quality control at Apple seems lax. The -X flags effect on the
-    output seems to be deteriorating. So there is a hack here to
-    repair that.
+    output seems to be deteriorating. So we whitelist rather than blacklist.
     """
     retval = None
     
@@ -112,16 +120,18 @@ def extract_section_darwin(inputFile):
     try:
         octets = []
         for line in lines:
-            splat = line.split('\t')
-            if len(splat) is 2:
-                (_, octetline) = splat
-                octets.extend(octetline.split())
+            m = otool_hexdata.match(line)
+            if not m:
+                logging.debug('otool output:\n\t{0}\nDID NOT match expectations.'.format(line))
+                continue
+            octetline = m.group(1)
+            octets.extend(octetline.split())
         octets = ''.join(octets)
         retval = octets.decode('hex').splitlines()
         if not retval:
             logging.error('{0} contained no {1} segment'.format(inputFile, darwinSegmentName))
     except Exception as e:
-        logging.error('{0}'.format(str(e)))
+        logging.error('extract_section_darwin: {0}'.format(str(e)))
     return retval
 
 def extract_section_linux(inputFile):
