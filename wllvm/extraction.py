@@ -89,9 +89,7 @@ def getSectionContent(size, offset, filename):
 
 
 """
-otool hexdata pattern. Note that the initial address is optional, even though we use -X option,
-otool ignores this and proveides addresses. We also get headers in more recent versions of otool. So we
-should revisit this when XCode gets updated.
+otool hexdata pattern. 
 """
 otool_hexdata = re.compile('^(?:[0-9a-f]{8,16}\t)?([0-9a-f\s]+)$', re.IGNORECASE)
 
@@ -102,8 +100,6 @@ def extract_section_darwin(inputFile):
     Uses otool to extract the section, then processes it
     to a usable state.
 
-    Quality control at Apple seems lax. The -X flags effect on the
-    output seems to be deteriorating. So we whitelist rather than blacklist.
     """
     retval = None
     
