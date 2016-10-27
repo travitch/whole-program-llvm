@@ -33,7 +33,7 @@ import os
 
 from subprocess import *
 
-from .utils import *
+from .compilers import *
 
 from .popenwrapper import Popen
 

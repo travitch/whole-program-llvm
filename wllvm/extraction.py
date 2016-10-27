@@ -2,13 +2,13 @@ import os
 import sys
 import subprocess as sp
 import re
-from .utils import llvmCompilerPathEnv
 
 from .popenwrapper import Popen
 
-from .utils import elfSectionName
-from .utils import darwinSegmentName
-from .utils import darwinSectionName
+from .compilers import llvmCompilerPathEnv
+from .compilers import elfSectionName
+from .compilers import darwinSegmentName
+from .compilers import darwinSectionName
 
 from .filetype import FileType
 

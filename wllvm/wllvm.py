@@ -12,7 +12,7 @@ linked into a library or executable.
 
 import sys, os
 
-from .utils import getBuilder, buildObject, buildAndAttachBitcode, logging
+from .compilers import getBuilder, buildObject, buildAndAttachBitcode, logging
 
 from .logconfig import *
 
