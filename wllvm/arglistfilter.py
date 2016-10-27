@@ -178,6 +178,9 @@ class ArgumentListFilter(object):
             '-print-multi-lib' : (0, ArgumentListFilter.compileUnaryCallback),
             '-print-libgcc-file-name' : (0, ArgumentListFilter.compileUnaryCallback),
 
+            # Code coverage instrumentation
+            '-fprofile-arcs' : (0, ArgumentListFilter.compileLinkUnaryCallback),
+            '-coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
 
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
@@ -356,6 +359,12 @@ class ArgumentListFilter(object):
         self.linkArgs.append(flag)
         self.linkArgs.append(arg)
 
+    #flags common to both linking and compiling (coverage for example)
+    def compileLinkUnaryCallback(self, flag):
+        self.compileArgs.append(flag)
+        self.linkArgs.append(flag)
+
+        
     def getOutputFilename(self):
         if self.outputFilename is not None:
             return self.outputFilename
