@@ -34,7 +34,8 @@ Version History:
 
 1.0.12   - 10/27/2016 Common flag support.
 
+1.0.13   - 11/05/2016  pylint spots a few mistakes.
 
 """
-wllvm_version='1.0.12'
+wllvm_version='1.0.13'
 
