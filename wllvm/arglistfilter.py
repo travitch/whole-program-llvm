@@ -1,7 +1,4 @@
-import logging
-import collections
-import os
-import re
+import logging, collections, os, re, sys
 
 # Internal logger
 _logger = logging.getLogger(__name__)

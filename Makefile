@@ -21,6 +21,8 @@ all:
 	@echo ''
 	@echo 'then upload the zip file to https://pypi.python.org/pypi'
 	@echo ''
+	@echo 'To pylint                            :  "make lint"'
+	@echo ''
 
 
 
@@ -66,3 +68,10 @@ clean:
 	rm -f  wllvm/*.pyc wllvm/*~
 
 
+PYLINT = $(shell which pylint)
+
+lint:
+ifeq ($(PYLINT),)
+	$(error lint target requires pylint)
+endif
+	@ $(PYLINT) -E wllvm/*.py
