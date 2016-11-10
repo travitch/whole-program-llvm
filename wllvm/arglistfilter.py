@@ -178,7 +178,7 @@ class ArgumentListFilter(object):
             # Code coverage instrumentation
             '-fprofile-arcs' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             '-coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
-
+            '--coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
