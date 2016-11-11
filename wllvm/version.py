@@ -36,6 +36,8 @@ Version History:
 
 1.0.13   - 11/05/2016  pylint spots a few mistakes.
 
+1.0.14   - 11/10/2016  --coverage flag.
+
 """
-wllvm_version='1.0.13'
+wllvm_version='1.0.14'
 
