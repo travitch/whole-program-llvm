@@ -1,2 +1,4 @@
 *.pyc
 .idea
+key.cfg
+wllvm.egg-info

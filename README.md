@@ -1,9 +1,11 @@
-
+![WLLVM](https://github.com/SRI-CSL/whole-program-llvm/blob/master/img/dragon128x128.png?raw_true)Whole Program LLVM
+==================
+[![PyPI version](https://badge.fury.io/py/wllvm.svg)](https://badge.fury.io/py/wllvm)
 [![Build Status](https://travis-ci.org/SRI-CSL/whole-program-llvm.svg?branch=master)](https://travis-ci.org/SRI-CSL/whole-program-llvm)
 
 
 Introduction
-============
+------------
 
 This project, WLLVM, provides tools for building whole-program (or
 whole-library) LLVM bitcode files from an unmodified C or C++
@@ -17,7 +19,7 @@ bitcode. The wrappers also store the location of the generated bitcode
 file in a dedicated section of the object file.  When object files are
 linked together, the contents of the dedicated sections are
 concatenated (so we don't lose the locations of any of the constituent
-bitcode files). After the build completes, one can use an WLLVM
+bitcode files). After the build completes, one can use a WLLVM
 utility to read the contents of the dedicated section and link all of
 the bitcode into a single whole-program bitcode file. This utility
 works for both executable and native libraries.
@@ -46,15 +48,22 @@ depending on your machine's permissions.
 
 
 Tutorial
-====
+=======
+If you want to develop or use the development version:
 
-See the tutorial markdown files for detailed instructions on how to compile apache with wllvm on Ubuntu.
+    git clone https://github.com/SRI-CSL/whole-program-llvm
+    cd whole-program-llvm
+    pip install -e .
+
 
 Usage
-=====
+-----
 
-WLLVM includes two python executables: `wllvm` for compiling C code
-and `wllvm++` for C++, and an auxiliary tool `extract-bc`.
+WLLVM includes four python executables: `wllvm` for compiling C code
+and `wllvm++` for compiling C++, an auxiliary tool `extract-bc` for
+extracting the bitcode from a build product (object file, executable, library
+or archive), and a sanity checker, `wllvm-sanity-checker` for detecting
+configuration oversights.
 
 Three environment variables must be set to use these wrappers:
 
@@ -90,11 +99,14 @@ In addition to the above environment variables the following can be optionally u
    and `wllvm++` behave like a normal C or C++ compiler. They do not
    produce bitcode.  Setting `WLLVM_CONFIGURE_ONLY` may prevent
    configuration errors caused by the unexpected production of hidden
-   bitcode files.
+   bitcode files. It is sometimes required when configuring a build.
+
+
+
 
 
 Building a bitcode module with clang
-====================================
+------------------------------------
 
     export LLVM_COMPILER=clang
 
@@ -103,14 +115,21 @@ Building a bitcode module with clang
     CC=wllvm ./configure
     make
 
-    # Produces pkg-config.bc
+This should produce the executable `pkg-config`. To extract the bitcode:
+
     extract-bc pkg-config
 
-A gentler set of instructions on building apache can be found
-[here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/tutorial.md)
+which will produce the bitcode module `pkg-config.bc`.
+
+
+Tutorials
+---------
+
+A gentler set of instructions on building apache in a vagrant Ubuntu 14.04 can be found
+[here,](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial.md) and for Ubuntu 16.04 [here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-ubuntu-16.04.md)
 
 Building a bitcode module with dragonegg
-========================================
+----------------------------------------
 
     export LLVM_COMPILER=dragonegg
     export LLVM_GCC_PREFIX=llvm-
@@ -121,12 +140,15 @@ Building a bitcode module with dragonegg
     CC=wllvm ./configure
     make
 
-    # Produces pkg-config.bc
+Again, this should produce the executable `pkg-config`. To extract the bitcode:
+
     extract-bc pkg-config
+
+which will produce the bitcode module `pkg-config.bc`.
 
 
 Building bitcode archive
-========================
+------------------------
 
     export LLVM_COMPILER=clang
     tar -xvf bullet-2.81-rev2613.tgz
@@ -138,24 +160,37 @@ Building bitcode archive
     # Produces src/LinearMath/libLinearMath.bca
     extract-bc src/LinearMath/libLinearMath.a
 
+Note that by default extracting bitcode from an archive produces
+an archive of bitcode. You can also extract the bitcode directly into a module.
+
+    extract-bc -b src/LinearMath/libLinearMath.a
+
+produces `src/LinearMath/libLinearMath.a.bc`.
+
+
 
 Building an Operating System
-============================
+----------------------------
 
-To see how to build freeBSD 10.0 from scratch check out this 
-[guide.](../master/README-freeBSD.md)
+To see how to build freeBSD 10.0 from scratch check out this
+[guide.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-freeBSD.md)
 
 
 Configuring without building bitcode
-================================
+------------------------------------
 
+Sometimes it is necessary to disable the production of bitcode.
+Typically this is during configuration, where the production
+of unexpected files can confuse the configure script. For this
+we have a flag `WLLVM_CONFIGURE_ONLY` which can be used as
+follows:
 
     WLLVM_CONFIGURE_ONLY=1 CC=wllvm ./configure
     CC=wllvm make
 
 
 Building a bitcode archive then extracting the bitcode
-========================
+------------------------------------------------------
 
     export LLVM_COMPILER=clang
     tar xvfz jansson-2.7.tar.gz
@@ -168,11 +203,13 @@ Building a bitcode archive then extracting the bitcode
     extract-bc libjansson.a
     llvm-ar x libjansson.bca
     ls -la
-   
+
     
 
+
+
 Debugging
-=========
+---------
 
 The WLLVM tools can show various levels of output to aid with debugging.
 To show this output set WLLVM_OUTPUT to one of the following levels:
@@ -189,7 +226,7 @@ For example
 
 
 Sanity Checking
-=========
+---------------
 
 Too many environment variables? Try doing a sanity check:
 
@@ -200,6 +237,6 @@ it might point out what is wrong.
 
 
 License
-=======
+-------
 
-WLLVM is released under the MIT license. See the file `LICENSE` for details.
+WLLVM is released under the MIT license. See the file `LICENSE` for [details.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/LICENSE)

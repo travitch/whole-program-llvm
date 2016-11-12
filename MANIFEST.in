@@ -1,0 +1,4 @@
+include wllvm/dragonegg_as/as
+
+recursive-exclude test *
+exclude doc
