@@ -179,6 +179,7 @@ class ArgumentListFilter(object):
             '-fprofile-arcs' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             '-coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             '--coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
+
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
@@ -361,7 +362,6 @@ class ArgumentListFilter(object):
         self.compileArgs.append(flag)
         self.linkArgs.append(flag)
 
-        
     def getOutputFilename(self):
         if self.outputFilename is not None:
             return self.outputFilename
