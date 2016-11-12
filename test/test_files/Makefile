@@ -1,5 +1,6 @@
 #iam: please leave this Makefile; it is useful for debugging when things break.
 
+
 zero:
 	${CXX} hello.cc -o hello
 
@@ -37,9 +38,9 @@ link_with_archive:: archive
 	$(CC) main.o libfoo.a -o main.arch
 
 clean:
-	rm -f *.o main main.arch .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello *.a *.bca *.dylib
+	rm -f *.o main main.arch .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello *.a *.bca *.dylib *.manifest
 
 mystery:
-	otool -X -s __LLVM __llvm_bc main > main.otool
+	otool -X -s __WLLVM __llvm_bc main > main.otool
 	xxd -r main.otool
 	xxd -r main.otool main.xxd

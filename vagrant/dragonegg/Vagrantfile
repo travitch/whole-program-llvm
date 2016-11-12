@@ -1,0 +1,19 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/trusty64"
+
+   config.vm.provision "shell", inline: <<-SHELL
+     sudo apt-get update
+     sudo apt-get install -y python-pip
+     sudo apt-get install  -y llvm-3.3 llvm-gcc-4.7
+     sudo pip install wllvm
+     echo 'export PATH=/usr/lib/llvm-3.3/bin:${PATH}'   >> /home/vagrant/.bashrc
+     echo 'export LLVM_COMPILER=dragonegg'              >> /home/vagrant/.bashrc
+     echo 'export LLVM_GCC_PREFIX=llvm-'                >> /home/vagrant/.bashrc
+     echo 'export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.7/plugin/dragonegg.so'  >> /home/vagrant/.bashrc
+   SHELL
+
+end

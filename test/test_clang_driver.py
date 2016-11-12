@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- Coding: UTF-8 -*-
+
 import os
 from test_base_driver import root_directory, BaseDriverTest
 
