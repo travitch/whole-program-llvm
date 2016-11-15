@@ -1,7 +1,3 @@
-import sys
-import os
-import subprocess as sp
-import errno
 """
 Module support for the wllvm-sanity-checker tool.
 
@@ -10,6 +6,11 @@ environment to see if it makes sense from the
 wllvm point of view. Useful first step in trying to
 debug a failure.
 """
+
+import sys
+import os
+import subprocess as sp
+import errno
 
 explain_LLVM_COMPILER = """
 
@@ -90,7 +91,7 @@ class Checker(object):
         """
 
         if not self.checkOS():
-            print('I do not think we support your OS. Sorry.')
+            print 'I do not think we support your OS. Sorry.'
             return 1
 
         success = self.checkCompiler()
@@ -125,7 +126,7 @@ class Checker(object):
         cc_name = os.getenv('LLVM_CC_NAME')
         cxx_name = os.getenv('LLVM_CXX_NAME')
 
-        cc =  '{0}{1}'.format(self.path, cc_name if cc_name else 'clang')
+        cc = '{0}{1}'.format(self.path, cc_name if cc_name else 'clang')
         cxx = '{0}{1}'.format(self.path, cxx_name if cxx_name else 'clang++')
 
         return self.checkCompilers(cc, cxx)
@@ -140,7 +141,7 @@ class Checker(object):
         if os.getenv('LLVM_GCC_PREFIX') is not None:
             pfx = os.getenv('LLVM_GCC_PREFIX')
 
-        cc  = '{0}{1}gcc'.format(self.path, pfx)
+        cc = '{0}{1}gcc'.format(self.path, pfx)
         cxx = '{0}{1}g++'.format(self.path, pfx)
 
         return self.checkCompilers(cc, cxx)
@@ -151,19 +152,18 @@ class Checker(object):
         plugin = os.getenv('LLVM_DRAGONEGG_PLUGIN')
 
         if not plugin:
-            print(explain_LLVM_DRAGONEGG_PLUGIN)
+            print explain_LLVM_DRAGONEGG_PLUGIN
             return False
 
         if os.path.isfile(plugin):
             try:
                 open(plugin)
-                pass
             except IOError as e:
-                print("Unable to open {0}".format(plugin))
+                print "Unable to open {0}: {1}".format(plugin, str(e))
             else:
                 return True
         else:
-            print("Could not find {0}".format(plugin))
+            print "Could not find {0}".format(plugin)
             return False
 
 
@@ -172,16 +172,16 @@ class Checker(object):
         (code, comment) = self.checkSwitch()
 
         if code == 0:
-            print(comment)
+            print comment
             return False
         elif code == 1:
-            print(comment)
+            print comment
             return self.checkClang()
         elif code == 2:
-            print(comment)
+            print comment
             return self.checkDragonegg()
         else:
-            print('Insane\n')
+            print 'Insane'
             return False
 
 
@@ -192,21 +192,21 @@ class Checker(object):
         (cxxOk, cxxVersion) = self.checkExecutable(cxx)
 
         if not ccOk:
-            print('The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc))
+            print 'The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc)
         else:
-            print('The C compiler {0} is:\n\n{1}\n'.format(cc, extractLine(ccVersion, 0)))
+            print 'The C compiler {0} is:\n\n{1}\n'.format(cc, extractLine(ccVersion, 0))
 
         if not cxxOk:
-            print('The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx))
+            print 'The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx)
         else:
-            print('The C++ compiler {0} is:\n\n{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
+            print 'The C++ compiler {0} is:\n\n{1}\n'.format(cxx, extractLine(cxxVersion, 0))
 
         if not ccOk or  not cxxOk:
-            print(explain_LLVM_COMPILER_PATH)
+            print explain_LLVM_COMPILER_PATH
             if not ccOk:
-                print(explain_LLVM_CC_NAME)
+                print explain_LLVM_CC_NAME
             if not cxxOk:
-                print(explain_LLVM_CXX_NAME)
+                print explain_LLVM_CXX_NAME
 
 
 
@@ -243,32 +243,32 @@ class Checker(object):
         if not ar_name:
             ar_name = 'llvm-ar'
 
-        link = '{0}{1}'.format(self.path,link_name) if self.path else link_name
-        ar = '{0}{1}'.format(self.path,ar_name) if self.path else ar_name
+        link = '{0}{1}'.format(self.path, link_name) if self.path else link_name
+        ar = '{0}{1}'.format(self.path, ar_name) if self.path else ar_name
 
         (linkOk, linkVersion) = self.checkExecutable(link, '-version')
 
-        (arOk, arVersion) =  self.checkExecutable(ar, '-version')
+        (arOk, arVersion) = self.checkExecutable(ar, '-version')
 
         if not linkOk:
-            print('The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link))
-            print(explain_LLVM_LINK_NAME)
+            print 'The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link)
+            print explain_LLVM_LINK_NAME
         else:
-            print('The bitcode linker {0} is:\n\n{1}\n'.format(link, extractLine(linkVersion, 1)))
+            print 'The bitcode linker {0} is:\n\n{1}\n'.format(link, extractLine(linkVersion, 1))
 
         if not arOk:
-            print('The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar))
-            print(explain_LLVM_AR_NAME)
+            print 'The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar)
+            print explain_LLVM_AR_NAME
         else:
-            print('The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1)))
+            print 'The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1))
 
 
 
 def extractLine(version, n):
-        if not version:
-            return version
-        lines = version.split('\n')
-        if n < len(lines):
-            return lines[n]
-        else:
-            return lines[-1]
+    if not version:
+        return version
+    lines = version.split('\n')
+    if n < len(lines):
+        return lines[n]
+    else:
+        return lines[-1]

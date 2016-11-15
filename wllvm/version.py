@@ -8,7 +8,7 @@ Version History:
 
 1.0.0    - 8/2/2016 initial birth as a pip package.
 
-1.0.1    - 8/2/2016 the rst gets a make over, and doc strings 
+1.0.1    - 8/2/2016 the rst gets a make over, and doc strings
            became more pervasive.
 
 1.0.2    - 8/4/2016 dragonegg issues. trying to include a polite 'as' wrapper
@@ -39,5 +39,4 @@ Version History:
 1.0.14   - 11/10/2016  --coverage flag.
 
 """
-wllvm_version='1.0.14'
-
+wllvm_version = '1.0.14'

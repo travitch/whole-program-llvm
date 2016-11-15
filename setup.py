@@ -13,10 +13,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 # use the in house version number so we stay in synch with ourselves.
 from wllvm.version import wllvm_version
-    
+
 setup(
     name='wllvm',
-    version=wllvm_version, 
+    version=wllvm_version,
     description='Whole Program LLVM',
     long_description=long_description,
     url='https://github.com/SRI-CSL/whole-program-llvm',
@@ -25,9 +25,9 @@ setup(
 
 
     include_package_data=True,
-    
+
     packages=find_packages(),
-    
+
     entry_points = {
         'console_scripts': [
             'wllvm-as = wllvm.as:main',
@@ -39,7 +39,7 @@ setup(
     },
 
     license='MIT',
-    
+
     classifiers=[
         'Development Status :: 4 - Beta',
         'Natural Language :: English',
