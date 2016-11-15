@@ -29,6 +29,7 @@ in the pip egg, and in the repository.
 from __future__ import absolute_import
 
 import sys
+
 import os
 
 from subprocess import *
@@ -39,8 +40,11 @@ from .popenwrapper import Popen
 
 from .arglistfilter import ArgumentListFilter
 
-import logging
-logging.basicConfig()
+from .logconfig import logConfig
+
+# Internal logger
+_logger = logConfig(__name__)
+
 
 class BCFilter(ArgumentListFilter):
     def __init__(self, arglist):

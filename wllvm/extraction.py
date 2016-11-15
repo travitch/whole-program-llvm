@@ -2,7 +2,6 @@ import os
 import sys
 import subprocess as sp
 import re
-import logging
 import pprint
 import tempfile
 import shutil
@@ -25,9 +24,7 @@ from .logconfig import logConfig
 
 """
 
-_logger = logging.getLogger(__name__)
-
-logConfig()
+_logger = logConfig(__name__)
 
 
 def extraction(args):

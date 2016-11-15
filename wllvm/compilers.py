@@ -3,7 +3,6 @@ from __future__ import print_function
 
 
 import pprint
-import logging
 import os
 import sys
 import tempfile
@@ -14,11 +13,9 @@ from .arglistfilter import ArgumentListFilter
 
 from .logconfig import logConfig
 
-
 # Internal logger
-_logger = logging.getLogger(__name__)
+_logger = logConfig(__name__)
 
-logConfig()
 
 def wcompile(isCXX):
     """ The workhorse, called from wllvm and wllvm++.
@@ -36,7 +33,7 @@ def wcompile(isCXX):
         if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except Exception as e:
-        _logger.debug('wllvm++: exception case: %s', e)
+        _logger.debug('wllvm++: exception case: %s', str(e))
 
     return rc
 
@@ -90,7 +87,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     absBcPath = os.path.abspath(bcPath)
     f.write(absBcPath.encode())
     f.write('\n'.encode())
-    _logger.debug(pprint.pformat('Wrote "%s" to file "%s"', absBcPath, f.name))
+    _logger.debug('Wrote "%s" to file "%s"', absBcPath, f.name)
 
     # Ensure buffers are flushed so that objcopy doesn't read an empty
     # file
