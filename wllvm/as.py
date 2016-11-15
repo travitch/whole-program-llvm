@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""This is the (dragonegg) assembler phase.  
+"""This is the (dragonegg) assembler phase.
 
 This variant is only invoked during the second compilation where we
 are building bitcode.  The compiler has already been instructed to
@@ -53,7 +53,7 @@ class BCFilter(ArgumentListFilter):
         self.outFileName = name
 
 def main():
-        
+
     argFilter = BCFilter(sys.argv[1:])
     # Since this is just the assembler, there should only ever be one file
     try:
@@ -72,7 +72,7 @@ def main():
     if not argFilter.outFileName:
         logging.error('Output file argument not found.')
         sys.exit(1)
-     
+
     fakeAssembler = [llvmAssembler, infile, '-o', argFilter.outFileName]
 
     asmProc = Popen(fakeAssembler)
@@ -84,6 +84,6 @@ def main():
 
     sys.exit(realRet)
 
-    
+
 if __name__ == '__main__':
     sys.exit(main())

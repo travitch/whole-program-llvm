@@ -27,7 +27,7 @@ all:
 
 
 #local editable install for developing
-develop: 
+develop:
 	pip install -e .
 
 
@@ -36,7 +36,7 @@ dist: clean
 
 # If you need to push this project again,
 # INCREASE the version number in wllvm/version.py,
-# otherwise the server will give you an error. 
+# otherwise the server will give you an error.
 
 testpublish: dist
 	python setup.py register -r https://testpypi.python.org/pypi
@@ -50,7 +50,7 @@ publish: dist
 	python setup.py sdist upload -r https://pypi.python.org/pypi
 
 install:
-	pip install 
+	pip install
 
 check_clang:
 	cd test; python -m unittest -v test_base_driver test_clang_driver
@@ -74,4 +74,6 @@ lint:
 ifeq ($(PYLINT),)
 	$(error lint target requires pylint)
 endif
-	@ $(PYLINT) -E wllvm/*.py
+#	@ $(PYLINT) -E wllvm/*.py
+# for detecting more than just errors:
+	@ $(PYLINT) --rcfile=.pylintrc wllvm/*.py

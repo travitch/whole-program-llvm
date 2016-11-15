@@ -1,4 +1,8 @@
-import logging, collections, os, re, sys
+import logging
+import collections
+import os
+import re
+import sys
 
 # Internal logger
 _logger = logging.getLogger(__name__)
@@ -123,8 +127,8 @@ class ArgumentListFilter(object):
             # Debug
             '-g' : (0, ArgumentListFilter.compileUnaryCallback),
             '-g0' : (0, ArgumentListFilter.compileUnaryCallback),     #iam: clang not gcc
-            '-ggdb' : (0, ArgumentListFilter.compileUnaryCallback), 
-            '-ggdb3' : (0, ArgumentListFilter.compileUnaryCallback), 
+            '-ggdb' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-ggdb3' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gdwarf-2' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gdwarf-3' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gline-tables-only' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -185,7 +189,7 @@ class ArgumentListFilter(object):
             # (the Darwin ld is a bit single minded)
             #
             # 1) compilation with -fvisibility=hidden causes trouble when we try to
-            #    attach bitcode filenames to an object file. The global symbols in object 
+            #    attach bitcode filenames to an object file. The global symbols in object
             #    files get turned into local symbols when we invoke 'ld -r'
             #
             # 2) all stripping commands (e.g., -dead_strip) remove the __LLVM segment after
@@ -195,8 +199,8 @@ class ArgumentListFilter(object):
             # calling ld -r.
             #
             '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
-            
-           }
+
+        }
 
         #
         # Patterns for other command-line arguments:
@@ -227,7 +231,7 @@ class ArgumentListFilter(object):
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
-            
+
         }
 
         #iam: try and keep track of the files, input object, and output
@@ -235,7 +239,7 @@ class ArgumentListFilter(object):
         self.inputFiles = []
         self.objectFiles = []
         self.outputFilename = None
-        
+
         #iam: try and split the args into linker and compiler switches
         self.compileArgs = []
         self.linkArgs = []
@@ -256,10 +260,10 @@ class ArgumentListFilter(object):
         self._inputArgs = collections.deque(inputList)
 
         #iam: parse the cmd line, bailing if we discover that there will be no second phase.
-        while ( len(self._inputArgs) > 0   and
-                not (self.isAssembly or
-                     self.isAssembleOnly or
-                     self.isPreprocessOnly  ) ):
+        while (len(self._inputArgs) > 0   and
+               not (self.isAssembly or
+                    self.isAssembleOnly or
+                    self.isPreprocessOnly)):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
             _logger.debug('Trying to match item ' + currentItem)
@@ -281,7 +285,7 @@ class ArgumentListFilter(object):
                 # If no action has been specified, this is a zero-argument
                 # flag that we should just keep.
                 if not matched:
-                    _logger.warning('Did not recognize the compiler flag "{0}"'.format(currentItem))
+                    _logger.warning('Did not recognize the compiler flag "%s"', currentItem)
                     self.compileUnaryCallback(currentItem)
 
         if DUMPING:
@@ -296,11 +300,11 @@ class ArgumentListFilter(object):
         return ret
 
     def abortUnaryCallback(self, flag):
-        _logger.warning('Out of context experience: "{0}"'.format(str(self.inputList)))
+        _logger.warning('Out of context experience: "%s"', str(self.inputList))
         sys.exit(1)
 
     def inputFileCallback(self, infile):
-        _logger.debug('Input file: ' + infile)
+        _logger.debug('Input file: %s', infile)
         self.inputFiles.append(infile)
         if re.search('\\.(s|S)$', infile):
             self.isAssembly = True
@@ -335,13 +339,13 @@ class ArgumentListFilter(object):
 
     def darwinWarningLinkUnaryCallback(self, flag):
         if sys.platform.startswith('darwin'):
-            _logger.warning('The flag "{0}" cannot be used with this tool'.format(flag))
+            _logger.warning('The flag "%s" cannot be used with this tool', flag)
             sys.exit(1)
         else:
             self.linkArgs.append(flag)
 
     def defaultBinaryCallback(self, flag, arg):
-        _logger.warning('Ignoring compiler arg pair: "{0} {1}"'.format(flag, arg))
+        _logger.warning('Ignoring compiler arg pair: "%s %s"', flag, arg)
 
     def dependencyBinaryCallback(self, flag, arg):
         self.isDependencyOnly = True
@@ -392,15 +396,11 @@ class ArgumentListFilter(object):
 
     #iam: for printing our partitioning of the args
     def dump(self):
-        _logger.debug('compileArgs: {0}'.format(self.compileArgs))
-        _logger.debug('inputFiles: {0}'.format(self.inputFiles))
-        _logger.debug('linkArgs: {0}'.format(self.linkArgs))
-        _logger.debug('objectFiles: {0}'.format(self.objectFiles))
-        _logger.debug('outputFilename: {0}'.format(self.outputFilename))
+        _logger.debug('compileArgs: %s\ninputFiles: %s\nlinkArgs: %s',
+                      self.compileArgs, self.inputFiles, self.linkArgs)
+        _logger.debug('objectFiles: %s\noutputFilename: %s',
+                      self.objectFiles, self.outputFilename)
         for srcFile in self.inputFiles:
-            _logger.debug('srcFile: {0}'.format(srcFile))
+            _logger.debug('srcFile: %s', srcFile)
             (objFile, bcFile) = self.getArtifactNames(srcFile)
-            _logger.debug('{0} ===> ({1}, {2})'.format(srcFile, objFile, bcFile))
-
-
-
+            _logger.debug('%s ===> (%s, %s)', srcFile, objFile, bcFile)
