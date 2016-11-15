@@ -7,17 +7,31 @@ records the location of the bitcode in an ELF section of the object
 file so that it can be found later after all of the objects are linked
 into a library or executable.
 """
+import sys, os
 
-import sys
+from .compilers import getBuilder, buildObject, buildAndAttachBitcode, logging
 
-from .compilers import wcompile
+from .logconfig import *
 
+_logger = logging.getLogger(__name__)
 
 def main():
-    """ The entry point to wllvm++.
-    """
-    wcompile(True)
+    try:
+        rc = 1
+        cmd = list(sys.argv)
+        cmd = cmd[1:]
+        builder = getBuilder(cmd, True)
+        rc = buildObject(builder)
+
+
+        if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+            buildAndAttachBitcode(builder)
+    except Exception as e:
+        _logger.debug('wllvm++: exception case: {0}\n'.format(e))
+        pass
+    return rc
 
 
 if __name__ == '__main__':
     sys.exit(main())
+
