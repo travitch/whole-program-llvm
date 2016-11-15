@@ -32,9 +32,9 @@ import sys
 
 import os
 
-from subprocess import *
+#from subprocess import *
 
-from .compilers import *
+from .compilers import llvmCompilerPathEnv
 
 from .popenwrapper import Popen
 
@@ -47,34 +47,40 @@ _logger = logConfig(__name__)
 
 
 class BCFilter(ArgumentListFilter):
+    """ Argument filter for the assembler.
+    """
     def __init__(self, arglist):
         self.bcName = None
         self.outFileName = None
-        localCallbacks = { '-o' : (1, BCFilter.outFileCallback) }
+        localCallbacks = {'-o' : (1, BCFilter.outFileCallback)}
         super(BCFilter, self).__init__(arglist, exactMatches=localCallbacks)
 
     def outFileCallback(self, flag, name):
+        """ Callback for the -o flag.
+        """
+        _logger.debug('BCFilter.outFileCallback %s %s', flag, name)
         self.outFileName = name
 
 def main():
-
+    """ Entry point to the assebler 'as' in the dragonegg realm.
+    """
     argFilter = BCFilter(sys.argv[1:])
     # Since this is just the assembler, there should only ever be one file
     try:
         [infile] = argFilter.inputFiles
     except ValueError:
-        logging.debug('Input file argument not detected, assuming stdin.')
+        _logger.debug('Input file argument not detected, assuming stdin.')
         infile = "-"
 
     # set llvm-as
-    llvmAssembler='llvm-as'
+    llvmAssembler = 'llvm-as'
     if os.getenv(llvmCompilerPathEnv):
         llvmAssembler = os.path.join(os.getenv(llvmCompilerPathEnv), llvmAssembler)
 
     # Now compile this llvm assembly file into a bitcode file.  The output
     # filename is the same as the object with a .bc appended
     if not argFilter.outFileName:
-        logging.error('Output file argument not found.')
+        _logger.error('Output file argument not found.')
         sys.exit(1)
 
     fakeAssembler = [llvmAssembler, infile, '-o', argFilter.outFileName]
@@ -83,7 +89,7 @@ def main():
     realRet = asmProc.wait()
 
     if realRet != 0:
-        logging.error('llvm-as failed')
+        _logger.error('llvm-as failed')
         sys.exit(realRet)
 
     sys.exit(realRet)

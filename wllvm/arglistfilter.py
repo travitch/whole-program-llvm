@@ -300,7 +300,7 @@ class ArgumentListFilter(object):
         return ret
 
     def abortUnaryCallback(self, flag):
-        _logger.warning('Out of context experience: "%s"', str(self.inputList))
+        _logger.warning('Out of context experience: "%s" "%s"', str(self.inputList), flag)
         sys.exit(1)
 
     def inputFileCallback(self, infile):
@@ -310,34 +310,44 @@ class ArgumentListFilter(object):
             self.isAssembly = True
 
     def outputFileCallback(self, flag, filename):
+        _logger.debug('outputFileCallback: %s %s', flag, filename)
         self.outputFilename = filename
 
     def objectFileCallback(self, objfile):
+        _logger.debug('objectFileCallback: %s', objfile)
         self.objectFiles.append(objfile)
 
     def preprocessOnlyCallback(self, flag):
+        _logger.debug('preprocessOnlyCallback: %s', flag)
         self.isPreprocessOnly = True
 
     def dependencyOnlyCallback(self, flag):
+        _logger.debug('dependencyOnlyCallback: %s', flag)
         self.isDependencyOnly = True
         self.compileArgs.append(flag)
 
     def assembleOnlyCallback(self, flag):
+        _logger.debug('assembleOnlyCallback: %s', flag)
         self.isAssembleOnly = True
 
     def verboseFlagCallback(self, flag):
+        _logger.debug('verboseFlagCallback: %s', flag)
         self.isVerbose = True
 
     def compileOnlyCallback(self, flag):
+        _logger.debug('compileOnlyCallback: %s', flag)
         self.isCompileOnly = True
 
     def linkUnaryCallback(self, flag):
+        _logger.debug('linkUnaryCallback: %s', flag)
         self.linkArgs.append(flag)
 
     def compileUnaryCallback(self, flag):
+        _logger.debug('compileUnaryCallback: %s', flag)
         self.compileArgs.append(flag)
 
     def darwinWarningLinkUnaryCallback(self, flag):
+        _logger.debug('darwinWarningLinkUnaryCallback: %s', flag)
         if sys.platform.startswith('darwin'):
             _logger.warning('The flag "%s" cannot be used with this tool', flag)
             sys.exit(1)
@@ -348,21 +358,25 @@ class ArgumentListFilter(object):
         _logger.warning('Ignoring compiler arg pair: "%s %s"', flag, arg)
 
     def dependencyBinaryCallback(self, flag, arg):
+        _logger.debug('dependencyBinaryCallback: %s %s', flag, arg)
         self.isDependencyOnly = True
         self.compileArgs.append(flag)
         self.compileArgs.append(arg)
 
     def compileBinaryCallback(self, flag, arg):
+        _logger.debug('compileBinaryCallback: %s %s', flag, arg)
         self.compileArgs.append(flag)
         self.compileArgs.append(arg)
 
 
     def linkBinaryCallback(self, flag, arg):
+        _logger.debug('linkBinaryCallback: %s %s', flag, arg)
         self.linkArgs.append(flag)
         self.linkArgs.append(arg)
 
     #flags common to both linking and compiling (coverage for example)
     def compileLinkUnaryCallback(self, flag):
+        _logger.debug('compileLinkUnaryCallback: %s', flag)
         self.compileArgs.append(flag)
         self.linkArgs.append(flag)
 
@@ -371,8 +385,8 @@ class ArgumentListFilter(object):
             return self.outputFilename
         elif self.isCompileOnly:
             #iam: -c but no -o, therefore the obj should end up in the cwd.
-            (path, base) = os.path.split(self.inputFiles[0])
-            (root, ext) = os.path.splitext(base)
+            (_, base) = os.path.split(self.inputFiles[0])
+            (root, _) = os.path.splitext(base)
             return '{0}.o'.format(root)
         else:
             return 'a.out'
@@ -382,8 +396,8 @@ class ArgumentListFilter(object):
     # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
     # of what is being written out.
     def getArtifactNames(self, srcFile, hidden=False):
-        (srcpath, srcbase) = os.path.split(srcFile)
-        (srcroot, srcext) = os.path.splitext(srcbase)
+        (_, srcbase) = os.path.split(srcFile)
+        (srcroot, _) = os.path.splitext(srcbase)
         if hidden:
             objbase = '.{0}.o'.format(srcroot)
         else:

@@ -30,7 +30,7 @@ def main():
     """ The entry point to extract-bc.
     """
     try:
-        extraction(sys.argv)
+        extraction()
     except Exception:
         pass
     return 0

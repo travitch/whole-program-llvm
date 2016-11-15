@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 
-import pprint
 import os
 import sys
 import tempfile
@@ -52,9 +51,12 @@ llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 # This is the ELF section name inserted into binaries
 elfSectionName = '.llvm_bc'
 
+# (Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment name to __WLLVM).
+#
 # These are the MACH_O segment and section name
 # The SegmentName was __LLVM. Changed to __WLLVM to avoid clashing
 # with a segment that ld now uses (since MacOS X 10.11.3?)
+#
 darwinSegmentName = '__WLLVM'
 darwinSectionName = '__llvm_bc'
 
@@ -211,7 +213,7 @@ class DragoneggBuilder(BuilderBase):
     def attachBitcode(self, argFilter):
         pass
 
-    def extraBitcodeArgs(self, argFilter):
+    def extraBitcodeArgs(self, _):
         return []
 
 

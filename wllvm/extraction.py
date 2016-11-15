@@ -19,19 +19,14 @@ from .filetype import FileType
 from .logconfig import logConfig
 
 
-"""
-(Fix: 2016/02/16: __LLVM is now used by MacOS's ld so we changed the segment name to __WLLVM).
-
-"""
-
 _logger = logConfig(__name__)
 
 
-def extraction(args):
+def extraction():
     """ This is the entry point to extract-bc.
     """
 
-    (success, pArgs) = extract_bc_args(args)
+    (success, pArgs) = extract_bc_args()
 
     if not success:
         return 1
@@ -62,7 +57,7 @@ def getSectionSizeAndOffset(sectionName, filename):
 
     objdumpOutput = objdumpProc.communicate()[0]
     if objdumpProc.returncode != 0:
-        _logger.error('Could not dump %s' % filename)
+        _logger.error('Could not dump %s', filename)
         sys.exit(-1)
 
     for line in [l.decode('utf-8') for l in objdumpOutput.splitlines()]:
@@ -72,7 +67,6 @@ def getSectionSizeAndOffset(sectionName, filename):
         if fields[1] != sectionName:
             continue
         try:
-            idx = int(fields[0])
             size = int(fields[2], 16)
             offset = int(fields[5], 16)
             return (size, offset)
@@ -101,9 +95,7 @@ def getSectionContent(size, offset, filename):
         return d.replace('\0', '')
 
 
-"""
-otool hexdata pattern.
-"""
+# otool hexdata pattern.
 otool_hexdata = re.compile(r'^(?:[0-9a-f]{8,16}\t)?([0-9a-f\s]+)$', re.IGNORECASE)
 
 
@@ -135,8 +127,7 @@ def extract_section_darwin(inputFile):
                 continue
             octetline = m.group(1)
             octets.extend(octetline.split())
-        octets = ''.join(octets)
-        retval = octets.decode('hex').splitlines()
+        retval = ''.join(octets).decode('hex').splitlines()
         if not retval:
             _logger.error('%s contained no %s segment', inputFile, darwinSegmentName)
     except Exception as e:
@@ -228,7 +219,7 @@ def handleExecutable(pArgs):
             for f in fileNames:
                 output.write('{0}\n'.format(f))
 
-    if pArgs.outputFile == None:
+    if pArgs.outputFile is None:
         pArgs.outputFile = pArgs.inputFile + '.' + moduleExtension
 
     return linkFiles(pArgs, fileNames)
@@ -245,7 +236,7 @@ def handleArchive(pArgs):
     # Make temporary directory to extract objects to
     tempDir = ''
     bitCodeFiles = []
-    retCode = 0
+
     try:
         tempDir = tempfile.mkdtemp(suffix='wllvm')
         os.chdir(tempDir)
@@ -269,7 +260,7 @@ def handleArchive(pArgs):
             raise Exception(errorMsg)
 
         # Iterate over objects and examine their bitcode inserts
-        for (root, dirs, files) in os.walk(tempDir):
+        for (root, _, files) in os.walk(tempDir):
             _logger.debug('Exploring "%s"', root)
             for f in files:
                 fPath = os.path.join(root, f)
@@ -311,7 +302,7 @@ def buildArchive(pArgs, bitCodeFiles):
     if pArgs.bitcodeModuleFlag:
 
         # Pick output file path if outputFile not set
-        if pArgs.outputFile == None:
+        if pArgs.outputFile is None:
             pArgs.outputFile = pArgs.inputFile
             pArgs.outputFile += '.' + moduleExtension
 
@@ -322,7 +313,7 @@ def buildArchive(pArgs, bitCodeFiles):
     else:
 
         # Pick output file path if outputFile not set
-        if pArgs.outputFile == None:
+        if pArgs.outputFile is None:
             if pArgs.inputFile.endswith('.a'):
                 # Strip off .a suffix
                 pArgs.outputFile = pArgs.inputFile[:-2]
@@ -344,7 +335,7 @@ class ExtractedArgs(object):
         self.arCmd = None
 
 
-def extract_bc_args(args):
+def extract_bc_args():
 
     # do we need a path in front?
     llvmToolPrefix = os.getenv(llvmCompilerPathEnv)
