@@ -18,7 +18,7 @@ from .compilers import wcompile
 def main():
     """ The entry point to wllvm++.
     """
-    wcompile(False)
+    return wcompile(False)
 
 
 if __name__ == '__main__':
