@@ -38,5 +38,10 @@ Version History:
 
 1.0.14   - 11/10/2016  --coverage flag.
 
+1.0.15   - 11/15/2016  pylintification complete.
+
+1.0.16   - 11/16/2016  ooops musl points out I screwed up the exit codes AGAIN.
+
 """
-wllvm_version = '1.0.14'
+
+wllvm_version = '1.0.16'
