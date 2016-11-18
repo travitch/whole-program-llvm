@@ -51,9 +51,27 @@ Tutorial
 =======
 If you want to develop or use the development version:
 
-    git clone https://github.com/travitch/whole-program-llvm
-    cd whole-program-llvm
-    pip install -e .
+```
+git clone https://github.com/travitch/whole-program-llvm
+cd whole-program-llvm
+```
+
+Now you need to install WLLVM. You can either install
+globally on your system in develop mode:
+
+```
+sudo pip install -e .
+```
+
+or install WLLVM into a virtual python environment
+in develop mode to avoid installing globally:
+
+```
+virtualenv venv
+source venv/bin/activate
+pip install -e .
+```
+
 
 
 Usage
