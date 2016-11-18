@@ -51,7 +51,7 @@ Tutorial
 =======
 If you want to develop or use the development version:
 
-    git clone https://github.com/SRI-CSL/whole-program-llvm
+    git clone https://github.com/travitch/whole-program-llvm
     cd whole-program-llvm
     pip install -e .
 
