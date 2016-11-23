@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import subprocess as sp
@@ -6,8 +8,6 @@ import pprint
 import tempfile
 import shutil
 import argparse
-
-from __future__ import print_function
 
 from .popenwrapper import Popen
 
