@@ -7,6 +7,8 @@ export PATH=/usr/lib/llvm-3.5/bin:${PATH}
 export LLVM_COMPILER=clang
 export WLLVM_OUTPUT=WARNING
 
+wllvm-sanity-checker
+
 wget https://archive.apache.org/dist/httpd/httpd-${APACHE_VER}.tar.gz
 
 tar xfz httpd-${APACHE_VER}.tar.gz
