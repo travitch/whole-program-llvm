@@ -28,6 +28,8 @@ install:
 
 # command to run tests
 script:
+  # Run unittests
+  - python -m unittest discover test/
   - export WLLVM_HOME=`pwd`
   - export APACHE_VER=2.4.18
   # build apache with clang
