@@ -6,7 +6,6 @@ dist: trusty
 python:
   - "3.3"
   - "2.7"
-  - "2.6"
 
 
 # command to install dependencies
