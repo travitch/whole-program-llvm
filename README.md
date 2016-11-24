@@ -1,4 +1,4 @@
-![WLLVM](https://github.com/SRI-CSL/whole-program-llvm/blob/master/img/dragon128x128.png?raw_true)Whole Program LLVM
+![WLLVM](img/dragon128x128.png?raw_true)Whole Program LLVM
 ==================
 [![PyPI version](https://badge.fury.io/py/wllvm.svg)](https://badge.fury.io/py/wllvm)
 [![Build Status](https://travis-ci.org/SRI-CSL/whole-program-llvm.svg?branch=master)](https://travis-ci.org/SRI-CSL/whole-program-llvm)
@@ -51,9 +51,27 @@ Tutorial
 =======
 If you want to develop or use the development version:
 
-    git clone https://github.com/SRI-CSL/whole-program-llvm
-    cd whole-program-llvm
-    pip install -e .
+```
+git clone https://github.com/travitch/whole-program-llvm
+cd whole-program-llvm
+```
+
+Now you need to install WLLVM. You can either install
+globally on your system in develop mode:
+
+```
+sudo pip install -e .
+```
+
+or install WLLVM into a virtual python environment
+in develop mode to avoid installing globally:
+
+```
+virtualenv venv
+source venv/bin/activate
+pip install -e .
+```
+
 
 
 Usage
@@ -126,7 +144,7 @@ Tutorials
 ---------
 
 A gentler set of instructions on building apache in a vagrant Ubuntu 14.04 can be found
-[here,](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial.md) and for Ubuntu 16.04 [here.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-ubuntu-16.04.md)
+[here,](doc/tutorial.md) and for Ubuntu 16.04 [here.](doc/tutorial-ubuntu-16.04.md)
 
 Building a bitcode module with dragonegg
 ----------------------------------------
@@ -173,7 +191,7 @@ Building an Operating System
 ----------------------------
 
 To see how to build freeBSD 10.0 from scratch check out this
-[guide.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/doc/tutorial-freeBSD.md)
+[guide.](doc/tutorial-freeBSD.md)
 
 
 Configuring without building bitcode
@@ -239,4 +257,4 @@ it might point out what is wrong.
 License
 -------
 
-WLLVM is released under the MIT license. See the file `LICENSE` for [details.](https://github.com/SRI-CSL/whole-program-llvm/blob/master/LICENSE)
+WLLVM is released under the MIT license. See the file `LICENSE` for [details.](LICENSE)
