@@ -11,6 +11,8 @@ export LLVM_DRAGONEGG_PLUGIN=/usr/lib/gcc/x86_64-linux-gnu/4.7/plugin/dragonegg.
 
 export WLLVM_OUTPUT=WARNING
 
+wllvm-sanity-checker
+
 wget https://archive.apache.org/dist/httpd/httpd-${APACHE_VER}.tar.gz
 
 

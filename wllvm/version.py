@@ -8,7 +8,7 @@ Version History:
 
 1.0.0    - 8/2/2016 initial birth as a pip package.
 
-1.0.1    - 8/2/2016 the rst gets a make over, and doc strings 
+1.0.1    - 8/2/2016 the rst gets a make over, and doc strings
            became more pervasive.
 
 1.0.2    - 8/4/2016 dragonegg issues. trying to include a polite 'as' wrapper
@@ -36,6 +36,14 @@ Version History:
 
 1.0.13   - 11/05/2016  pylint spots a few mistakes.
 
-"""
-wllvm_version='1.0.13'
+1.0.14   - 11/10/2016  --coverage flag.
 
+1.0.15   - 11/15/2016  pylintification complete.
+
+1.0.16   - 11/16/2016  ooops musl points out I screwed up the exit codes AGAIN.
+
+1.0.17   - 11/23/2016  delcypher  #16  over at travitch's place.
+
+"""
+
+wllvm_version = '1.0.17'

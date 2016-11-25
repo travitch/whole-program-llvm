@@ -1,7 +1,3 @@
-import sys
-import os
-import subprocess as sp
-import errno
 """
 Module support for the wllvm-sanity-checker tool.
 
@@ -10,6 +6,13 @@ environment to see if it makes sense from the
 wllvm point of view. Useful first step in trying to
 debug a failure.
 """
+from __future__ import print_function
+
+import sys
+import os
+import subprocess as sp
+import errno
+
 
 explain_LLVM_COMPILER = """
 
@@ -125,7 +128,7 @@ class Checker(object):
         cc_name = os.getenv('LLVM_CC_NAME')
         cxx_name = os.getenv('LLVM_CXX_NAME')
 
-        cc =  '{0}{1}'.format(self.path, cc_name if cc_name else 'clang')
+        cc = '{0}{1}'.format(self.path, cc_name if cc_name else 'clang')
         cxx = '{0}{1}'.format(self.path, cxx_name if cxx_name else 'clang++')
 
         return self.checkCompilers(cc, cxx)
@@ -140,7 +143,7 @@ class Checker(object):
         if os.getenv('LLVM_GCC_PREFIX') is not None:
             pfx = os.getenv('LLVM_GCC_PREFIX')
 
-        cc  = '{0}{1}gcc'.format(self.path, pfx)
+        cc = '{0}{1}gcc'.format(self.path, pfx)
         cxx = '{0}{1}g++'.format(self.path, pfx)
 
         return self.checkCompilers(cc, cxx)
@@ -157,9 +160,8 @@ class Checker(object):
         if os.path.isfile(plugin):
             try:
                 open(plugin)
-                pass
             except IOError as e:
-                print("Unable to open {0}".format(plugin))
+                print("Unable to open {0}: {1}".format(plugin, str(e)))
             else:
                 return True
         else:
@@ -181,7 +183,7 @@ class Checker(object):
             print(comment)
             return self.checkDragonegg()
         else:
-            print('Insane\n')
+            print('Insane')
             return False
 
 
@@ -243,12 +245,12 @@ class Checker(object):
         if not ar_name:
             ar_name = 'llvm-ar'
 
-        link = '{0}{1}'.format(self.path,link_name) if self.path else link_name
-        ar = '{0}{1}'.format(self.path,ar_name) if self.path else ar_name
+        link = '{0}{1}'.format(self.path, link_name) if self.path else link_name
+        ar = '{0}{1}'.format(self.path, ar_name) if self.path else ar_name
 
         (linkOk, linkVersion) = self.checkExecutable(link, '-version')
 
-        (arOk, arVersion) =  self.checkExecutable(ar, '-version')
+        (arOk, arVersion) = self.checkExecutable(ar, '-version')
 
         if not linkOk:
             print('The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link))
@@ -265,10 +267,10 @@ class Checker(object):
 
 
 def extractLine(version, n):
-        if not version:
-            return version
-        lines = version.split('\n')
-        if n < len(lines):
-            return lines[n]
-        else:
-            return lines[-1]
+    if not version:
+        return version
+    lines = version.split('\n')
+    if n < len(lines):
+        return lines[n]
+    else:
+        return lines[-1]
