@@ -6,11 +6,13 @@ environment to see if it makes sense from the
 wllvm point of view. Useful first step in trying to
 debug a failure.
 """
+from __future__ import print_function
 
 import sys
 import os
 import subprocess as sp
 import errno
+
 
 explain_LLVM_COMPILER = """
 
@@ -91,7 +93,7 @@ class Checker(object):
         """
 
         if not self.checkOS():
-            print 'I do not think we support your OS. Sorry.'
+            print('I do not think we support your OS. Sorry.')
             return 1
 
         success = self.checkCompiler()
@@ -152,18 +154,18 @@ class Checker(object):
         plugin = os.getenv('LLVM_DRAGONEGG_PLUGIN')
 
         if not plugin:
-            print explain_LLVM_DRAGONEGG_PLUGIN
+            print(explain_LLVM_DRAGONEGG_PLUGIN)
             return False
 
         if os.path.isfile(plugin):
             try:
                 open(plugin)
             except IOError as e:
-                print "Unable to open {0}: {1}".format(plugin, str(e))
+                print("Unable to open {0}: {1}".format(plugin, str(e)))
             else:
                 return True
         else:
-            print "Could not find {0}".format(plugin)
+            print("Could not find {0}".format(plugin))
             return False
 
 
@@ -172,16 +174,16 @@ class Checker(object):
         (code, comment) = self.checkSwitch()
 
         if code == 0:
-            print comment
+            print(comment)
             return False
         elif code == 1:
-            print comment
+            print(comment)
             return self.checkClang()
         elif code == 2:
-            print comment
+            print(comment)
             return self.checkDragonegg()
         else:
-            print 'Insane'
+            print('Insane')
             return False
 
 
@@ -192,21 +194,21 @@ class Checker(object):
         (cxxOk, cxxVersion) = self.checkExecutable(cxx)
 
         if not ccOk:
-            print 'The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc)
+            print('The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc))
         else:
-            print 'The C compiler {0} is:\n\n{1}\n'.format(cc, extractLine(ccVersion, 0))
+            print('The C compiler {0} is:\n\n{1}\n'.format(cc, extractLine(ccVersion, 0)))
 
         if not cxxOk:
-            print 'The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx)
+            print('The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx))
         else:
-            print 'The C++ compiler {0} is:\n\n{1}\n'.format(cxx, extractLine(cxxVersion, 0))
+            print('The C++ compiler {0} is:\n\n{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
 
         if not ccOk or  not cxxOk:
-            print explain_LLVM_COMPILER_PATH
+            print(explain_LLVM_COMPILER_PATH)
             if not ccOk:
-                print explain_LLVM_CC_NAME
+                print(explain_LLVM_CC_NAME)
             if not cxxOk:
-                print explain_LLVM_CXX_NAME
+                print(explain_LLVM_CXX_NAME)
 
 
 
@@ -251,16 +253,16 @@ class Checker(object):
         (arOk, arVersion) = self.checkExecutable(ar, '-version')
 
         if not linkOk:
-            print 'The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link)
-            print explain_LLVM_LINK_NAME
+            print('The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link))
+            print(explain_LLVM_LINK_NAME)
         else:
-            print 'The bitcode linker {0} is:\n\n{1}\n'.format(link, extractLine(linkVersion, 1))
+            print('The bitcode linker {0} is:\n\n{1}\n'.format(link, extractLine(linkVersion, 1)))
 
         if not arOk:
-            print 'The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar)
-            print explain_LLVM_AR_NAME
+            print('The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar))
+            print(explain_LLVM_AR_NAME)
         else:
-            print 'The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1))
+            print('The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1)))
 
 
 

@@ -4,29 +4,35 @@ sudo: required
 dist: trusty
 
 python:
+  - "3.5"
+  - "3.4"
   - "3.3"
   - "2.7"
-  - "2.6"
 
 
 # command to install dependencies
 install:
   - sudo apt-get update
-  # to install wllvm
-  - sudo apt-get install -y python-pip
   # apache prerequisites
   - sudo apt-get install  -y libapr1-dev libaprutil1-dev
   # for the clang build  
   - sudo apt-get install  -y llvm-3.5 clang-3.5
   # dragonegg prereqs. dragonegg and llvm-gcc use llvm 3.3
   - sudo apt-get install  -y llvm-3.3 llvm-gcc-4.7
-  - sudo pip install -e .
-  - export WLLVM_HOME=`pwd`
-  - export APACHE_VER=2.4.18
+  # Install wllvm
+  # Report the version of pip being used for debugging purposes.
+  # It should report the site-packages directory and the version
+  # of python it is working with.
+  - pip --version
+  - pip install -e .
 
 
 # command to run tests
 script:
+  # Run unittests
+  - python -m unittest discover test/ || exit 1
+  - export WLLVM_HOME=`pwd`
+  - export APACHE_VER=2.4.18
   # build apache with clang
   - ${WLLVM_HOME}/.travis/apache_clang.sh
   # build apache with gcc and dragonegg

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import subprocess as sp
@@ -87,7 +89,7 @@ def getSectionContent(size, offset, filename):
             d = c.decode('utf-8')
         except UnicodeDecodeError:
             _logger.error('Failed to read section containing:')
-            print c
+            print(c)
             raise
         # The linker pads sections with null bytes; our real data
         # cannot have null bytes because it is just text.  Discard
