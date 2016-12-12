@@ -226,6 +226,7 @@ class ArgumentListFilter(object):
             r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-rtlib=.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
@@ -410,11 +411,12 @@ class ArgumentListFilter(object):
 
     #iam: for printing our partitioning of the args
     def dump(self):
-        _logger.debug('compileArgs: %s\ninputFiles: %s\nlinkArgs: %s',
-                      self.compileArgs, self.inputFiles, self.linkArgs)
-        _logger.debug('objectFiles: %s\noutputFilename: %s',
-                      self.objectFiles, self.outputFilename)
+        efn = sys.stderr.write
+        efn('\ncompileArgs: {0}\ninputFiles: {1}\nlinkArgs: {2}\n'.format(
+            self.compileArgs, self.inputFiles, self.linkArgs))
+        efn('\nobjectFiles: {0}\noutputFilename: {1}\n'.format(
+                      self.objectFiles, self.outputFilename))
         for srcFile in self.inputFiles:
-            _logger.debug('srcFile: %s', srcFile)
+            efn('\nsrcFile: {0}\n'.format(srcFile))
             (objFile, bcFile) = self.getArtifactNames(srcFile)
-            _logger.debug('%s ===> (%s, %s)', srcFile, objFile, bcFile)
+            efn('\n{0} ===> ({1}, {2})\n'.format(srcFile, objFile, bcFile))

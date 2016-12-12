@@ -58,7 +58,6 @@ check_clang:
 check_dragonegg:
 	cd test; python -m unittest -v test_base_driver test_dragonegg_driver
 
-
 zippity:
 	rm -rf doczip*; mkdir doczip;
 	cat README.md | pandoc -f markdown_github > doczip/index.html
