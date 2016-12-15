@@ -412,10 +412,8 @@ class ArgumentListFilter(object):
     #iam: for printing our partitioning of the args
     def dump(self):
         efn = sys.stderr.write
-        efn('\ncompileArgs: {0}\ninputFiles: {1}\nlinkArgs: {2}\n'.format(
-            self.compileArgs, self.inputFiles, self.linkArgs))
-        efn('\nobjectFiles: {0}\noutputFilename: {1}\n'.format(
-                      self.objectFiles, self.outputFilename))
+        efn('\ncompileArgs: {0}\ninputFiles: {1}\nlinkArgs: {2}\n'.format(self.compileArgs, self.inputFiles, self.linkArgs))
+        efn('\nobjectFiles: {0}\noutputFilename: {1}\n'.format(self.objectFiles, self.outputFilename))
         for srcFile in self.inputFiles:
             efn('\nsrcFile: {0}\n'.format(srcFile))
             (objFile, bcFile) = self.getArtifactNames(srcFile)

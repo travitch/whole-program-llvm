@@ -141,7 +141,7 @@ class BuilderBase(object):
         else:
             self.prefixPath = ''
 
-    #clang and drogonegg share the same taste in bitcode filenames.
+    #clang and dragonegg share the same taste in bitcode filenames.
     def getBitcodeFileName(self, argFilter):
         (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
