@@ -4,6 +4,12 @@
 zero:
 	${CXX} hello.cc -o hello
 
+zero_e:
+	${CXX} hello.cc -emit-llvm -c
+	${CXX} hello.bc -o hello
+
+
+
 one:
 	${CC} foo.c bar.c baz.c main.c -o main
 
@@ -11,9 +17,18 @@ two:
 	${CC} foo.c bar.c baz.c main.c -c
 	${CC} foo.o bar.o baz.o main.o -o main
 
+two_e:
+	${CC} -emit-llvm  foo.c bar.c baz.c main.c -c
+	${CC} foo.bc bar.bc baz.bc main.bc -o main
+
 mix:
 	${CC} foo.c bar.c -c
 	${CC} foo.o bar.o baz.c main.c -o main
+
+mix_e:
+	${CC} -emit-llvm foo.c bar.c -c
+	${CC} foo.bc bar.bc baz.c main.c -o main
+
 
 objects:
 	${CC} foo.c -c
@@ -44,3 +59,4 @@ mystery:
 	otool -X -s __WLLVM __llvm_bc main > main.otool
 	xxd -r main.otool
 	xxd -r main.otool main.xxd
+
