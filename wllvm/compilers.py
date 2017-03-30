@@ -28,11 +28,10 @@ def wcompile(isCXX):
         builder = getBuilder(cmd, isCXX)
         rc = buildObject(builder)
 
-
         if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except Exception as e:
-        _logger.debug('wllvm++: exception case: %s', str(e))
+        _logger.debug('%s: exception case: %s', "wllvm++" if isCXX else "wllvm", str(e))
 
     return rc
 
@@ -252,7 +251,7 @@ def buildAndAttachBitcode(builder):
 
     af = builder.getBitcodeArglistFilter()
 
-    if len(af.inputFiles) == 0 or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly:
+    if len(af.inputFiles) == 0 or af.isEmitLLVM or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly:
         _logger.debug('No work to do')
         _logger.debug(af.__dict__)
         return
@@ -281,12 +280,19 @@ def buildAndAttachBitcode(builder):
     else:
 
         for srcFile in af.inputFiles:
+            _logger.debug('Not compile only case: %s', srcFile)
             (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
             if hidden:
                 buildObjectFile(builder, srcFile, objFile)
                 newObjectFiles.append(objFile)
-            buildBitcodeFile(builder, srcFile, bcFile)
-            attachBitcodePathToObject(bcFile, objFile)
+
+            if srcFile.endswith('.bc'):
+                _logger.debug('attaching %s to %s', srcFile, objFile)
+                attachBitcodePathToObject(srcFile, objFile)
+            else:
+                _logger.debug('building and attaching %s to %s', bcFile, objFile)
+                buildBitcodeFile(builder, srcFile, bcFile)
+                attachBitcodePathToObject(bcFile, objFile)
 
 
     if not af.isCompileOnly:

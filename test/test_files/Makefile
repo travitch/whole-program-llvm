@@ -9,6 +9,13 @@ zero_e:
 	${CXX} hello.bc -o hello
 
 
+e:
+	${CC} -emit-llvm  foo.c  -c
+	${CC} -emit-llvm  bar.c  -c
+	${CC} -emit-llvm  baz.c -c
+	${CC} -emit-llvm  main.c -c
+	${CC} foo.bc bar.bc baz.bc main.bc -o main
+
 
 one:
 	${CC} foo.c bar.c baz.c main.c -o main
@@ -59,4 +66,3 @@ mystery:
 	otool -X -s __WLLVM __llvm_bc main > main.otool
 	xxd -r main.otool
 	xxd -r main.otool main.xxd
-

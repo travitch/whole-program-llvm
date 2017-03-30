@@ -50,7 +50,7 @@ class ArgumentListFilter(object):
 
 
             #iam: if this happens, then we need to stop and think.
-            '-emit-llvm' : (0, ArgumentListFilter.abortUnaryCallback),
+            '-emit-llvm' : (0, ArgumentListFilter.emitLLVMCallback),
 
             #iam: buildworld and buildkernel use these flags
             '-pipe' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -212,7 +212,7 @@ class ArgumentListFilter(object):
         # - optimiziation and other flags: -f...
         #
         defaultArgPatterns = {
-            r'^.+\.(c|cc|cpp|C|cxx|i|s|S)$' : (0, ArgumentListFilter.inputFileCallback),
+            r'^.+\.(c|cc|cpp|C|cxx|i|s|S|bc)$' : (0, ArgumentListFilter.inputFileCallback),
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
             r'^.+\.(o|lo|So|so|po|a|dylib)$' : (0, ArgumentListFilter.objectFileCallback),
@@ -252,6 +252,8 @@ class ArgumentListFilter(object):
         self.isAssembleOnly = False
         self.isAssembly = False
         self.isCompileOnly = False
+        self.isEmitLLVM = False
+
 
         argExactMatches = dict(defaultArgExactMatches)
         argExactMatches.update(exactMatches)
@@ -337,6 +339,11 @@ class ArgumentListFilter(object):
 
     def compileOnlyCallback(self, flag):
         _logger.debug('compileOnlyCallback: %s', flag)
+        self.isCompileOnly = True
+
+    def emitLLVMCallback(self, flag):
+        _logger.debug('emitLLVMCallback: %s', flag)
+        self.isEmitLLVM = True
         self.isCompileOnly = True
 
     def linkUnaryCallback(self, flag):
