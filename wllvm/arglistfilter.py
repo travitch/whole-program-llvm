@@ -228,6 +228,7 @@ class ArgumentListFilter(object):
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-rtlib=.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-stdlib=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
