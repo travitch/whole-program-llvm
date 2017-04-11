@@ -16,7 +16,7 @@ from .compilers import wcompile
 
 
 def main():
-    """ The entry point to wllvm++.
+    """ The entry point to wllvm.
     """
     return wcompile(False)
 
