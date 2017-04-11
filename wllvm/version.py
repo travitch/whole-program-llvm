@@ -44,6 +44,8 @@ Version History:
 
 1.0.17   - 11/23/2016  delcypher  #16  over at travitch's place.
 
+1.0.18   - 4/11/2017  tentative solution to the -emit-llvm "out of context" experience.
+
 """
 
-wllvm_version = '1.0.17'
+wllvm_version = '1.0.18'
