@@ -13,6 +13,7 @@ import os
 import subprocess as sp
 import errno
 
+from .version import wllvm_version
 
 explain_LLVM_COMPILER = """
 
@@ -115,10 +116,11 @@ class Checker(object):
     def checkSwitch(self):
         """Checks the correctness of the LLVM_COMPILER env var."""
         compiler_type = os.getenv('LLVM_COMPILER')
+        vmsg = 'We are wllvm version {0} and'.format(wllvm_version)
         if compiler_type == 'clang':
-            return (1, '\nGood, we are using clang.\n')
+            return (1, '\n{0} we are using clang.\n'.format(vmsg))
         elif compiler_type == 'dragonegg':
-            return (2, '\nOK, we are using dragonegg.\n')
+            return (2, '\n{0} we are using dragonegg.\n'.format(vmsg))
         else:
             return (0, explain_LLVM_COMPILER)
 
