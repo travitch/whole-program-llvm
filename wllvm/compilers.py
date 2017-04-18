@@ -5,7 +5,9 @@ from __future__ import print_function
 import os
 import sys
 import tempfile
+import hashlib
 
+from shutil import copyfile
 from .filetype import FileType
 from .popenwrapper import Popen
 from .arglistfilter import ArgumentListFilter
@@ -120,6 +122,13 @@ def attachBitcodePathToObject(bcPath, outFileName):
         _logger.error('objcopy failed with %s', orc)
         sys.exit(-1)
 
+    # loicg: If the environment variable WLLVM_BC_STORE is set, copy the bitcode
+    # file to that location, using a hash of the original bitcode path as a name
+    storeEnv = os.getenv('WLLVM_BC_STORE')
+    if storeEnv:
+        hashName = hashlib.sha256(absBcPath).hexdigest()
+        copyfile(absBcPath, os.path.join(storeEnv, hashName))
+
 class BuilderBase(object):
     def __init__(self, cmd, isCxx, prefixPath=None):
         self.cmd = cmd
@@ -140,16 +149,7 @@ class BuilderBase(object):
         else:
             self.prefixPath = ''
 
-    #clang and dragonegg share the same taste in bitcode filenames.
-    def getBitcodeFileName(self, argFilter):
-        (dirs, baseFile) = os.path.split(argFilter.getOutputFilename())
-        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-        return bcfilename
-
 class ClangBuilder(BuilderBase):
-    def __init__(self, cmd, isCxx, prefixPath=None):
-        super(ClangBuilder, self).__init__(cmd, isCxx, prefixPath)
-
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
         return cc + ['-emit-llvm']
@@ -159,31 +159,13 @@ class ClangBuilder(BuilderBase):
             cxx = os.getenv('LLVM_CXX_NAME')
             if cxx:
                 return ['{0}{1}'.format(self.prefixPath, cxx)]
-            else:
-                return ['{0}clang++'.format(self.prefixPath)]
-        else:
-            cc = os.getenv('LLVM_CC_NAME')
-            if cc:
-                return ['{0}{1}'.format(self.prefixPath, cc)]
-            else:
-                return ['{0}clang'.format(self.prefixPath)]
-
-    def getBitcodeArglistFilter(self):
-        return ClangBitcodeArgumentListFilter(self.cmd)
-
-    def extraBitcodeArgs(self, argFilter):
-        bcPath = self.getBitcodeFileName(argFilter)
-        return ['-o', bcPath]
-
-    def attachBitcode(self, argFilter):
-        bcname = self.getBitcodeFileName(argFilter)
-        outFile = argFilter.getOutputFilename()
-        attachBitcodePathToObject(bcname, outFile)
+            return ['{0}clang++'.format(self.prefixPath)]
+        cc = os.getenv('LLVM_CC_NAME')
+        if cc:
+            return ['{0}{1}'.format(self.prefixPath, cc)]
+        return ['{0}clang'.format(self.prefixPath)]
 
 class DragoneggBuilder(BuilderBase):
-    def __init__(self, cmd, isCxx, prefixPath=None):
-        super(DragoneggBuilder, self).__init__(cmd, isCxx, prefixPath)
-
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
         cc = self.getCompiler()
@@ -201,20 +183,7 @@ class DragoneggBuilder(BuilderBase):
 
         if self.isCxx:
             return ['{0}{1}g++'.format(self.prefixPath, pfx)]
-        else:
-            return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
-
-    def getBitcodeArglistFilter(self):
-        return ArgumentListFilter(self.cmd)
-
-    # Don't need to do anything since the -B flag in the bitcode
-    # compiler and the assembly stub handles it
-    def attachBitcode(self, argFilter):
-        pass
-
-    def extraBitcodeArgs(self, _):
-        return []
-
+        return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
 
 def getBuilder(cmd, isCxx):
     compilerEnv = 'LLVM_COMPILER'
@@ -251,7 +220,7 @@ def buildAndAttachBitcode(builder):
 
     af = builder.getBitcodeArglistFilter()
 
-    if len(af.inputFiles) == 0 or af.isEmitLLVM or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly:
+    if not af.inputFiles or af.isEmitLLVM or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly:
         _logger.debug('No work to do')
         _logger.debug(af.__dict__)
         return
@@ -271,9 +240,6 @@ def buildAndAttachBitcode(builder):
         # maybe python-magic is in our future ...
         srcFile = af.inputFiles[0]
         (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
-        if af.outputFilename is not None:
-            objFile = af.outputFilename
-            bcFile = builder.getBitcodeFileName(af)
         buildBitcodeFile(builder, srcFile, bcFile)
         attachBitcodePathToObject(bcFile, objFile)
 

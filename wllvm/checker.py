@@ -121,8 +121,7 @@ class Checker(object):
             return (1, '\n{0} we are using clang.\n'.format(vmsg))
         elif compiler_type == 'dragonegg':
             return (2, '\n{0} we are using dragonegg.\n'.format(vmsg))
-        else:
-            return (0, explain_LLVM_COMPILER)
+        return (0, explain_LLVM_COMPILER)
 
 
     def checkClang(self):
@@ -184,9 +183,8 @@ class Checker(object):
         elif code == 2:
             print(comment)
             return self.checkDragonegg()
-        else:
-            print('Insane')
-            return False
+        print('Insane')
+        return False
 
 
 
@@ -229,8 +227,7 @@ class Checker(object):
                 return (False, '{0} not executable'.format(exe))
             elif e.errno == errno.ENOENT:
                 return (False, '{0} not found'.format(exe))
-            else:
-                return (False, '{0} not sure why, errno is {1}'.format(exe, e.errno))
+            return (False, '{0} not sure why, errno is {1}'.format(exe, e.errno))
         else:
             return (True, compilerOutput)
 
@@ -274,5 +271,4 @@ def extractLine(version, n):
     lines = version.split('\n')
     if n < len(lines):
         return lines[n]
-    else:
-        return lines[-1]
+    return lines[-1]

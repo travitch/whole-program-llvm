@@ -8,6 +8,7 @@ import pprint
 import tempfile
 import shutil
 import argparse
+import hashlib
 
 from .popenwrapper import Popen
 
@@ -148,12 +149,26 @@ def extract_section_linux(inputFile):
         _logger.error('%s contained no %s. section is empty', inputFile, elfSectionName)
     return contents
 
+# loicg: This function checks if the given path points to an existing bitcode file.
+# If it does not, it tries to look for the bitcode file in the store directory given
+# by the environment variable WLLVM_BC_STORE
+def getBitcodePath(bcPath):
+    if not bcPath or os.path.isfile(bcPath):
+        return bcPath
+    storeEnv = os.getenv('WLLVM_BC_STORE')
+    if storeEnv:
+        hashName = hashlib.sha256(bcPath).hexdigest()
+        hashPath = os.path.join(storeEnv, hashName)
+        if os.path.isfile(hashPath):
+            return hashPath
+    return bcPath
 
 def linkFiles(pArgs, fileNames):
     linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
 
     linkCmd.append('-o={0}'.format(pArgs.outputFile))
 
+    fileNames = map(getBitcodePath, fileNames)
     linkCmd.extend([x for x in fileNames if x != ''])
     _logger.info('Writing output to %s', pArgs.outputFile)
     try:
