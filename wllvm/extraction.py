@@ -152,7 +152,7 @@ def extract_section_linux(inputFile):
 def linkFiles(pArgs, fileNames):
     linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
 
-    linkCmd.extend(['-o', pArgs.outputFile])
+    linkCmd.extend(['-o={0}'.format(pArgs.outputFile]))
 
     linkCmd.extend([x for x in fileNames if x != ''])
     _logger.info('Writing output to %s', pArgs.outputFile)
