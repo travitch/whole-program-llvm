@@ -91,6 +91,7 @@ class Checker(object):
         1. Check that the OS is supported.
         2. Checks that the compiler settings make sense.
         3. Checks that the needed LLVM utilities exists.
+        4. Check that the store, if set, exists.
         """
 
         if not self.checkOS():
@@ -101,6 +102,7 @@ class Checker(object):
 
         if success:
             self.checkAuxiliaries()
+            self.checkStore()
 
         return 0 if success else 1
 
@@ -263,6 +265,17 @@ class Checker(object):
         else:
             print('The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1)))
 
+
+    def checkStore(self):
+        """Checks that the bitcode store, if set, makes sense."""
+        store_dir = os.getenv('WLLVM_BC_STORE')
+        if store_dir:
+            if os.path.exists(store_dir) and os.path.isdir(store_dir) and os.path.isabs(store_dir):
+                print('Using the bitcode store:\n\n\t{0}\n\n'.format(store_dir))
+            else:
+                print('The bitcode store:\n\n\t{0}\n\nis either not absolute, does not exist, or is not a directory.\n\n'.format(store_dir))
+        else:
+            print('Not using a bitcode store.\n\n')
 
 
 def extractLine(version, n):

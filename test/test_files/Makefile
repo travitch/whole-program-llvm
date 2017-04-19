@@ -1,5 +1,6 @@
 #iam: please leave this Makefile; it is useful for debugging when things break.
 
+all: one archive
 
 zero:
 	${CXX} hello.cc -o hello

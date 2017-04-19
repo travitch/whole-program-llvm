@@ -46,6 +46,9 @@ Version History:
 
 1.0.18   - 4/11/2017  tentative solution to the -emit-llvm "out of context" experience.
 
+1.0.19   - 4/19/2017  fixed a '-o' issue in extract-bc and added the bitcode store feature.
+
+
 """
 
-wllvm_version = '1.0.18'
+wllvm_version = '1.0.19'
