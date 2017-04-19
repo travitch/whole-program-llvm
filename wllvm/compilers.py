@@ -185,6 +185,9 @@ class DragoneggBuilder(BuilderBase):
             return ['{0}{1}g++'.format(self.prefixPath, pfx)]
         return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
 
+    def getBitcodeArglistFilter(self):
+        return ArgumentListFilter(self.cmd)
+
 def getBuilder(cmd, isCxx):
     compilerEnv = 'LLVM_COMPILER'
     cstring = os.getenv(compilerEnv)
