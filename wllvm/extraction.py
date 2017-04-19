@@ -160,23 +160,20 @@ def getStorePath(bcPath):
     return None
 
 
-# loicg: This function checks if the given path points to an existing bitcode file.
-# If it does not, it tries to look for the bitcode file in the store directory given
-# by the environment variable WLLVM_BC_STORE
 def getBitcodePath(bcPath):
+    """Tries to resolve the whereabouts of the bitcode.
+
+    First, ihecks if the given path points to an existing bitcode file.
+    If it does not, it tries to look for the bitcode file in the store directory given
+    by the environment variable WLLVM_BC_STORE.
+    """
+
     if not bcPath or os.path.isfile(bcPath):
         return bcPath
 
     storePath = getStorePath(bcPath)
     if storePath:
         return storePath
-
-#    storeEnv = os.getenv('WLLVM_BC_STORE')
-#    if storeEnv:
-#        hashName = hashlib.sha256(bcPath).hexdigest()
-#        hashPath = os.path.join(storeEnv, hashName)
-#        if os.path.isfile(hashPath):
-#            return hashPath
     return bcPath
 
 def linkFiles(pArgs, fileNames):
