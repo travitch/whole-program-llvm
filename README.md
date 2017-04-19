@@ -40,7 +40,7 @@ As of August 2016 WLLVM is now a pip package. You can just do:
 
     pip install wllvm
 
-or 
+or
 
     sudo pip install wllvm
 
@@ -222,8 +222,14 @@ Building a bitcode archive then extracting the bitcode
     llvm-ar x libjansson.bca
     ls -la
 
-    
 
+Put the bitcode files in a store
+--------------------------------
+
+Sometimes it can be useful to put the bitcode files out of the build folder, to prevent
+deletion or to retrieve it later. If the environment variable `WLLVM_BC_STORE` is set to
+an existing directory, then WLLVM will copy the produced bitcode file into that directory,
+using a hash of the path to the original bitcode file as a name for the stored copy.
 
 
 Debugging
