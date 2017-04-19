@@ -165,6 +165,9 @@ class ClangBuilder(BuilderBase):
             return ['{0}{1}'.format(self.prefixPath, cc)]
         return ['{0}clang'.format(self.prefixPath)]
 
+    def getBitcodeArglistFilter(self):
+        return ClangBitcodeArgumentListFilter(self.cmd)
+
 class DragoneggBuilder(BuilderBase):
     def getBitcodeCompiler(self):
         pth = os.getenv('LLVM_DRAGONEGG_PLUGIN')
