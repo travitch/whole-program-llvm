@@ -353,11 +353,11 @@ def buildArchive(pArgs, bitCodeFiles):
 
 def writeManifest(manifestFile, bitCodeFiles):
     with open(manifestFile, 'w') as output:
-            for f in bitCodeFiles:
-                output.write('{0}\n'.format(f))
-                sf = getStorePath(f)
-                if sf:
-                    output.write('{0}\n'.format(sf))
+        for f in bitCodeFiles:
+            output.write('{0}\n'.format(f))
+            sf = getStorePath(f)
+            if sf:
+                output.write('{0}\n'.format(sf))
 
 
 
