@@ -44,6 +44,13 @@ Version History:
 
 1.0.17   - 11/23/2016  delcypher  #16  over at travitch's place.
 
+1.0.18   - 4/11/2017  tentative solution to the -emit-llvm "out of context" experience.
+
+1.0.19   - 4/19/2017  fixed a '-o' issue in extract-bc and added the bitcode store feature.
+
+1.1.0    - 4/21/2017  no new features on the horizon, no new bugs?
+
+
 """
 
-wllvm_version = '1.0.17'
+wllvm_version = '1.1.0'

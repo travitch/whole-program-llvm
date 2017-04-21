@@ -8,6 +8,7 @@ import pprint
 import tempfile
 import shutil
 import argparse
+import hashlib
 
 from .popenwrapper import Popen
 
@@ -149,11 +150,38 @@ def extract_section_linux(inputFile):
     return contents
 
 
+def getStorePath(bcPath):
+    storeEnv = os.getenv('WLLVM_BC_STORE')
+    if storeEnv:
+        hashName = hashlib.sha256(bcPath).hexdigest()
+        hashPath = os.path.join(storeEnv, hashName)
+        if os.path.isfile(hashPath):
+            return hashPath
+    return None
+
+
+def getBitcodePath(bcPath):
+    """Tries to resolve the whereabouts of the bitcode.
+
+    First, ihecks if the given path points to an existing bitcode file.
+    If it does not, it tries to look for the bitcode file in the store directory given
+    by the environment variable WLLVM_BC_STORE.
+    """
+
+    if not bcPath or os.path.isfile(bcPath):
+        return bcPath
+
+    storePath = getStorePath(bcPath)
+    if storePath:
+        return storePath
+    return bcPath
+
 def linkFiles(pArgs, fileNames):
     linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
 
-    linkCmd.extend(['-o', pArgs.outputFile])
+    linkCmd.append('-o={0}'.format(pArgs.outputFile))
 
+    fileNames = map(getBitcodePath, fileNames)
     linkCmd.extend([x for x in fileNames if x != ''])
     _logger.info('Writing output to %s', pArgs.outputFile)
     try:
@@ -216,10 +244,7 @@ def handleExecutable(pArgs):
         return 1
 
     if pArgs.manifestFlag:
-        manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
-        with open(manifestFile, 'w') as output:
-            for f in fileNames:
-                output.write('{0}\n'.format(f))
+        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
 
     if pArgs.outputFile is None:
         pArgs.outputFile = pArgs.inputFile + '.' + moduleExtension
@@ -289,10 +314,7 @@ def handleArchive(pArgs):
 
     #write the manifest file if asked for
     if pArgs.manifestFlag:
-        manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
-        with open(manifestFile, 'w') as output:
-            for f in bitCodeFiles:
-                output.write('{0}\n'.format(f))
+        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
 
     # Build bitcode archive
     os.chdir(originalDir)
@@ -324,6 +346,16 @@ def buildArchive(pArgs, bitCodeFiles):
         _logger.info('Writing output to %s', pArgs.outputFile)
 
         return archiveFiles(pArgs, bitCodeFiles)
+
+
+def writeManifest(manifestFile, bitCodeFiles):
+    with open(manifestFile, 'w') as output:
+        for f in bitCodeFiles:
+            output.write('{0}\n'.format(f))
+            sf = getStorePath(f)
+            if sf:
+                output.write('{0}\n'.format(sf))
+
 
 
 class ExtractedArgs(object):

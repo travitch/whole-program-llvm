@@ -264,7 +264,7 @@ class ArgumentListFilter(object):
         self._inputArgs = collections.deque(inputList)
 
         #iam: parse the cmd line, bailing if we discover that there will be no second phase.
-        while (len(self._inputArgs) > 0   and
+        while (self._inputArgs   and
                not (self.isAssembly or
                     self.isAssembleOnly or
                     self.isPreprocessOnly)):
@@ -397,8 +397,7 @@ class ArgumentListFilter(object):
             (_, base) = os.path.split(self.inputFiles[0])
             (root, _) = os.path.splitext(base)
             return '{0}.o'.format(root)
-        else:
-            return 'a.out'
+        return 'a.out'
 
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
     # the hidden flag determines whether the objectFile is hidden like the

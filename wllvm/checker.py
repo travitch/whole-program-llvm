@@ -13,6 +13,7 @@ import os
 import subprocess as sp
 import errno
 
+from .version import wllvm_version
 
 explain_LLVM_COMPILER = """
 
@@ -90,6 +91,7 @@ class Checker(object):
         1. Check that the OS is supported.
         2. Checks that the compiler settings make sense.
         3. Checks that the needed LLVM utilities exists.
+        4. Check that the store, if set, exists.
         """
 
         if not self.checkOS():
@@ -100,6 +102,7 @@ class Checker(object):
 
         if success:
             self.checkAuxiliaries()
+            self.checkStore()
 
         return 0 if success else 1
 
@@ -115,12 +118,12 @@ class Checker(object):
     def checkSwitch(self):
         """Checks the correctness of the LLVM_COMPILER env var."""
         compiler_type = os.getenv('LLVM_COMPILER')
+        vmsg = 'We are wllvm version {0} and'.format(wllvm_version)
         if compiler_type == 'clang':
-            return (1, '\nGood, we are using clang.\n')
+            return (1, '\n{0} we are using clang.\n'.format(vmsg))
         elif compiler_type == 'dragonegg':
-            return (2, '\nOK, we are using dragonegg.\n')
-        else:
-            return (0, explain_LLVM_COMPILER)
+            return (2, '\n{0} we are using dragonegg.\n'.format(vmsg))
+        return (0, explain_LLVM_COMPILER)
 
 
     def checkClang(self):
@@ -182,9 +185,8 @@ class Checker(object):
         elif code == 2:
             print(comment)
             return self.checkDragonegg()
-        else:
-            print('Insane')
-            return False
+        print('Insane')
+        return False
 
 
 
@@ -196,12 +198,12 @@ class Checker(object):
         if not ccOk:
             print('The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc))
         else:
-            print('The C compiler {0} is:\n\n{1}\n'.format(cc, extractLine(ccVersion, 0)))
+            print('The C compiler {0} is:\n\n\t{1}\n'.format(cc, extractLine(ccVersion, 0)))
 
         if not cxxOk:
             print('The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx))
         else:
-            print('The C++ compiler {0} is:\n\n{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
+            print('The C++ compiler {0} is:\n\n\t{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
 
         if not ccOk or  not cxxOk:
             print(explain_LLVM_COMPILER_PATH)
@@ -227,8 +229,7 @@ class Checker(object):
                 return (False, '{0} not executable'.format(exe))
             elif e.errno == errno.ENOENT:
                 return (False, '{0} not found'.format(exe))
-            else:
-                return (False, '{0} not sure why, errno is {1}'.format(exe, e.errno))
+            return (False, '{0} not sure why, errno is {1}'.format(exe, e.errno))
         else:
             return (True, compilerOutput)
 
@@ -256,21 +257,30 @@ class Checker(object):
             print('The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link))
             print(explain_LLVM_LINK_NAME)
         else:
-            print('The bitcode linker {0} is:\n\n{1}\n'.format(link, extractLine(linkVersion, 1)))
+            print('The bitcode linker {0} is:\n\n\t{1}\n'.format(link, extractLine(linkVersion, 1)))
 
         if not arOk:
             print('The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar))
             print(explain_LLVM_AR_NAME)
         else:
-            print('The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1)))
+            print('The bitcode archiver {0} is:\n\n\t{1}\n'.format(ar, extractLine(arVersion, 1)))
 
+
+    def checkStore(self):
+        """Checks that the bitcode store, if set, makes sense."""
+        store_dir = os.getenv('WLLVM_BC_STORE')
+        if store_dir:
+            if os.path.exists(store_dir) and os.path.isdir(store_dir) and os.path.isabs(store_dir):
+                print('Using the bitcode store:\n\n\t{0}\n\n'.format(store_dir))
+            else:
+                print('The bitcode store:\n\n\t{0}\n\nis either not absolute, does not exist, or is not a directory.\n\n'.format(store_dir))
+        else:
+            print('Not using a bitcode store.\n\n')
 
 
 def extractLine(version, n):
     if not version:
         return version
     lines = version.split('\n')
-    if n < len(lines):
-        return lines[n]
-    else:
-        return lines[-1]
+    line = lines[n] if n < len(lines) else lines[-1]
+    return line.strip() if line else line
