@@ -48,7 +48,9 @@ Version History:
 
 1.0.19   - 4/19/2017  fixed a '-o' issue in extract-bc and added the bitcode store feature.
 
+1.1.0    - 4/21/2017  no new features on the horizon, no new bugs?
+
 
 """
 
-wllvm_version = '1.0.19'
+wllvm_version = '1.1.0'
