@@ -198,12 +198,12 @@ class Checker(object):
         if not ccOk:
             print('The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc))
         else:
-            print('The C compiler {0} is:\n\n{1}\n'.format(cc, extractLine(ccVersion, 0)))
+            print('The C compiler {0} is:\n\n\t{1}\n'.format(cc, extractLine(ccVersion, 0)))
 
         if not cxxOk:
             print('The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx))
         else:
-            print('The C++ compiler {0} is:\n\n{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
+            print('The C++ compiler {0} is:\n\n\t{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
 
         if not ccOk or  not cxxOk:
             print(explain_LLVM_COMPILER_PATH)
@@ -257,13 +257,13 @@ class Checker(object):
             print('The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link))
             print(explain_LLVM_LINK_NAME)
         else:
-            print('The bitcode linker {0} is:\n\n{1}\n'.format(link, extractLine(linkVersion, 1)))
+            print('The bitcode linker {0} is:\n\n\t{1}\n'.format(link, extractLine(linkVersion, 1)))
 
         if not arOk:
             print('The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar))
             print(explain_LLVM_AR_NAME)
         else:
-            print('The bitcode archiver {0} is:\n\n{1}\n'.format(ar, extractLine(arVersion, 1)))
+            print('The bitcode archiver {0} is:\n\n\t{1}\n'.format(ar, extractLine(arVersion, 1)))
 
 
     def checkStore(self):
@@ -282,6 +282,5 @@ def extractLine(version, n):
     if not version:
         return version
     lines = version.split('\n')
-    if n < len(lines):
-        return lines[n]
-    return lines[-1]
+    line = lines[n] if n < len(lines) else lines[-1]
+    return line.strip() if line else line
