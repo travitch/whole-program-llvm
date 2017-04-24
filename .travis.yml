@@ -37,5 +37,7 @@ script:
   - ${WLLVM_HOME}/.travis/apache_clang.sh
   # build apache with gcc and dragonegg
   - ${WLLVM_HOME}/.travis/apache_dragonegg.sh
+  # build musllvm with clang
+  - ${WLLVM_HOME}/.travis/musllvm.sh
   
 
