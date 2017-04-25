@@ -404,17 +404,20 @@ class ArgumentListFilter(object):
     # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
     # of what is being written out.
     def getArtifactNames(self, srcFile, hidden=False):
-        (_, srcbase) = os.path.split(srcFile)
-        (srcroot, _) = os.path.splitext(srcbase)
-        if hidden:
-            objbase = '.{0}.o'.format(srcroot)
-        else:
-            objbase = '{0}.o'.format(srcroot)
-        bcbase = '.{0}.o.bc'.format(srcroot)
-        path = ''
         if self.outputFilename is not None:
-            path = os.path.dirname(self.outputFilename)
-        return [os.path.join(path, objbase), os.path.join(path, bcbase)]
+            objFile = self.outputFilename
+            (dirs, baseFile) = os.path.split(objFile)
+            bcFile = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+            return [objFile, bcFile]
+        else:
+            (_, srcbase) = os.path.split(srcFile)
+            (srcroot, _) = os.path.splitext(srcbase)
+            if hidden:
+                objbase = '.{0}.o'.format(srcroot)
+            else:
+                objbase = '{0}.o'.format(srcroot)
+            bcbase = '.{0}.o.bc'.format(srcroot)
+            return [objbase, bcbase]
 
     #iam: for printing our partitioning of the args
     def dump(self):
