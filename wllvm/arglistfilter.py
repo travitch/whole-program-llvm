@@ -399,25 +399,24 @@ class ArgumentListFilter(object):
             return '{0}.o'.format(root)
         return 'a.out'
 
+    def getBitcodeFileName(self):
+        (dirs, baseFile) = os.path.split(self.getOutputFilename())
+        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        return bcfilename
+        
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
     # the hidden flag determines whether the objectFile is hidden like the
     # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
     # of what is being written out.
     def getArtifactNames(self, srcFile, hidden=False):
-        if self.outputFilename is not None:
-            objFile = self.outputFilename
-            (dirs, baseFile) = os.path.split(objFile)
-            bcFile = os.path.join(dirs, '.{0}.bc'.format(baseFile))
-            return [objFile, bcFile]
+        (_, srcbase) = os.path.split(srcFile)
+        (srcroot, _) = os.path.splitext(srcbase)
+        if hidden:
+            objbase = '.{0}.o'.format(srcroot)
         else:
-            (_, srcbase) = os.path.split(srcFile)
-            (srcroot, _) = os.path.splitext(srcbase)
-            if hidden:
-                objbase = '.{0}.o'.format(srcroot)
-            else:
-                objbase = '{0}.o'.format(srcroot)
-            bcbase = '.{0}.o.bc'.format(srcroot)
-            return [objbase, bcbase]
+            objbase = '{0}.o'.format(srcroot)
+        bcbase = '.{0}.o.bc'.format(srcroot)
+        return [objbase, bcbase]
 
     #iam: for printing our partitioning of the args
     def dump(self):

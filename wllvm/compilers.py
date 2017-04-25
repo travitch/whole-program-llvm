@@ -246,6 +246,9 @@ def buildAndAttachBitcode(builder):
         # maybe python-magic is in our future ...
         srcFile = af.inputFiles[0]
         (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
+        if af.outputFilename is not None:
+            objFile = af.outputFilename
+            bcFile = af.getBitcodeFileName()
         buildBitcodeFile(builder, srcFile, bcFile)
         attachBitcodePathToObject(bcFile, objFile)
 
