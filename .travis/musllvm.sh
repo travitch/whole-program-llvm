@@ -10,7 +10,7 @@ export WLLVM_OUTPUT=WARNING
 wllvm-sanity-checker
 
 
-git clone https://github.com/SRI-CSL/musllvm.git .
+git clone https://github.com/SRI-CSL/musllvm.git musllvm
 cd musllvm
 WLLVM_CONFIGURE_ONLY=1  CC=wllvm ./configure --target=LLVM --build=LLVM
 make

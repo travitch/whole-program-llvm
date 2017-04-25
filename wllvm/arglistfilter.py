@@ -403,7 +403,7 @@ class ArgumentListFilter(object):
         (dirs, baseFile) = os.path.split(self.getOutputFilename())
         bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
         return bcfilename
-        
+
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
     # the hidden flag determines whether the objectFile is hidden like the
     # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
