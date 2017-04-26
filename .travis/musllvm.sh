@@ -11,7 +11,7 @@ wllvm-sanity-checker
 
 #setup the store so we test that feature as well
 export WLLVM_BC_STORE=/tmp/bc
-mkdir /tmp/bc
+mkdir -p /tmp/bc
 
 git clone https://github.com/SRI-CSL/musllvm.git musllvm
 cd musllvm
