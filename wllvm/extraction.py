@@ -16,6 +16,7 @@ from .compilers import llvmCompilerPathEnv
 from .compilers import elfSectionName
 from .compilers import darwinSegmentName
 from .compilers import darwinSectionName
+from .compilers import getHashedPathName
 
 from .filetype import FileType
 
@@ -153,7 +154,7 @@ def extract_section_linux(inputFile):
 def getStorePath(bcPath):
     storeEnv = os.getenv('WLLVM_BC_STORE')
     if storeEnv:
-        hashName = hashlib.sha256(bcPath).hexdigest()
+        hashName = getHashedPathName(bcPath)
         hashPath = os.path.join(storeEnv, hashName)
         if os.path.isfile(hashPath):
             return hashPath

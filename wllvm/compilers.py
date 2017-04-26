@@ -73,6 +73,9 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
         self.outputFilename = filename
 
 
+def getHashedPathName(path):
+    return hashlib.sha256(path).encode('utf-8').hexdigest() if path else None
+
 
 def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
@@ -110,7 +113,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # file to that location, using a hash of the original bitcode path as a name
     storeEnv = os.getenv('WLLVM_BC_STORE')
     if storeEnv:
-        hashName = hashlib.sha256(absBcPath).hexdigest()
+        hashName = getHashedPathName(absBcPath)
         copyfile(absBcPath, os.path.join(storeEnv, hashName))
 
     try:
