@@ -10,8 +10,8 @@ export WLLVM_OUTPUT=WARNING
 wllvm-sanity-checker
 
 #setup the store so we test that feature as well
-#export WLLVM_BC_STORE=/tmp/bc
-#mkdir /tmp/bc
+export WLLVM_BC_STORE=/tmp/bc
+mkdir /tmp/bc
 
 git clone https://github.com/SRI-CSL/musllvm.git musllvm
 cd musllvm
@@ -27,20 +27,13 @@ else
 fi
 
 #now lets makes sure the store has the bitcode too.
-#mv ./lib/libc.a .
-#make clean
-#extract-bc --bitcode ./libc.a
+mv ./lib/libc.a .
+make clean
+extract-bc --bitcode ./libc.a
 
-#if [ -s "./libc.a.bc" ]
-#then
-#    echo "libc.a.bc exists."
-#else
-#    exit 1
-#fi
-
-
-
-
-
-
-
+if [ -s "./libc.a.bc" ]
+then
+    echo "libc.a.bc exists."
+else
+    exit 1
+fi

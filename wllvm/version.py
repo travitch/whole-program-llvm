@@ -52,7 +52,8 @@ Version History:
 
 1.1.1    - 4/25/2017 bugs introduced by the new fetures have hopefully been eradicated.
 
+1.1.2    - 4/26/2017 encoding issues with hashlib in the python 3 swarm.
 
 """
 
-wllvm_version = '1.1.1'
+wllvm_version = '1.1.2'

@@ -7,9 +7,6 @@ export PATH=/usr/lib/llvm-3.5/bin:${PATH}
 export LLVM_COMPILER=clang
 export WLLVM_OUTPUT=WARNING
 
-export WLLVM_OUTPUT=DEBUG
-
-
 wllvm-sanity-checker
 
 #setup the store so we test that feature as well
