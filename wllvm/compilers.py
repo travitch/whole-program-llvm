@@ -74,7 +74,7 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
 
 
 def getHashedPathName(path):
-    return hashlib.sha256(path).encode('utf-8').hexdigest() if path else None
+    return hashlib.sha256(path.encode('utf-8')).hexdigest() if path else None
 
 
 def attachBitcodePathToObject(bcPath, outFileName):
