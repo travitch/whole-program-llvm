@@ -399,6 +399,11 @@ class ArgumentListFilter(object):
             return '{0}.o'.format(root)
         return 'a.out'
 
+    def getBitcodeFileName(self):
+        (dirs, baseFile) = os.path.split(self.getOutputFilename())
+        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        return bcfilename
+
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
     # the hidden flag determines whether the objectFile is hidden like the
     # bitcodeFile is (starts with a '.'), use the logging level & DUMPING flag to get a sense
@@ -411,10 +416,7 @@ class ArgumentListFilter(object):
         else:
             objbase = '{0}.o'.format(srcroot)
         bcbase = '.{0}.o.bc'.format(srcroot)
-        path = ''
-        if self.outputFilename is not None:
-            path = os.path.dirname(self.outputFilename)
-        return [os.path.join(path, objbase), os.path.join(path, bcbase)]
+        return [objbase, bcbase]
 
     #iam: for printing our partitioning of the args
     def dump(self):

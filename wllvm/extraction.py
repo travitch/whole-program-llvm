@@ -16,6 +16,7 @@ from .compilers import llvmCompilerPathEnv
 from .compilers import elfSectionName
 from .compilers import darwinSegmentName
 from .compilers import darwinSectionName
+from .compilers import getHashedPathName
 
 from .filetype import FileType
 
@@ -153,7 +154,7 @@ def extract_section_linux(inputFile):
 def getStorePath(bcPath):
     storeEnv = os.getenv('WLLVM_BC_STORE')
     if storeEnv:
-        hashName = hashlib.sha256(bcPath).hexdigest()
+        hashName = getHashedPathName(bcPath)
         hashPath = os.path.join(storeEnv, hashName)
         if os.path.isfile(hashPath):
             return hashPath
@@ -163,7 +164,7 @@ def getStorePath(bcPath):
 def getBitcodePath(bcPath):
     """Tries to resolve the whereabouts of the bitcode.
 
-    First, ihecks if the given path points to an existing bitcode file.
+    First, checks if the given path points to an existing bitcode file.
     If it does not, it tries to look for the bitcode file in the store directory given
     by the environment variable WLLVM_BC_STORE.
     """
@@ -298,6 +299,7 @@ def handleArchive(pArgs):
 
                     for bcFile in contents:
                         if bcFile != '':
+                            bcFile = getBitcodePath(bcFile)
                             if not os.path.exists(bcFile):
                                 _logger.warning('%s lists bitcode library "%s" but it could not be found', f, bcFile)
                             else:

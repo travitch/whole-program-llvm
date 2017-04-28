@@ -73,6 +73,9 @@ class ClangBitcodeArgumentListFilter(ArgumentListFilter):
         self.outputFilename = filename
 
 
+def getHashedPathName(path):
+    return hashlib.sha256(path.encode('utf-8')).hexdigest() if path else None
+
 
 def attachBitcodePathToObject(bcPath, outFileName):
     # Don't try to attach a bitcode path to a binary.  Unfortunately
@@ -106,6 +109,13 @@ def attachBitcodePathToObject(bcPath, outFileName):
         objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
 
+    # loicg: If the environment variable WLLVM_BC_STORE is set, copy the bitcode
+    # file to that location, using a hash of the original bitcode path as a name
+    storeEnv = os.getenv('WLLVM_BC_STORE')
+    if storeEnv:
+        hashName = getHashedPathName(absBcPath)
+        copyfile(absBcPath, os.path.join(storeEnv, hashName))
+
     try:
         if os.path.getsize(outFileName) > 0:
             objProc = Popen(objcopyCmd)
@@ -121,13 +131,6 @@ def attachBitcodePathToObject(bcPath, outFileName):
     if orc != 0:
         _logger.error('objcopy failed with %s', orc)
         sys.exit(-1)
-
-    # loicg: If the environment variable WLLVM_BC_STORE is set, copy the bitcode
-    # file to that location, using a hash of the original bitcode path as a name
-    storeEnv = os.getenv('WLLVM_BC_STORE')
-    if storeEnv:
-        hashName = hashlib.sha256(absBcPath).hexdigest()
-        copyfile(absBcPath, os.path.join(storeEnv, hashName))
 
 class BuilderBase(object):
     def __init__(self, cmd, isCxx, prefixPath=None):
@@ -246,6 +249,9 @@ def buildAndAttachBitcode(builder):
         # maybe python-magic is in our future ...
         srcFile = af.inputFiles[0]
         (objFile, bcFile) = af.getArtifactNames(srcFile, hidden)
+        if af.outputFilename is not None:
+            objFile = af.outputFilename
+            bcFile = af.getBitcodeFileName()
         buildBitcodeFile(builder, srcFile, bcFile)
         attachBitcodePathToObject(bcFile, objFile)
 
