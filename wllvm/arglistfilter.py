@@ -213,6 +213,8 @@ class ArgumentListFilter(object):
         #
         defaultArgPatterns = {
             r'^.+\.(c|cc|cpp|C|cxx|i|s|S|bc)$' : (0, ArgumentListFilter.inputFileCallback),
+            # FORTRAN file types
+            r'^.+\.([fF](|[0-9][0-9]|or|OR|pp|PP))$' : (0, ArgumentListFilter.inputFileCallback),
             #iam: the object file recogition is not really very robust, object files
             # should be determined by their existance and contents...
             r'^.+\.(o|lo|So|so|po|a|dylib)$' : (0, ArgumentListFilter.objectFileCallback),

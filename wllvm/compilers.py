@@ -18,7 +18,7 @@ from .logconfig import logConfig
 _logger = logConfig(__name__)
 
 
-def wcompile(isCXX):
+def wcompile(mode):
     """ The workhorse, called from wllvm and wllvm++.
     """
 
@@ -27,13 +27,13 @@ def wcompile(isCXX):
     try:
         cmd = list(sys.argv)
         cmd = cmd[1:]
-        builder = getBuilder(cmd, isCXX)
+        builder = getBuilder(cmd, mode)
         rc = buildObject(builder)
 
         if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except Exception as e:
-        _logger.debug('%s: exception case: %s', "wllvm++" if isCXX else "wllvm", str(e))
+        _logger.debug('%s: exception case: %s', mode, str(e))
 
     return rc
 
@@ -133,9 +133,9 @@ def attachBitcodePathToObject(bcPath, outFileName):
         sys.exit(-1)
 
 class BuilderBase(object):
-    def __init__(self, cmd, isCxx, prefixPath=None):
+    def __init__(self, cmd, mode, prefixPath=None):
         self.cmd = cmd
-        self.isCxx = isCxx
+        self.mode = mode
 
         # Used as prefix path for compiler
         if prefixPath:
@@ -158,15 +158,15 @@ class ClangBuilder(BuilderBase):
         return cc + ['-emit-llvm']
 
     def getCompiler(self):
-        if self.isCxx:
-            cxx = os.getenv('LLVM_CXX_NAME')
-            if cxx:
-                return ['{0}{1}'.format(self.prefixPath, cxx)]
-            return ['{0}clang++'.format(self.prefixPath)]
-        cc = os.getenv('LLVM_CC_NAME')
-        if cc:
-            return ['{0}{1}'.format(self.prefixPath, cc)]
-        return ['{0}clang'.format(self.prefixPath)]
+        if self.mode == "wllvm++":
+            env, prog = 'LLVM_CXX_NAME', 'clang++'
+        elif self.mode == "wllvm":
+            env, prog = 'LLVM_CC_NAME', 'clang'
+        elif self.mode == "wfortran":
+            env, prog = 'LLVM_F77_NAME', 'flang'
+        else:
+            raise Exception("Unknown mode {0}".format(self.mode))
+        return ['{0}{1}'.format(self.prefixPath, os.getenv(env) or prog)]
 
     def getBitcodeArglistFilter(self):
         return ClangBitcodeArgumentListFilter(self.cmd)
@@ -187,14 +187,20 @@ class DragoneggBuilder(BuilderBase):
         if os.getenv('LLVM_GCC_PREFIX') is not None:
             pfx = os.getenv('LLVM_GCC_PREFIX')
 
-        if self.isCxx:
-            return ['{0}{1}g++'.format(self.prefixPath, pfx)]
-        return ['{0}{1}gcc'.format(self.prefixPath, pfx)]
+        if self.mode == "wllvm++":
+            mode = 'g++'
+        elif self.mode == "wllvm":
+            mode = 'gcc'
+        elif self.mode == "wfortran":
+            mode = 'gfortran'
+        else:
+            raise Exception("Unknown mode {0}".format(self.mode))
+        return ['{0}{1}{2}'.format(self.prefixPath, pfx, mode)]
 
     def getBitcodeArglistFilter(self):
         return ArgumentListFilter(self.cmd)
 
-def getBuilder(cmd, isCxx):
+def getBuilder(cmd, mode):
     compilerEnv = 'LLVM_COMPILER'
     cstring = os.getenv(compilerEnv)
     pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
@@ -203,9 +209,9 @@ def getBuilder(cmd, isCxx):
         _logger.info('WLLVM compiler path prefix "%s"', pathPrefix)
 
     if cstring == 'clang':
-        return ClangBuilder(cmd, isCxx, pathPrefix)
+        return ClangBuilder(cmd, mode, pathPrefix)
     elif cstring == 'dragonegg':
-        return DragoneggBuilder(cmd, isCxx, pathPrefix)
+        return DragoneggBuilder(cmd, mode, pathPrefix)
     elif cstring is None:
         errorMsg = ' No compiler set. Please set environment variable %s'
         _logger.critical(errorMsg, compilerEnv)

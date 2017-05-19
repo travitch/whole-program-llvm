@@ -33,6 +33,7 @@ setup(
             'wllvm-as = wllvm.as:main',
             'wllvm = wllvm.wllvm:main',
             'wllvm++ = wllvm.wllvmpp:main',
+            'wfortran = wllvm.wfortran:main',
             'wllvm-sanity-checker = wllvm.sanity:main',
             'extract-bc = wllvm.extractor:main',
         ],

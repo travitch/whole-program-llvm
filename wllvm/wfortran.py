@@ -18,7 +18,7 @@ from .compilers import wcompile
 def main():
     """ The entry point to wllvm.
     """
-    return wcompile("wllvm")
+    return wcompile("wfortran")
 
 
 if __name__ == '__main__':
