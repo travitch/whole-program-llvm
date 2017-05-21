@@ -54,6 +54,8 @@ Version History:
 
 1.1.2    - 4/26/2017 encoding issues with hashlib in the python 3 swarm.
 
+1.1.3    - 5/20/2017 fortran support via flang (pull #60 over at travitch's place)
+
 """
 
-wllvm_version = '1.1.2'
+wllvm_version = '1.1.3'
