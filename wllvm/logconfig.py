@@ -7,23 +7,32 @@ import logging
 import os
 import sys
 
-_loggingEnv = 'WLLVM_OUTPUT'
+# iam: 6/30/2017 decided to move to a gllvm style where we can set the level and the output file
+_loggingEnvLevel_old = 'WLLVM_OUTPUT'
+_loggingEnvLevel_new = 'WLLVM_OUTPUT_LEVEL'
 
-_validLogLevels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
+_loggingDestination = 'WLLVM_OUTPUT_FILE'
+
+_validLogLevels = ['ERROR', 'WARNING', 'INFO', 'DEBUG']
 
 def logConfig(name):
 
-    logging.basicConfig(level=logging.WARNING, format='%(levelname)s:%(message)s')
+    destination = os.getenv(_loggingDestination)
+
+    if destination:
+        logging.basicConfig(filename=destination, level=logging.WARNING, format='%(levelname)s:%(message)s')
+    else:
+        logging.basicConfig(level=logging.WARNING, format='%(levelname)s:%(message)s')
 
     retval = logging.getLogger(name)
 
-    level = os.getenv(_loggingEnv)
+    level = os.getenv(_loggingEnvLevel_old) or os.getenv(_loggingEnvLevel_new) 
 
     if level:
         level = level.upper()
         if not level in _validLogLevels:
-            logging.error('"%s" is not a valid value for %s. Valid values are %s',
-                          level, _loggingEnv, _validLogLevels)
+            logging.error('"%s" is not a valid value for %s or %s. Valid values are %s',
+                          level, _loggingEnvLevel_old, _loggingEnvLevel_new, _validLogLevels)
             sys.exit(1)
         else:
             retval.setLevel(getattr(logging, level))

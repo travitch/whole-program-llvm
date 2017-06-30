@@ -35,6 +35,7 @@ def wcompile(mode):
     except Exception as e:
         _logger.debug('%s: exception case: %s', mode, str(e))
 
+    _logger.info('Calling %s returned %d',  list(sys.argv), rc)  
     return rc
 
 
@@ -204,9 +205,9 @@ def getBuilder(cmd, mode):
     compilerEnv = 'LLVM_COMPILER'
     cstring = os.getenv(compilerEnv)
     pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
-    _logger.info('WLLVM compiler using %s', cstring)
+    _logger.debug('WLLVM compiler using %s', cstring)
     if pathPrefix:
-        _logger.info('WLLVM compiler path prefix "%s"', pathPrefix)
+        _logger.debug('WLLVM compiler path prefix "%s"', pathPrefix)
 
     if cstring == 'clang':
         return ClangBuilder(cmd, mode, pathPrefix)

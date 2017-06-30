@@ -241,17 +241,25 @@ Debugging
 ---------
 
 The WLLVM tools can show various levels of output to aid with debugging.
-To show this output set WLLVM_OUTPUT to one of the following levels:
+To show this output set the `WLLVM_OUTPUT_LEVEL` environment
+variable to one of the following levels:
 
- * `CRITICAL`
  * `ERROR`
  * `WARNING`
  * `INFO`
  * `DEBUG`
 
-For example
+For example:
+```
+    export WLLVM_OUTPUT_LEVEL=DEBUG
+```
+Output will be directed to the standard error stream, unless you specify the
+path of a logfile via the `WLLVM_OUTPUT_FILE` environment variable.
 
-    export WLLVM_OUTPUT=DEBUG
+For example:
+```
+    export WLLVM_OUTPUT_FILE=/tmp/wllvm.log
+```
 
 
 Sanity Checking
