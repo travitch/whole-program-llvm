@@ -30,12 +30,22 @@ def wcompile(mode):
         builder = getBuilder(cmd, mode)
         rc = buildObject(builder)
 
-        if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-            buildAndAttachBitcode(builder)
+        # phase one compile failed. no point continuing
+        if rc != 0:
+            _logger.info('phase one failed: %s', str(sys.argv))
+            return rc
+
+        # configure only; continuing not desired
+        if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+            return rc
+
+        # phase two
+        buildAndAttachBitcode(builder)
+
     except Exception as e:
         _logger.debug('%s: exception case: %s', mode, str(e))
 
-    _logger.info('Calling %s returned %d',  list(sys.argv), rc)  
+    _logger.info('Calling %s returned %d',  list(sys.argv), rc)
     return rc
 
 
@@ -236,7 +246,8 @@ def buildAndAttachBitcode(builder):
 
     af = builder.getBitcodeArglistFilter()
 
-    if not af.inputFiles or af.isEmitLLVM or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly:
+
+    if not af.inputFiles or af.isEmitLLVM or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly or af.isStandardIn:
         _logger.debug('No work to do')
         _logger.debug(af.__dict__)
         return

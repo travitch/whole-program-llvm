@@ -31,6 +31,8 @@ class ArgumentListFilter(object):
     def __init__(self, inputList, exactMatches={}, patternMatches={}):
         defaultArgExactMatches = {
 
+            '-' : (0, ArgumentListFilter.standardInCallback),
+
             '-o' : (1, ArgumentListFilter.outputFileCallback),
             '-c' : (0, ArgumentListFilter.compileOnlyCallback),
             '-E' : (0, ArgumentListFilter.preprocessOnlyCallback),
@@ -256,7 +258,7 @@ class ArgumentListFilter(object):
         self.isAssembly = False
         self.isCompileOnly = False
         self.isEmitLLVM = False
-
+        self.isStandardIn = False
 
         argExactMatches = dict(defaultArgExactMatches)
         argExactMatches.update(exactMatches)
@@ -304,6 +306,11 @@ class ArgumentListFilter(object):
             ret.append(a)
             nargs = nargs - 1
         return ret
+
+
+    def standardInCallback(self, flag):
+        _logger.debug('standardInCallback: %s', flag)
+        self.isStandardIn = True
 
     def abortUnaryCallback(self, flag):
         _logger.warning('Out of context experience: "%s" "%s"', str(self.inputList), flag)
