@@ -21,7 +21,6 @@ def logConfig(name):
     
 
     if destination:
-        sys.stderr.write("logging to {0}\n".format(destination))
         logging.basicConfig(filename=destination, level=logging.WARNING, format='%(levelname)s:%(message)s')
     else:
         logging.basicConfig(level=logging.WARNING, format='%(levelname)s:%(message)s')
@@ -30,8 +29,6 @@ def logConfig(name):
 
     # ignore old setting
     level = os.getenv(_loggingEnvLevel_new) 
-
-    sys.stderr.write("logging level set to to {0}\n".format(level))
 
     if level:
         level = level.upper()

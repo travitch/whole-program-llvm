@@ -124,6 +124,14 @@ class ArgumentListFilter(object):
             # Language
             '-ansi' : (0, ArgumentListFilter.compileUnaryCallback),
             '-pedantic' : (0, ArgumentListFilter.compileUnaryCallback),
+            #iam: i notice that yices configure passes -xc so
+            # we should have a fall back pattern that captures the case
+            # when there is no space between the x and the langauge.
+            # for what its worth: the manual says the language can be one of
+            # c  objective-c  c++ c-header  cpp-output  c++-cpp-output
+            # assembler  assembler-with-cpp
+            # BD: care to comment on your configure?
+
             '-x' : (1, ArgumentListFilter.compileBinaryCallback),
 
             # Debug
@@ -237,6 +245,8 @@ class ArgumentListFilter(object):
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            #iam: -xc from yices. why BD?
+            r'^-x.+$' : (0, ArgumentListFilter.compileUnaryCallback),
 
         }
 
