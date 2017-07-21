@@ -33,7 +33,7 @@ def wcompile(mode):
         if rc == 0 and not os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             buildAndAttachBitcode(builder)
     except Exception as e:
-        _logger.debug('%s: exception case: %s', mode, str(e))
+        _logger.warning('%s: exception case: %s', mode, str(e))
 
     _logger.info('Calling %s returned %d',  list(sys.argv), rc)  
     return rc
