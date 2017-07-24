@@ -309,6 +309,16 @@ class ArgumentListFilter(object):
         if DUMPING:
             self.dump()
 
+
+    def skipBitcodeGeneration(self):
+        if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+            return True
+        if not self.inputFiles or self.isEmitLLVM or self.isAssembly or self.isAssembleOnly:
+            return True
+        if self.isPreprocessOnly or self.isStandardIn or (self.isDependencyOnly and not self.isCompileOnly):
+            return True
+        return False
+
     def _shiftArgs(self, nargs):
         ret = []
         while nargs > 0:

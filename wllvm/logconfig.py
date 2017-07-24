@@ -18,7 +18,6 @@ _validLogLevels = ['ERROR', 'WARNING', 'INFO', 'DEBUG']
 def logConfig(name):
 
     destination = os.getenv(_loggingDestination)
-    
 
     if destination:
         logging.basicConfig(filename=destination, level=logging.WARNING, format='%(levelname)s:%(message)s')
@@ -28,7 +27,7 @@ def logConfig(name):
     retval = logging.getLogger(name)
 
     # ignore old setting
-    level = os.getenv(_loggingEnvLevel_new) 
+    level = os.getenv(_loggingEnvLevel_new)
 
     if level:
         level = level.upper()

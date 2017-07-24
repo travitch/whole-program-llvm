@@ -17,7 +17,6 @@ from .logconfig import logConfig
 # Internal logger
 _logger = logConfig(__name__)
 
-
 def wcompile(mode):
     """ The workhorse, called from wllvm and wllvm++.
     """
@@ -28,6 +27,9 @@ def wcompile(mode):
         cmd = list(sys.argv)
         cmd = cmd[1:]
         builder = getBuilder(cmd, mode)
+
+        af = builder.getBitcodeArglistFilter()
+
         rc = buildObject(builder)
 
         # phase one compile failed. no point continuing
@@ -35,17 +37,19 @@ def wcompile(mode):
             _logger.info('phase one failed: %s', str(sys.argv))
             return rc
 
-        # configure only; continuing not desired
-        if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
+        # no need to generate bitcode (e.g. configure only, assembly, ....)
+        if af.skipBitcodeGeneration():
+            _logger.info('No work to do')
+            _logger.debug(af.__dict__)
             return rc
 
         # phase two
-        buildAndAttachBitcode(builder)
+        buildAndAttachBitcode(builder, af)
 
     except Exception as e:
         _logger.warning('%s: exception case: %s', mode, str(e))
 
-    _logger.info('Calling %s returned %d',  list(sys.argv), rc)
+    _logger.info('Calling %s returned %d', list(sys.argv), rc)
     return rc
 
 
@@ -145,6 +149,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
 
 class BuilderBase(object):
     def __init__(self, cmd, mode, prefixPath=None):
+        self.af = None     #memoize the arglist filter
         self.cmd = cmd
         self.mode = mode
 
@@ -180,7 +185,9 @@ class ClangBuilder(BuilderBase):
         return ['{0}{1}'.format(self.prefixPath, os.getenv(env) or prog)]
 
     def getBitcodeArglistFilter(self):
-        return ClangBitcodeArgumentListFilter(self.cmd)
+        if self.af is None:
+            self.af = ClangBitcodeArgumentListFilter(self.cmd)
+        return self.af
 
 class DragoneggBuilder(BuilderBase):
     def getBitcodeCompiler(self):
@@ -209,7 +216,9 @@ class DragoneggBuilder(BuilderBase):
         return ['{0}{1}{2}'.format(self.prefixPath, pfx, mode)]
 
     def getBitcodeArglistFilter(self):
-        return ArgumentListFilter(self.cmd)
+        if self.af is None:
+            self.af = ArgumentListFilter(self.cmd)
+        return self.af
 
 def getBuilder(cmd, mode):
     compilerEnv = 'LLVM_COMPILER'
@@ -242,15 +251,7 @@ def buildObject(builder):
 
 
 # This command does not have the executable with it
-def buildAndAttachBitcode(builder):
-
-    af = builder.getBitcodeArglistFilter()
-
-
-    if not af.inputFiles or af.isEmitLLVM or af.isAssembly or af.isAssembleOnly or (af.isDependencyOnly and not af.isCompileOnly) or af.isPreprocessOnly or af.isStandardIn:
-        _logger.debug('No work to do')
-        _logger.debug(af.__dict__)
-        return
+def buildAndAttachBitcode(builder, af):
 
     #iam: when we have multiple input files we'll have to keep track of their object files.
     newObjectFiles = []
