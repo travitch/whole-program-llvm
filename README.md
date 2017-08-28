@@ -31,7 +31,8 @@ presence of static libraries in builds.  WLLVM's approach has the
 distinct advantage of generating working binaries, in case some part
 of a build process requires that.
 
-WLLVM works with either clang or the gcc dragonegg plugin.
+WLLVM works with either clang or the gcc dragonegg plugin. If you are not interested in dragonegg support,
+and speed is an issue for you, you may want to try out [gllvm.](https://github.com/SRI-CSL/gllvm)
 
 Installation
 ------------
@@ -241,17 +242,25 @@ Debugging
 ---------
 
 The WLLVM tools can show various levels of output to aid with debugging.
-To show this output set WLLVM_OUTPUT to one of the following levels:
+To show this output set the `WLLVM_OUTPUT_LEVEL` environment
+variable to one of the following levels:
 
- * `CRITICAL`
  * `ERROR`
  * `WARNING`
  * `INFO`
  * `DEBUG`
 
-For example
+For example:
+```
+    export WLLVM_OUTPUT_LEVEL=DEBUG
+```
+Output will be directed to the standard error stream, unless you specify the
+path of a logfile via the `WLLVM_OUTPUT_FILE` environment variable.
 
-    export WLLVM_OUTPUT=DEBUG
+For example:
+```
+    export WLLVM_OUTPUT_FILE=/tmp/wllvm.log
+```
 
 
 Sanity Checking

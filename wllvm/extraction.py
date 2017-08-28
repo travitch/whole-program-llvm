@@ -8,7 +8,6 @@ import pprint
 import tempfile
 import shutil
 import argparse
-import hashlib
 
 from .popenwrapper import Popen
 
