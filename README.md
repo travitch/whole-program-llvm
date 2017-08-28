@@ -31,7 +31,8 @@ presence of static libraries in builds.  WLLVM's approach has the
 distinct advantage of generating working binaries, in case some part
 of a build process requires that.
 
-WLLVM works with either clang or the gcc dragonegg plugin.
+WLLVM works with either clang or the gcc dragonegg plugin. If you are not interested in dragonegg support,
+and speed is an issue for you, you may want to try out [gllvm.](https://github.com/SRI-CSL/gllvm)
 
 Installation
 ------------
