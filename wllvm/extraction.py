@@ -8,6 +8,7 @@ import pprint
 import tempfile
 import shutil
 import argparse
+import codecs
 
 from .popenwrapper import Popen
 
@@ -24,6 +25,7 @@ from .logconfig import logConfig
 
 _logger = logConfig(__name__)
 
+decode_hex = codecs.getdecoder("hex_codec")
 
 def extraction():
     """ This is the entry point to extract-bc.
@@ -101,7 +103,6 @@ def getSectionContent(size, offset, filename):
 # otool hexdata pattern.
 otool_hexdata = re.compile(r'^(?:[0-9a-f]{8,16}\t)?([0-9a-f\s]+)$', re.IGNORECASE)
 
-
 def extract_section_darwin(inputFile):
     """Extracts the section as a string, the darwin version.
 
@@ -123,7 +124,7 @@ def extract_section_darwin(inputFile):
 
     try:
         octets = []
-        for line in lines:
+        for line in lines[1:]:
             m = otool_hexdata.match(line)
             if not m:
                 _logger.debug('otool output:\n\t%s\nDID NOT match expectations.', line)
