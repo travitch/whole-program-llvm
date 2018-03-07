@@ -30,7 +30,7 @@ install:
 # command to run tests
 script:
 #  # Run unittests
-  - python -m unittest discover test/ || exit 1
+#  - python -m unittest discover test/ || exit 1
   - export WLLVM_HOME=`pwd`
   - ${WLLVM_HOME}/.travis/store.sh
   - export APACHE_VER=2.4.18
