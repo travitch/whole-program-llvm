@@ -125,13 +125,15 @@ def extract_section_darwin(inputFile):
     try:
         octets = []
         for line in lines[1:]:
-            m = otool_hexdata.match(line)
+            #            m = otool_hexdata.match(line)
+            m = otool_hexdata.match(line.decode())
             if not m:
                 _logger.debug('otool output:\n\t%s\nDID NOT match expectations.', line)
                 continue
             octetline = m.group(1)
             octets.extend(octetline.split())
-        retval = ''.join(octets).decode('hex').splitlines()
+            #        retval = ''.join(octets).decode('hex').splitlines()
+        retval = decode_hex(''.join(octets))[0].splitlines()
         if not retval:
             _logger.error('%s contained no %s segment', inputFile, darwinSegmentName)
     except Exception as e:
