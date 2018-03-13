@@ -242,6 +242,10 @@ class ArgumentListFilter(object):
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-stdlib=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            #iam: mac stuff...
+            r'-mmacosx-version-min=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
+            
+
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
