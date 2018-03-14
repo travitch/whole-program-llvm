@@ -244,7 +244,6 @@ class ArgumentListFilter(object):
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             #iam: mac stuff...
             r'-mmacosx-version-min=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
-            
 
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -288,7 +287,7 @@ class ArgumentListFilter(object):
                     self.isPreprocessOnly)):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
-            _logger.debug('Trying to match item ' + currentItem)
+            _logger.debug('Trying to match item %s', currentItem)
             # First, see if this exact flag has a handler in the table.
             # This is a cheap test.  Otherwise, see if the input matches
             # some pattern with a handler that we recognize

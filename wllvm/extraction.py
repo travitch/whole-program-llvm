@@ -37,13 +37,13 @@ def extraction():
         return 1
 
     if sys.platform.startswith('freebsd') or  sys.platform.startswith('linux'):
-        process_file_unix(pArgs)
+        return process_file_unix(pArgs)
     elif sys.platform.startswith('darwin'):
-        process_file_darwin(pArgs)
-    else:
-        #iam: do we work on anything else?
-        _logger.error('Unsupported or unrecognized platform: %s', sys.platform)
-        return 1
+        return process_file_darwin(pArgs)
+
+    #iam: do we work on anything else?
+    _logger.error('Unsupported or unrecognized platform: %s', sys.platform)
+    return 1
 
 
 
