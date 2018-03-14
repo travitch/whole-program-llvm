@@ -58,7 +58,9 @@ Version History:
 
 1.1.4    - 7/24/2017 improvements motivated by gllvm and logic.
 
+1.1.5    - 3/14/2018 fixes suggested by Alexander Bakst
+
 
 """
 
-wllvm_version = '1.1.4'
+wllvm_version = '1.1.5'
