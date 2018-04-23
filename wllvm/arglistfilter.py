@@ -88,9 +88,15 @@ class ArgumentListFilter(object):
             '-msoft-float' : (0, ArgumentListFilter.compileUnaryCallback),
             '-m3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
             '-mno-3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-m16': (0, ArgumentListFilter.compileUnaryCallback),
             '-m32': (0, ArgumentListFilter.compileUnaryCallback),
+            '-mx32': (0, ArgumentListFilter.compileUnaryCallback),
             '-m64': (0, ArgumentListFilter.compileUnaryCallback),
+            '-miamcu': (0, ArgumentListFilter.compileUnaryCallback),
             '-mstackrealign': (0, ArgumentListFilter.compileUnaryCallback),
+            '-mretpoline-external-thunk': (0, ArgumentListFilter.compileUnaryCallback),  #iam: linux kernel stuff
+            '-mno-fp-ret-in-387': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
+            '-mskip-rax-setup': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
 
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -194,6 +200,14 @@ class ArgumentListFilter(object):
             '-coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             '--coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
 
+            # ian's additions while building the linux kernel
+
+            '/dev/null' : (0,  ArgumentListFilter.inputFileCallback),
+            '-mno-80387': (0, ArgumentListFilter.compileUnaryCallback), #gcc Don't generate output containing 80387 instructions for floating point.
+            "-mregparm=3"
+            "-march=i386"
+
+            
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
@@ -209,6 +223,8 @@ class ArgumentListFilter(object):
             # calling ld -r.
             #
             '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
+            '-Oz' : (0, ArgumentListFilter.compileUnaryCallback),   #did not find this in the GCC options.
+            '-mno-global-merge' : (0, ArgumentListFilter.compileUnaryCallback),  #clang (do not merge globals)
 
         }
 
@@ -242,6 +258,14 @@ class ArgumentListFilter(object):
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-stdlib=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-mstack-alignment=.+$': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
+            r'^-march=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
+            r'^-mregparm=.+$': (0, ArgumentListFilter.compileUnaryCallback),                  #iam: linux kernel stuff
+            r'^-mcmodel=.+$': (0, ArgumentListFilter.compileUnaryCallback),                   #iam: linux kernel stuff
+            r'^-mpreferred-stack-boundary=.+$': (0, ArgumentListFilter.compileUnaryCallback), #iam: linux kernel stuff
+            r'^-mindirect-branch=.+$': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
+
+            
             #iam: mac stuff...
             r'-mmacosx-version-min=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
 
@@ -315,13 +339,21 @@ class ArgumentListFilter(object):
 
     def skipBitcodeGeneration(self):
         if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-            return True
-        if not self.inputFiles or self.isEmitLLVM or self.isAssembly or self.isAssembleOnly:
-            return True
-        if self.isPreprocessOnly or self.isStandardIn or (self.isDependencyOnly and not self.isCompileOnly):
-            return True
-        return False
-
+            return (True, "CFG Only")
+        if not self.inputFiles:
+            return (True, "No input files")
+        if self.isEmitLLVM:
+            return (True, "Emit LLVM")
+        if self.isAssembly or self.isAssembleOnly:
+            return (True, "Assembly")
+        if self.isPreprocessOnly:
+            return (True, "Preprocess Only")
+        if self.isStandardIn:
+            return (True, "Standard In")
+        if (self.isDependencyOnly and not self.isCompileOnly):
+            return (True, "Dependency Only")
+        return (False, "")
+    
     def _shiftArgs(self, nargs):
         ret = []
         while nargs > 0:

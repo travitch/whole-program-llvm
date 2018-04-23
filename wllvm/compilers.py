@@ -38,8 +38,9 @@ def wcompile(mode):
             return rc
 
         # no need to generate bitcode (e.g. configure only, assembly, ....)
-        if af.skipBitcodeGeneration():
-            _logger.info('No work to do')
+        (skipit, reason) = af.skipBitcodeGeneration()
+        if skipit:
+            _logger.info('No work to do: %s', reason)
             _logger.debug(af.__dict__)
             return rc
 
