@@ -103,10 +103,18 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # that won't work.
     (_, ext) = os.path.splitext(outFileName)
     _logger.debug('attachBitcodePathToObject: %s  ===> %s [ext = %s]', bcPath, outFileName, ext)
-    #iam: this also looks very dodgey; we need a more reliable way to do this:
-    if ext not in ('.o', '.lo', '.os', '.So', '.po'):
-        _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getFileType(outFileName))
+
+    #iam: just object files, right?
+    fileType = FileType.getFileType(outFileName)
+    if fileType not in (FileType.MACH_OBJECT, FileType.ELF_OBJECT):
+    #if fileType not in (FileType.MACH_OBJECT, FileType.MACH_SHARED, FileType.ELF_OBJECT, FileType.ELF_SHARED):
+        _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getReadableFileType(fileType))
         return
+
+    #iam: this also looks very dodgey; we need a more reliable way to do this:
+    #if ext not in ('.o', '.lo', '.os', '.So', '.po'):
+    #    _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getReadableFileType(outFileName))
+    #    return
 
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.

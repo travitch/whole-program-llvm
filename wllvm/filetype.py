@@ -56,6 +56,17 @@ class FileType(object):
 
         return retval
 
+
+    @classmethod
+    def getFileTypeString(cls, fti):
+        """ Returns the string name of the file type.
+
+        """
+        if fti in cls.revMap:
+            return cls.revMap[fti]
+        else:
+            'UNKNOWN'
+
     @classmethod
     def init(cls):
         """ Initializes the static fields.
