@@ -97,7 +97,7 @@ class ArgumentListFilter(object):
             '-mretpoline-external-thunk': (0, ArgumentListFilter.compileUnaryCallback),  #iam: linux kernel stuff
             '-mno-fp-ret-in-387': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
             '-mskip-rax-setup': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
-
+            '-mindirect-branch-register': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -201,13 +201,10 @@ class ArgumentListFilter(object):
             '--coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
 
             # ian's additions while building the linux kernel
-
             '/dev/null' : (0,  ArgumentListFilter.inputFileCallback),
             '-mno-80387': (0, ArgumentListFilter.compileUnaryCallback), #gcc Don't generate output containing 80387 instructions for floating point.
-            "-mregparm=3"
-            "-march=i386"
 
-            
+
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
@@ -258,14 +255,17 @@ class ArgumentListFilter(object):
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-stdlib=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
-            r'^-mstack-alignment=.+$': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
-            r'^-march=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
-            r'^-mregparm=.+$': (0, ArgumentListFilter.compileUnaryCallback),                  #iam: linux kernel stuff
-            r'^-mcmodel=.+$': (0, ArgumentListFilter.compileUnaryCallback),                   #iam: linux kernel stuff
-            r'^-mpreferred-stack-boundary=.+$': (0, ArgumentListFilter.compileUnaryCallback), #iam: linux kernel stuff
-            r'^-mindirect-branch=.+$': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
+            r'^-mstack-alignment=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
+            r'^-march=.+$': (0, ArgumentListFilter.compileUnaryCallback),                                #iam: linux kernel stuff
+            r'^-mregparm=.+$': (0, ArgumentListFilter.compileUnaryCallback),                             #iam: linux kernel stuff
+            r'^-mcmodel=.+$': (0, ArgumentListFilter.compileUnaryCallback),                              #iam: linux kernel stuff
+            r'^-mpreferred-stack-boundary=.+$': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
+            r'^-mindirect-branch=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
+            r'^-mregparm=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),                        #iam: linux kernel stuff
+            r'^-march=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),                           #iam: linux kernel stuff
+            r'^--param=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),                          #iam: linux kernel stuff
 
-            
+
             #iam: mac stuff...
             r'-mmacosx-version-min=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
 
@@ -353,7 +353,7 @@ class ArgumentListFilter(object):
         if (self.isDependencyOnly and not self.isCompileOnly):
             return (True, "Dependency Only")
         return (False, "")
-    
+
     def _shiftArgs(self, nargs):
         ret = []
         while nargs > 0:

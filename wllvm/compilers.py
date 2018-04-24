@@ -23,6 +23,11 @@ def wcompile(mode):
 
     rc = 1
 
+    legible_argstring = ' '.join(list(sys.argv)[1:])
+
+    # for diffing with gclang
+    _logger.info('Entering CC [%s]', legible_argstring)
+
     try:
         cmd = list(sys.argv)
         cmd = cmd[1:]
@@ -34,13 +39,13 @@ def wcompile(mode):
 
         # phase one compile failed. no point continuing
         if rc != 0:
-            _logger.info('phase one failed: %s', str(sys.argv))
+            _logger.error('Failed to compile using given arguments: [%s]', legible_argstring)
             return rc
 
         # no need to generate bitcode (e.g. configure only, assembly, ....)
         (skipit, reason) = af.skipBitcodeGeneration()
         if skipit:
-            _logger.info('No work to do: %s', reason)
+            _logger.debug('No work to do: %s', reason)
             _logger.debug(af.__dict__)
             return rc
 
@@ -50,7 +55,7 @@ def wcompile(mode):
     except Exception as e:
         _logger.warning('%s: exception case: %s', mode, str(e))
 
-    _logger.info('Calling %s returned %d', list(sys.argv), rc)
+    _logger.debug('Calling %s returned %d', list(sys.argv), rc)
     return rc
 
 

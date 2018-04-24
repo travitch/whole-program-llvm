@@ -340,10 +340,13 @@ def buildArchive(pArgs, bitCodeFiles):
 
         # Pick output file path if outputFile not set
         if pArgs.outputFile is None:
+            bcaExtension = '.' + bitCodeArchiveExtension
             if pArgs.inputFile.endswith('.a'):
                 # Strip off .a suffix
                 pArgs.outputFile = pArgs.inputFile[:-2]
-                pArgs.outputFile += '.' + bitCodeArchiveExtension
+                pArgs.outputFile += bcaExtension
+            else:
+                pArgs.outputFile = pArgs.inputFile + bcaExtension
 
         _logger.info('Writing output to %s', pArgs.outputFile)
 

@@ -60,7 +60,10 @@ Version History:
 
 1.1.5    - 3/14/2018 fixes suggested by Alexander Bakst
 
+1.1.6    - 4/24/2018 fixes suggested by building the Linux kernel and trying to harmonize with gllvm.
+
 
 """
 
-wllvm_version = '1.1.5'
+wllvm_version = '1.1.6'
+wllvm_date = 'April 24th 2018'
