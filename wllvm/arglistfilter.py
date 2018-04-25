@@ -97,7 +97,7 @@ class ArgumentListFilter(object):
             '-mretpoline-external-thunk': (0, ArgumentListFilter.compileUnaryCallback),  #iam: linux kernel stuff
             '-mno-fp-ret-in-387': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
             '-mskip-rax-setup': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
-            '-mindirect-branch-register': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
+            '-mindirect-branch-register': (0, ArgumentListFilter.compileUnaryCallback),  #iam: linux kernel stuff
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -261,9 +261,9 @@ class ArgumentListFilter(object):
             r'^-mcmodel=.+$': (0, ArgumentListFilter.compileUnaryCallback),                              #iam: linux kernel stuff
             r'^-mpreferred-stack-boundary=.+$': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
             r'^-mindirect-branch=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
-            r'^-mregparm=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),                        #iam: linux kernel stuff
-            r'^-march=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),                           #iam: linux kernel stuff
-            r'^--param=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),                          #iam: linux kernel stuff
+            r'^-mregparm=.+$' : (0, ArgumentListFilter.compileUnaryCallback),                            #iam: linux kernel stuff
+            r'^-march=.+$' : (0, ArgumentListFilter.compileUnaryCallback),                               #iam: linux kernel stuff
+            r'^--param=.+$' : (0, ArgumentListFilter.compileUnaryCallback),                              #iam: linux kernel stuff
 
 
             #iam: mac stuff...
