@@ -236,6 +236,24 @@ def archiveFiles(pArgs, fileNames):
 
     return retCode
 
+def extract_from_thin_archive(inputFile):
+    """Extracts the paths from the thin archive.
+
+    """
+    retval = None
+
+    arCmd = ['ar', '-t', inputFile]         #might be os dependent
+    arProc = Popen(arCmd, stdout=sp.PIPE)
+
+    arOutput = arProc.communicate()[0]
+    if arProc.returncode != 0:
+        _logger.error('ar failed on %s', inputFile)
+        sys.exit(-1)
+
+    lines = arOutput.splitlines()
+    return lines
+
+
 
 def handleExecutable(pArgs):
 
@@ -253,9 +271,36 @@ def handleExecutable(pArgs):
     return linkFiles(pArgs, fileNames)
 
 
+def handleThinArchive(pArgs):
+
+    if pArgs.bitcodeModuleFlag:
+        _logger.info('Generating LLVM Bitcode module from an archive')
+    else:
+        _logger.info('Generating LLVM Bitcode archive from an archive')
+
+    objectPaths = extract_from_thin_archive(pArgs.inputFile)
+
+    if not objectPaths:
+        return 1
+
+    bcFiles = []
+    for p in objectPaths:
+        _logger.info('handleThinArchive: processing {0}'.format(p))
+        contents = pArgs.extractor(p)
+        for c in contents:
+            if len(c) > 0:
+                _logger.info('\t including {0}'.format(c))
+                bcFiles.append(str(c))
+
+    return  buildArchive(pArgs, bcFiles)
 
 
 def handleArchive(pArgs):
+
+    if pArgs.bitcodeModuleFlag:
+        _logger.info('Generating LLVM Bitcode module from an archive')
+    else:
+        _logger.info('Generating LLVM Bitcode archive from an archive')
 
     originalDir = os.getcwd() # This will be the destination
 
@@ -314,16 +359,16 @@ def handleArchive(pArgs):
         _logger.debug('Deleting temporary folder "%s"', tempDir)
         shutil.rmtree(tempDir)
 
-    #write the manifest file if asked for
-    if pArgs.manifestFlag:
-        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
-
-    # Build bitcode archive
+   # Build bitcode archive
     os.chdir(originalDir)
 
     return buildArchive(pArgs, bitCodeFiles)
 
 def buildArchive(pArgs, bitCodeFiles):
+
+    #write the manifest file if asked for
+    if pArgs.manifestFlag:
+        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
 
     if pArgs.bitcodeModuleFlag:
 
@@ -355,7 +400,7 @@ def buildArchive(pArgs, bitCodeFiles):
 
 def writeManifest(manifestFile, bitCodeFiles):
     with open(manifestFile, 'w') as output:
-        for f in bitCodeFiles:
+        for f in sorted(bitCodeFiles):
             output.write('{0}\n'.format(f))
             sf = getStorePath(f)
             if sf:
@@ -464,11 +509,9 @@ def process_file_unix(pArgs):
         _logger.info('Generating LLVM Bitcode module')
         return handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        if pArgs.bitcodeModuleFlag:
-            _logger.info('Generating LLVM Bitcode module from an archive')
-        else:
-            _logger.info('Generating LLVM Bitcode archive from an archive')
         return handleArchive(pArgs)
+    elif ft == FileType.THIN_ARCHIVE:
+        return handleThinArchive(pArgs)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
         return 1
@@ -488,10 +531,6 @@ def process_file_darwin(pArgs):
         _logger.info('Generating LLVM Bitcode module')
         return handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        if pArgs.bitcodeModuleFlag:
-            _logger.info('Generating LLVM Bitcode module from an archive')
-        else:
-            _logger.info('Generating LLVM Bitcode archive from an archive')
         return handleArchive(pArgs)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])

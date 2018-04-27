@@ -47,6 +47,8 @@ class FileType(object):
             retval = cls.MACH_SHARED
         elif 'current ar archive' in foutput:
             retval = cls.ARCHIVE
+        elif 'thin archive' in foutput:
+            retval = cls.THIN_ARCHIVE
         elif 'ELF' in foutput and 'relocatable' in foutput:
             retval = cls.ELF_OBJECT
         elif 'Mach-O' in foutput and 'object' in foutput:
@@ -78,7 +80,9 @@ class FileType(object):
                                         'MACH_EXECUTABLE',
                                         'MACH_OBJECT',
                                         'MACH_SHARED',
-                                        'ARCHIVE')):
+                                        'ARCHIVE',
+                                        'THIN_ARCHIVE',
+        )):
             setattr(cls, name, index)
             cls.revMap[index] = name
 
