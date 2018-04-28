@@ -242,7 +242,7 @@ def extract_from_thin_archive(inputFile):
     """
     retval = None
 
-    arCmd = ['ar', '-t', inputFile]         #might be os dependent
+    arCmd = ['ar', '-t', inputFile]         #iam: check if this might be os dependent
     arProc = Popen(arCmd, stdout=sp.PIPE)
 
     arOutput = arProc.communicate()[0]
@@ -263,7 +263,7 @@ def handleExecutable(pArgs):
         return 1
 
     if pArgs.manifestFlag:
-        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
+        writeManifest(pArgs, '{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
 
     if pArgs.outputFile is None:
         pArgs.outputFile = pArgs.inputFile + '.' + moduleExtension
@@ -272,11 +272,6 @@ def handleExecutable(pArgs):
 
 
 def handleThinArchive(pArgs):
-
-    if pArgs.bitcodeModuleFlag:
-        _logger.info('Generating LLVM Bitcode module from an archive')
-    else:
-        _logger.info('Generating LLVM Bitcode archive from an archive')
 
     objectPaths = extract_from_thin_archive(pArgs.inputFile)
 
@@ -296,11 +291,6 @@ def handleThinArchive(pArgs):
 
 
 def handleArchive(pArgs):
-
-    if pArgs.bitcodeModuleFlag:
-        _logger.info('Generating LLVM Bitcode module from an archive')
-    else:
-        _logger.info('Generating LLVM Bitcode archive from an archive')
 
     originalDir = os.getcwd() # This will be the destination
 
@@ -366,9 +356,14 @@ def handleArchive(pArgs):
 
 def buildArchive(pArgs, bitCodeFiles):
 
+    if pArgs.bitcodeModuleFlag:
+        _logger.info('Generating LLVM Bitcode module from an archive')
+    else:
+        _logger.info('Generating LLVM Bitcode archive from an archive')
+
     #write the manifest file if asked for
     if pArgs.manifestFlag:
-        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
+        writeManifest(pArgs, '{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
 
     if pArgs.bitcodeModuleFlag:
 
@@ -398,13 +393,16 @@ def buildArchive(pArgs, bitCodeFiles):
         return archiveFiles(pArgs, bitCodeFiles)
 
 
-def writeManifest(manifestFile, bitCodeFiles):
+def writeManifest(pArgs, manifestFile, bitCodeFiles):
+    if  pArgs.sortManifestFlag:
+        bitCodeFiles = sorted(bitCodeFiles)
     with open(manifestFile, 'w') as output:
-        for f in sorted(bitCodeFiles):
+        for f in bitCodeFiles:
             output.write('{0}\n'.format(f))
             sf = getStorePath(f)
             if sf:
                 output.write('{0}\n'.format(sf))
+    _logger.warning('Manifest written to %s', manifestFile)
 
 
 
@@ -456,6 +454,10 @@ def extract_bc_args():
     parser.add_argument('--manifest', '-m',
                         dest='manifestFlag',
                         help='Write a manifest file listing all the .bc files used.',
+                        action='store_true')
+    parser.add_argument('--sortmanifest', '-s',
+                        dest='sortManifestFlag',
+                        help='Sort the manifest file (if written).',
                         action='store_true')
     parser.add_argument('--bitcode', '-b',
                         dest='bitcodeModuleFlag',
