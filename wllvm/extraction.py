@@ -289,8 +289,106 @@ def handleThinArchive(pArgs):
 
     return  buildArchive(pArgs, bcFiles)
 
+#iam: do we want to preserve the order in the archive? if so we need to return both the list and the dict.
+def fetchTOC(pArgs, inputFile):
+    toc = {}
 
+    arCmd = ['ar', '-t', inputFile]         #iam: check if this might be os dependent
+    arProc = Popen(arCmd, stdout=sp.PIPE)
+
+    arOutput = arProc.communicate()[0]
+    if arProc.returncode != 0:
+        _logger.error('ar failed on %s', inputFile)
+        return toc
+
+    lines = arOutput.splitlines()
+
+    for line in lines:
+        if line in toc:
+            toc[line] += 1
+        else:
+            toc[line] = 1
+
+    return toc
+
+
+#iam: 5/1/2018
 def handleArchive(pArgs):
+    """ handleArchive processes a archive, and creates either a bitcode archive, or a module, depending on the flags used.
+
+    Archives are strange beasts. handleArchive processes the archive by:
+
+      1. first creating a table of contents of the archive, which maps file names (in the archive) to the number of
+    times a file with that name is stored in the archive.
+
+      2. for each OCCURENCE of a file (name and count) it extracts the section from the object file, and adds the
+    bitcode paths to the bitcode list.
+
+      3. it then either links all these bitcode files together using llvm-link,  or else is creates a bitcode
+    archive using llvm-ar
+
+    """
+
+    inputFile = pArgs.inputFile
+
+    originalDir = os.getcwd() # We want to end up back where we started.
+
+    toc = fetchTOC(pArgs, inputFile)
+
+    if not toc:
+        _logger.warning('No files found, so nothing to be done.')
+        return
+
+    bitCodeFiles = []
+
+    try:
+        tempDir = tempfile.mkdtemp(suffix='wllvm')
+        os.chdir(tempDir)
+
+        for filename in toc:
+            count = toc[filename]
+            for i in range(1, count + 1):
+                arCmd = ['ar', 'xN', str(i), inputFile, filename]         #iam: check if this might be os dependent
+                try:
+                    arP = Popen(arCmd)
+                except OSError as e:
+                    errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
+                    _logger.error(errorMsg)
+                    raise Exception(errorMsg)
+
+                arPE = arP.wait()
+
+                if arPE != 0:
+                    errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
+                    _logger.error(errorMsg)
+                    raise Exception(errorMsg)
+
+                # Extract bitcode locations from object
+                contents = pArgs.extractor(filename)
+                _logger.debug('From instance {0} of {1} in {2} we extracted\n\t{3}\n'.format(i, filename, inputFile, contents))
+                if contents:
+                    for path in contents:
+                        if path:
+                            bitCodeFiles.append(path)
+    finally:
+        # Delete the temporary folder
+        _logger.debug('Deleting temporary folder "%s"', tempDir)
+        shutil.rmtree(tempDir)
+
+    _logger.debug('From instance {0} we extracted\n\t{1}\n'.format(inputFile, bitCodeFiles))
+
+    # Build bitcode archive
+    os.chdir(originalDir)
+
+    return buildArchive(pArgs, bitCodeFiles)
+
+
+
+
+
+
+#iam: 5/1/2018  (soon to be given the flick from the codebase).
+def old_buggy_handleArchive(pArgs):
 
     originalDir = os.getcwd() # This will be the destination
 
