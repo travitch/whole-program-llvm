@@ -62,9 +62,9 @@ Version History:
 
 1.1.6    - 4/24/2018 fixes suggested by building the Linux kernel and trying to harmonize with gllvm.
            4/28/2018 can sort manifest via the -s switch.
-
+           5/1/2018 handle archives correctly (deal with multiple files with the same name in the archive).
 
 """
 
 wllvm_version = '1.1.6'
-wllvm_date = 'April 24th 2018'
+wllvm_date = 'May 1st 2018'
