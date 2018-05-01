@@ -201,7 +201,7 @@ class ArgumentListFilter(object):
             '--coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
 
             # ian's additions while building the linux kernel
-            '/dev/null' : (0,  ArgumentListFilter.inputFileCallback),
+            '/dev/null' : (0, ArgumentListFilter.inputFileCallback),
             '-mno-80387': (0, ArgumentListFilter.compileUnaryCallback), #gcc Don't generate output containing 80387 instructions for floating point.
 
 
@@ -256,8 +256,6 @@ class ArgumentListFilter(object):
             r'^-stdlib=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-mstack-alignment=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
-            r'^-march=.+$': (0, ArgumentListFilter.compileUnaryCallback),                                #iam: linux kernel stuff
-            r'^-mregparm=.+$': (0, ArgumentListFilter.compileUnaryCallback),                             #iam: linux kernel stuff
             r'^-mcmodel=.+$': (0, ArgumentListFilter.compileUnaryCallback),                              #iam: linux kernel stuff
             r'^-mpreferred-stack-boundary=.+$': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
             r'^-mindirect-branch=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
@@ -338,21 +336,22 @@ class ArgumentListFilter(object):
 
 
     def skipBitcodeGeneration(self):
+        retval = (False, "")
         if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-            return (True, "CFG Only")
-        if not self.inputFiles:
-            return (True, "No input files")
-        if self.isEmitLLVM:
-            return (True, "Emit LLVM")
-        if self.isAssembly or self.isAssembleOnly:
-            return (True, "Assembly")
-        if self.isPreprocessOnly:
-            return (True, "Preprocess Only")
-        if self.isStandardIn:
-            return (True, "Standard In")
-        if (self.isDependencyOnly and not self.isCompileOnly):
-            return (True, "Dependency Only")
-        return (False, "")
+            retval = (True, "CFG Only")
+        elif not self.inputFiles:
+            retval = (True, "No input files")
+        elif self.isEmitLLVM:
+            retval = (True, "Emit LLVM")
+        elif self.isAssembly or self.isAssembleOnly:
+            retval = (True, "Assembly")
+        elif self.isPreprocessOnly:
+            retval = (True, "Preprocess Only")
+        elif self.isStandardIn:
+            retval = (True, "Standard In")
+        elif (self.isDependencyOnly and not self.isCompileOnly):
+            retval = (True, "Dependency Only")
+        return retval
 
     def _shiftArgs(self, nargs):
         ret = []

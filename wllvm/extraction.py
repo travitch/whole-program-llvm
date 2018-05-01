@@ -248,10 +248,9 @@ def extract_from_thin_archive(inputFile):
     arOutput = arProc.communicate()[0]
     if arProc.returncode != 0:
         _logger.error('ar failed on %s', inputFile)
-        sys.exit(-1)
-
-    lines = arOutput.splitlines()
-    return lines
+    else:
+        retval = arOutput.splitlines()
+    return retval
 
 
 
@@ -280,17 +279,17 @@ def handleThinArchive(pArgs):
 
     bcFiles = []
     for p in objectPaths:
-        _logger.info('handleThinArchive: processing {0}'.format(p))
+        _logger.info('handleThinArchive: processing %s', p)
         contents = pArgs.extractor(p)
         for c in contents:
-            if len(c) > 0:
-                _logger.info('\t including {0}'.format(c))
+            if c:
+                _logger.info('\t including %s', c)
                 bcFiles.append(str(c))
 
     return  buildArchive(pArgs, bcFiles)
 
 #iam: do we want to preserve the order in the archive? if so we need to return both the list and the dict.
-def fetchTOC(pArgs, inputFile):
+def fetchTOC(inputFile):
     toc = {}
 
     arCmd = ['ar', '-t', inputFile]         #iam: check if this might be os dependent
@@ -333,11 +332,11 @@ def handleArchive(pArgs):
 
     originalDir = os.getcwd() # We want to end up back where we started.
 
-    toc = fetchTOC(pArgs, inputFile)
+    toc = fetchTOC(inputFile)
 
     if not toc:
         _logger.warning('No files found, so nothing to be done.')
-        return
+        return 0
 
     bitCodeFiles = []
 
@@ -353,31 +352,31 @@ def handleArchive(pArgs):
                     arP = Popen(arCmd)
                 except Exception as e:
                     _logger.error(e)
-                    return
+                    return 1
 
                 arPE = arP.wait()
 
                 if arPE != 0:
                     errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
                     _logger.error(errorMsg)
-                    return
+                    return 1
 
                 # Extract bitcode locations from object
                 contents = pArgs.extractor(filename)
-                _logger.debug('From instance {0} of {1} in {2} we extracted\n\t{3}\n'.format(i, filename, inputFile, contents))
+                _logger.debug('From instance %s of %s in %s we extracted\n\t%s\n', i, filename, inputFile, contents)
                 if contents:
                     for path in contents:
                         if path:
                             bitCodeFiles.append(path)
                 else:
-                    _logger.debug('From instance {0} of {1} in {2} we extracted NOTHING\n'.format(i, filename, inputFile))
+                    _logger.debug('From instance %s of %s in %s we extracted NOTHING\n', i, filename, inputFile)
 
     finally:
         # Delete the temporary folder
         _logger.debug('Deleting temporary folder "%s"', tempDir)
         shutil.rmtree(tempDir)
 
-    _logger.debug('From instance {0} we extracted\n\t{1}\n'.format(inputFile, bitCodeFiles))
+    _logger.debug('From instance %s we extracted\n\t%s\n', inputFile, bitCodeFiles)
 
     # Build bitcode archive
     os.chdir(originalDir)
@@ -599,7 +598,7 @@ def extract_bc_args():
 
 
 def process_file_unix(pArgs):
-
+    retval = 1
     ft = FileType.getFileType(pArgs.inputFile)
     _logger.debug('Detected file type is %s', FileType.revMap[ft])
 
@@ -609,19 +608,19 @@ def process_file_unix(pArgs):
 
     if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED or ft == FileType.ELF_OBJECT:
         _logger.info('Generating LLVM Bitcode module')
-        return handleExecutable(pArgs)
+        retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        return handleArchive(pArgs)
+        retval = handleArchive(pArgs)
     elif ft == FileType.THIN_ARCHIVE:
-        return handleThinArchive(pArgs)
+        retval = handleThinArchive(pArgs)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
-        return 1
+    return retval
 
 
 
 def process_file_darwin(pArgs):
-
+    retval = 1
     ft = FileType.getFileType(pArgs.inputFile)
     _logger.debug('Detected file type is %s', FileType.revMap[ft])
 
@@ -631,9 +630,9 @@ def process_file_darwin(pArgs):
 
     if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED or ft == FileType.MACH_OBJECT:
         _logger.info('Generating LLVM Bitcode module')
-        return handleExecutable(pArgs)
+        retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        return handleArchive(pArgs)
+        retval = handleArchive(pArgs)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
-        return 1
+    return retval

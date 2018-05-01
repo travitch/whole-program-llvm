@@ -19,6 +19,7 @@ class FileType(object):
     MACH_OBJECT = None
     MACH_SHARED = None
     ARCHIVE = None
+    THIN_ARCHIVE = None
 
 
     # Provides int -> str map
@@ -66,8 +67,7 @@ class FileType(object):
         """
         if fti in cls.revMap:
             return cls.revMap[fti]
-        else:
-            'UNKNOWN'
+        return 'UNKNOWN'
 
     @classmethod
     def init(cls):
@@ -81,8 +81,7 @@ class FileType(object):
                                         'MACH_OBJECT',
                                         'MACH_SHARED',
                                         'ARCHIVE',
-                                        'THIN_ARCHIVE',
-        )):
+                                        'THIN_ARCHIVE')):
             setattr(cls, name, index)
             cls.revMap[index] = name
 

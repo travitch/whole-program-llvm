@@ -120,7 +120,7 @@ class Checker(object):
         (destination, level) = loggingConfiguration()
         print('Logging output to {0}.'.format(destination if destination else 'standard error'))
         if not level:
-            print('Logging level not set, defaulting to WARNING\n'.format(destination if destination else 'standard error'))
+            print('Logging level not set, defaulting to WARNING\n')
         else:
             print('Logging level set to {0}.\n'.format(level))
 

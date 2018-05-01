@@ -108,7 +108,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
     fileType = FileType.getFileType(outFileName)
     if fileType not in (FileType.MACH_OBJECT, FileType.ELF_OBJECT):
     #if fileType not in (FileType.MACH_OBJECT, FileType.MACH_SHARED, FileType.ELF_OBJECT, FileType.ELF_SHARED):
-        _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getReadableFileType(fileType))
+        _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getFileTypeString(fileType))
         return
 
     #iam: this also looks very dodgey; we need a more reliable way to do this:
