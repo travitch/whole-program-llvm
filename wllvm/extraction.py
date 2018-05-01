@@ -351,17 +351,16 @@ def handleArchive(pArgs):
                 arCmd = ['ar', 'xN', str(i), inputFile, filename]         #iam: check if this might be os dependent
                 try:
                     arP = Popen(arCmd)
-                except OSError as e:
-                    errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
-                    _logger.error(errorMsg)
-                    raise Exception(errorMsg)
+                except Exception as e:
+                    _logger.error(e)
+                    return
 
                 arPE = arP.wait()
 
                 if arPE != 0:
                     errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
                     _logger.error(errorMsg)
-                    raise Exception(errorMsg)
+                    return
 
                 # Extract bitcode locations from object
                 contents = pArgs.extractor(filename)
@@ -370,6 +369,9 @@ def handleArchive(pArgs):
                     for path in contents:
                         if path:
                             bitCodeFiles.append(path)
+                else:
+                    _logger.debug('From instance {0} of {1} in {2} we extracted NOTHING\n'.format(i, filename, inputFile))
+
     finally:
         # Delete the temporary folder
         _logger.debug('Deleting temporary folder "%s"', tempDir)
