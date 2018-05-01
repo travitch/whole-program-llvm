@@ -61,8 +61,8 @@ Version History:
 1.1.5    - 3/14/2018 fixes suggested by Alexander Bakst
 
 1.1.6    - 4/24/2018 fixes suggested by building the Linux kernel and trying to harmonize with gllvm.
-           4/28/2018 can sort manifest via the -s switch.
-           5/1/2018 handle archives correctly (deal with multiple files with the same name in the archive).
+           4/28/2018 can handle thin archives, can sort manifest via the -s switch.
+           5/1/2018 can handle archives correctly (deal with multiple files with the same name in the archive).
 
 """
 
