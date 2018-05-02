@@ -317,6 +317,26 @@ def fetchTOC(inputFile):
     return toc
 
 
+def extractFile(archive, filename, instance):
+    arCmd = ['ar', 'xN', str(instance), archive, filename]         #iam: check if this might be os dependent
+    try:
+        arP = Popen(arCmd)
+    except Exception as e:
+        _logger.error(e)
+        return False
+
+    arPE = arP.wait()
+
+    if arPE != 0:
+        errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
+        _logger.error(errorMsg)
+        return False
+
+    return True
+
+
+
+
 #iam: 5/1/2018
 def handleArchive(pArgs):
     """ handleArchive processes a archive, and creates either a bitcode archive, or a module, depending on the flags used.
@@ -353,29 +373,18 @@ def handleArchive(pArgs):
         for filename in toc:
             count = toc[filename]
             for i in range(1, count + 1):
-                arCmd = ['ar', 'xN', str(i), inputFile, filename]         #iam: check if this might be os dependent
-                try:
-                    arP = Popen(arCmd)
-                except Exception as e:
-                    _logger.error(e)
-                    return 1
 
-                arPE = arP.wait()
-
-                if arPE != 0:
-                    errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
-                    _logger.error(errorMsg)
-                    return 1
-
-                # Extract bitcode locations from object
-                contents = pArgs.extractor(filename)
-                _logger.debug('From instance %s of %s in %s we extracted\n\t%s\n', i, filename, inputFile, contents)
-                if contents:
-                    for path in contents:
-                        if path:
-                            bitCodeFiles.append(path)
-                else:
-                    _logger.debug('From instance %s of %s in %s we extracted NOTHING\n', i, filename, inputFile)
+                # extact out the ith instance of filename
+                if extractFile(inputFile, filename, i):
+                    # Extract bitcode locations from object
+                    contents = pArgs.extractor(filename)
+                    _logger.debug('From instance %s of %s in %s we extracted\n\t%s\n', i, filename, inputFile, contents)
+                    if contents:
+                        for path in contents:
+                            if path:
+                                bitCodeFiles.append(path)
+                    else:
+                        _logger.debug('From instance %s of %s in %s we extracted NOTHING\n', i, filename, inputFile)
 
     finally:
         # Delete the temporary folder
