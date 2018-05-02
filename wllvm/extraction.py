@@ -184,7 +184,7 @@ def linkFiles(pArgs, fileNames):
 
     fileNames = map(getBitcodePath, fileNames)
     linkCmd.extend([x for x in fileNames if x != ''])
-    _logger.info('Writing output to %s', pArgs.outputFile)
+
     try:
         linkProc = Popen(linkCmd)
     except OSError as e:
@@ -261,8 +261,12 @@ def handleExecutable(pArgs):
     if not fileNames:
         return 1
 
+    if  pArgs.sortBitcodeFilesFlag:
+        fileNames = sorted(fileNames)
+
+
     if pArgs.manifestFlag:
-        writeManifest(pArgs, '{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
+        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
 
     if pArgs.outputFile is None:
         pArgs.outputFile = pArgs.inputFile + '.' + moduleExtension
@@ -279,12 +283,14 @@ def handleThinArchive(pArgs):
 
     bcFiles = []
     for p in objectPaths:
-        _logger.info('handleThinArchive: processing %s', p)
+        _logger.debug('handleThinArchive: processing %s', p)
         contents = pArgs.extractor(p)
         for c in contents:
             if c:
-                _logger.info('\t including %s', c)
+                _logger.debug('\t including %s', c)
                 bcFiles.append(str(c))
+
+
 
     return  buildArchive(pArgs, bcFiles)
 
@@ -460,9 +466,12 @@ def buildArchive(pArgs, bitCodeFiles):
     else:
         _logger.info('Generating LLVM Bitcode archive from an archive')
 
+    if  pArgs.sortBitcodeFilesFlag:
+        bitCodeFiles = sorted(bitCodeFiles)
+
     #write the manifest file if asked for
     if pArgs.manifestFlag:
-        writeManifest(pArgs, '{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
+        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
 
     if pArgs.bitcodeModuleFlag:
 
@@ -492,9 +501,7 @@ def buildArchive(pArgs, bitCodeFiles):
         return archiveFiles(pArgs, bitCodeFiles)
 
 
-def writeManifest(pArgs, manifestFile, bitCodeFiles):
-    if  pArgs.sortManifestFlag:
-        bitCodeFiles = sorted(bitCodeFiles)
+def writeManifest(manifestFile, bitCodeFiles):
     with open(manifestFile, 'w') as output:
         for f in bitCodeFiles:
             output.write('{0}\n'.format(f))
@@ -554,9 +561,9 @@ def extract_bc_args():
                         dest='manifestFlag',
                         help='Write a manifest file listing all the .bc files used.',
                         action='store_true')
-    parser.add_argument('--sortmanifest', '-s',
-                        dest='sortManifestFlag',
-                        help='Sort the manifest file (if written).',
+    parser.add_argument('--sort', '-s',
+                        dest='sortBitcodeFilesFlag',
+                        help='Sort the list of bitcode files (for debugging).',
                         action='store_true')
     parser.add_argument('--bitcode', '-b',
                         dest='bitcodeModuleFlag',
