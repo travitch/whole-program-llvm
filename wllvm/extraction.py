@@ -424,7 +424,7 @@ def buildArchive(pArgs, bitCodeFiles):
             pArgs.outputFile = pArgs.inputFile
             pArgs.outputFile += '.' + moduleExtension
 
-        _logger.info('Writing output to %s', pArgs.outputFile)
+        _logger.warning('Writing output to %s', pArgs.outputFile)
 
         return linkFiles(pArgs, bitCodeFiles)
 
@@ -440,7 +440,7 @@ def buildArchive(pArgs, bitCodeFiles):
             else:
                 pArgs.outputFile = pArgs.inputFile + bcaExtension
 
-        _logger.info('Writing output to %s', pArgs.outputFile)
+        _logger.warning('Writing output to %s', pArgs.outputFile)
 
         return archiveFiles(pArgs, bitCodeFiles)
 
