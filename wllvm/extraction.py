@@ -8,6 +8,7 @@ import pprint
 import tempfile
 import shutil
 import argparse
+import codecs
 
 from .popenwrapper import Popen
 
@@ -24,6 +25,7 @@ from .logconfig import logConfig
 
 _logger = logConfig(__name__)
 
+decode_hex = codecs.getdecoder("hex_codec")
 
 def extraction():
     """ This is the entry point to extract-bc.
@@ -35,13 +37,13 @@ def extraction():
         return 1
 
     if sys.platform.startswith('freebsd') or  sys.platform.startswith('linux'):
-        process_file_unix(pArgs)
+        return process_file_unix(pArgs)
     elif sys.platform.startswith('darwin'):
-        process_file_darwin(pArgs)
-    else:
-        #iam: do we work on anything else?
-        _logger.error('Unsupported or unrecognized platform: %s', sys.platform)
-        return 1
+        return process_file_darwin(pArgs)
+
+    #iam: do we work on anything else?
+    _logger.error('Unsupported or unrecognized platform: %s', sys.platform)
+    return 1
 
 
 
@@ -101,7 +103,6 @@ def getSectionContent(size, offset, filename):
 # otool hexdata pattern.
 otool_hexdata = re.compile(r'^(?:[0-9a-f]{8,16}\t)?([0-9a-f\s]+)$', re.IGNORECASE)
 
-
 def extract_section_darwin(inputFile):
     """Extracts the section as a string, the darwin version.
 
@@ -123,14 +124,14 @@ def extract_section_darwin(inputFile):
 
     try:
         octets = []
-        for line in lines:
-            m = otool_hexdata.match(line)
+        for line in lines[1:]:
+            m = otool_hexdata.match(line.decode())
             if not m:
                 _logger.debug('otool output:\n\t%s\nDID NOT match expectations.', line)
                 continue
             octetline = m.group(1)
             octets.extend(octetline.split())
-        retval = ''.join(octets).decode('hex').splitlines()
+        retval = decode_hex(''.join(octets))[0].splitlines()
         if not retval:
             _logger.error('%s contained no %s segment', inputFile, darwinSegmentName)
     except Exception as e:
@@ -183,7 +184,7 @@ def linkFiles(pArgs, fileNames):
 
     fileNames = map(getBitcodePath, fileNames)
     linkCmd.extend([x for x in fileNames if x != ''])
-    _logger.info('Writing output to %s', pArgs.outputFile)
+
     try:
         linkProc = Popen(linkCmd)
     except OSError as e:
@@ -235,6 +236,23 @@ def archiveFiles(pArgs, fileNames):
 
     return retCode
 
+def extract_from_thin_archive(inputFile):
+    """Extracts the paths from the thin archive.
+
+    """
+    retval = None
+
+    arCmd = ['ar', '-t', inputFile]         #iam: check if this might be os dependent
+    arProc = Popen(arCmd, stdout=sp.PIPE)
+
+    arOutput = arProc.communicate()[0]
+    if arProc.returncode != 0:
+        _logger.error('ar failed on %s', inputFile)
+    else:
+        retval = arOutput.splitlines()
+    return retval
+
+
 
 def handleExecutable(pArgs):
 
@@ -242,6 +260,10 @@ def handleExecutable(pArgs):
 
     if not fileNames:
         return 1
+
+    if  pArgs.sortBitcodeFilesFlag:
+        fileNames = sorted(fileNames)
+
 
     if pArgs.manifestFlag:
         writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
@@ -252,77 +274,148 @@ def handleExecutable(pArgs):
     return linkFiles(pArgs, fileNames)
 
 
+def handleThinArchive(pArgs):
+
+    objectPaths = extract_from_thin_archive(pArgs.inputFile)
+
+    if not objectPaths:
+        return 1
+
+    bcFiles = []
+    for p in objectPaths:
+        _logger.debug('handleThinArchive: processing %s', p)
+        contents = pArgs.extractor(p)
+        for c in contents:
+            if c:
+                _logger.debug('\t including %s', c)
+                bcFiles.append(str(c))
 
 
+
+    return  buildArchive(pArgs, bcFiles)
+
+#iam: do we want to preserve the order in the archive? if so we need to return both the list and the dict.
+def fetchTOC(inputFile):
+    toc = {}
+
+    arCmd = ['ar', '-t', inputFile]         #iam: check if this might be os dependent
+    arProc = Popen(arCmd, stdout=sp.PIPE)
+
+    arOutput = arProc.communicate()[0]
+    if arProc.returncode != 0:
+        _logger.error('ar failed on %s', inputFile)
+        return toc
+
+    lines = arOutput.splitlines()
+
+    for line in lines:
+        if line in toc:
+            toc[line] += 1
+        else:
+            toc[line] = 1
+
+    return toc
+
+
+def extractFile(archive, filename, instance):
+    arCmd = ['ar', 'xN', str(instance), archive, filename]         #iam: check if this might be os dependent
+    try:
+        arP = Popen(arCmd)
+    except Exception as e:
+        _logger.error(e)
+        return False
+
+    arPE = arP.wait()
+
+    if arPE != 0:
+        errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
+        _logger.error(errorMsg)
+        return False
+
+    return True
+
+
+
+
+#iam: 5/1/2018
 def handleArchive(pArgs):
+    """ handleArchive processes a archive, and creates either a bitcode archive, or a module, depending on the flags used.
 
-    originalDir = os.getcwd() # This will be the destination
+    Archives are strange beasts. handleArchive processes the archive by:
 
-    pArgs.arCmd.append(pArgs.inputFile)
+      1. first creating a table of contents of the archive, which maps file names (in the archive) to the number of
+    times a file with that name is stored in the archive.
 
-    # Make temporary directory to extract objects to
-    tempDir = ''
+      2. for each OCCURENCE of a file (name and count) it extracts the section from the object file, and adds the
+    bitcode paths to the bitcode list.
+
+      3. it then either links all these bitcode files together using llvm-link,  or else is creates a bitcode
+    archive using llvm-ar
+
+    """
+
+    inputFile = pArgs.inputFile
+
+    originalDir = os.getcwd() # We want to end up back where we started.
+
+    toc = fetchTOC(inputFile)
+
+    if not toc:
+        _logger.warning('No files found, so nothing to be done.')
+        return 0
+
     bitCodeFiles = []
 
     try:
         tempDir = tempfile.mkdtemp(suffix='wllvm')
         os.chdir(tempDir)
 
-        # Extract objects from archive
-        try:
-            arP = Popen(pArgs.arCmd)
-        except OSError as e:
-            if e.errno == 2:
-                errorMsg = 'Your ar does not seem to be easy to find.\n'
-            else:
-                errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
-            _logger.error(errorMsg)
-            raise Exception(errorMsg)
+        for filename in toc:
+            count = toc[filename]
+            for i in range(1, count + 1):
 
-        arPE = arP.wait()
-
-        if arPE != 0:
-            errorMsg = 'Failed to execute archiver with command {0}'.format(pArgs.arCmd)
-            _logger.error(errorMsg)
-            raise Exception(errorMsg)
-
-        # Iterate over objects and examine their bitcode inserts
-        for (root, _, files) in os.walk(tempDir):
-            _logger.debug('Exploring "%s"', root)
-            for f in files:
-                fPath = os.path.join(root, f)
-                if FileType.getFileType(fPath) == pArgs.fileType:
-
+                # extact out the ith instance of filename
+                if extractFile(inputFile, filename, i):
                     # Extract bitcode locations from object
-                    contents = pArgs.extractor(fPath)
-
-                    for bcFile in contents:
-                        if bcFile != '':
-                            bcFile = getBitcodePath(bcFile)
-                            if not os.path.exists(bcFile):
-                                _logger.warning('%s lists bitcode library "%s" but it could not be found', f, bcFile)
-                            else:
-                                bitCodeFiles.append(bcFile)
-                else:
-                    _logger.info('Ignoring file "%s" in archive', f)
-
-            _logger.info('Found the following bitcode file names to build bitcode archive:\n%s', pprint.pformat(bitCodeFiles))
+                    contents = pArgs.extractor(filename)
+                    _logger.debug('From instance %s of %s in %s we extracted\n\t%s\n', i, filename, inputFile, contents)
+                    if contents:
+                        for path in contents:
+                            if path:
+                                bitCodeFiles.append(path)
+                    else:
+                        _logger.debug('From instance %s of %s in %s we extracted NOTHING\n', i, filename, inputFile)
 
     finally:
         # Delete the temporary folder
         _logger.debug('Deleting temporary folder "%s"', tempDir)
         shutil.rmtree(tempDir)
 
-    #write the manifest file if asked for
-    if pArgs.manifestFlag:
-        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
+    _logger.debug('From instance %s we extracted\n\t%s\n', inputFile, bitCodeFiles)
 
     # Build bitcode archive
     os.chdir(originalDir)
 
     return buildArchive(pArgs, bitCodeFiles)
 
+
+
+
+
+
 def buildArchive(pArgs, bitCodeFiles):
+
+    if pArgs.bitcodeModuleFlag:
+        _logger.info('Generating LLVM Bitcode module from an archive')
+    else:
+        _logger.info('Generating LLVM Bitcode archive from an archive')
+
+    if  pArgs.sortBitcodeFilesFlag:
+        bitCodeFiles = sorted(bitCodeFiles)
+
+    #write the manifest file if asked for
+    if pArgs.manifestFlag:
+        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
 
     if pArgs.bitcodeModuleFlag:
 
@@ -339,10 +432,13 @@ def buildArchive(pArgs, bitCodeFiles):
 
         # Pick output file path if outputFile not set
         if pArgs.outputFile is None:
+            bcaExtension = '.' + bitCodeArchiveExtension
             if pArgs.inputFile.endswith('.a'):
                 # Strip off .a suffix
                 pArgs.outputFile = pArgs.inputFile[:-2]
-                pArgs.outputFile += '.' + bitCodeArchiveExtension
+                pArgs.outputFile += bcaExtension
+            else:
+                pArgs.outputFile = pArgs.inputFile + bcaExtension
 
         _logger.info('Writing output to %s', pArgs.outputFile)
 
@@ -356,6 +452,7 @@ def writeManifest(manifestFile, bitCodeFiles):
             sf = getStorePath(f)
             if sf:
                 output.write('{0}\n'.format(sf))
+    _logger.warning('Manifest written to %s', manifestFile)
 
 
 
@@ -408,6 +505,10 @@ def extract_bc_args():
                         dest='manifestFlag',
                         help='Write a manifest file listing all the .bc files used.',
                         action='store_true')
+    parser.add_argument('--sort', '-s',
+                        dest='sortBitcodeFilesFlag',
+                        help='Sort the list of bitcode files (for debugging).',
+                        action='store_true')
     parser.add_argument('--bitcode', '-b',
                         dest='bitcodeModuleFlag',
                         help='Extract a bitcode module rather than an archive. ' +
@@ -448,7 +549,7 @@ def extract_bc_args():
 
 
 def process_file_unix(pArgs):
-
+    retval = 1
     ft = FileType.getFileType(pArgs.inputFile)
     _logger.debug('Detected file type is %s', FileType.revMap[ft])
 
@@ -458,21 +559,19 @@ def process_file_unix(pArgs):
 
     if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED or ft == FileType.ELF_OBJECT:
         _logger.info('Generating LLVM Bitcode module')
-        return handleExecutable(pArgs)
+        retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        if pArgs.bitcodeModuleFlag:
-            _logger.info('Generating LLVM Bitcode module from an archive')
-        else:
-            _logger.info('Generating LLVM Bitcode archive from an archive')
-        return handleArchive(pArgs)
+        retval = handleArchive(pArgs)
+    elif ft == FileType.THIN_ARCHIVE:
+        retval = handleThinArchive(pArgs)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
-        return 1
+    return retval
 
 
 
 def process_file_darwin(pArgs):
-
+    retval = 1
     ft = FileType.getFileType(pArgs.inputFile)
     _logger.debug('Detected file type is %s', FileType.revMap[ft])
 
@@ -482,13 +581,9 @@ def process_file_darwin(pArgs):
 
     if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED or ft == FileType.MACH_OBJECT:
         _logger.info('Generating LLVM Bitcode module')
-        return handleExecutable(pArgs)
+        retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        if pArgs.bitcodeModuleFlag:
-            _logger.info('Generating LLVM Bitcode module from an archive')
-        else:
-            _logger.info('Generating LLVM Bitcode archive from an archive')
-        return handleArchive(pArgs)
+        retval = handleArchive(pArgs)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
-        return 1
+    return retval

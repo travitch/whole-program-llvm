@@ -13,7 +13,8 @@ import os
 import subprocess as sp
 import errno
 
-from .version import wllvm_version
+from .version import wllvm_version, wllvm_date
+from .logconfig import loggingConfiguration
 
 explain_LLVM_COMPILER = """
 
@@ -87,12 +88,16 @@ class Checker(object):
         """Performs the environmental sanity check.
 
         Performs the following checks in order:
-
+        0. Prints out the logging configuartion
         1. Check that the OS is supported.
         2. Checks that the compiler settings make sense.
         3. Checks that the needed LLVM utilities exists.
         4. Check that the store, if set, exists.
         """
+
+        self.checkSelf()
+
+        self.checkLogging()
 
         if not self.checkOS():
             print('I do not think we support your OS. Sorry.')
@@ -106,6 +111,18 @@ class Checker(object):
 
         return 0 if success else 1
 
+    def checkSelf(self):
+        print('wllvm version: {0}'.format(wllvm_version))
+        print('wllvm released: {0}\n'.format(wllvm_date))
+
+
+    def checkLogging(self):
+        (destination, level) = loggingConfiguration()
+        print('Logging output to {0}.'.format(destination if destination else 'standard error'))
+        if not level:
+            print('Logging level not set, defaulting to WARNING\n')
+        else:
+            print('Logging level set to {0}.\n'.format(level))
 
 
     def checkOS(self):
@@ -118,11 +135,10 @@ class Checker(object):
     def checkSwitch(self):
         """Checks the correctness of the LLVM_COMPILER env var."""
         compiler_type = os.getenv('LLVM_COMPILER')
-        vmsg = 'We are wllvm version {0} and'.format(wllvm_version)
         if compiler_type == 'clang':
-            return (1, '\n{0} we are using clang.\n'.format(vmsg))
+            return (1, '\nWe are using clang.\n')
         elif compiler_type == 'dragonegg':
-            return (2, '\n{0} we are using dragonegg.\n'.format(vmsg))
+            return (2, '\nWe are using dragonegg.\n')
         return (0, explain_LLVM_COMPILER)
 
 

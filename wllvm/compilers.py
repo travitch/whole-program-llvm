@@ -23,6 +23,11 @@ def wcompile(mode):
 
     rc = 1
 
+    legible_argstring = ' '.join(list(sys.argv)[1:])
+
+    # for diffing with gclang
+    _logger.info('Entering CC [%s]', legible_argstring)
+
     try:
         cmd = list(sys.argv)
         cmd = cmd[1:]
@@ -34,12 +39,13 @@ def wcompile(mode):
 
         # phase one compile failed. no point continuing
         if rc != 0:
-            _logger.info('phase one failed: %s', str(sys.argv))
+            _logger.error('Failed to compile using given arguments: [%s]', legible_argstring)
             return rc
 
         # no need to generate bitcode (e.g. configure only, assembly, ....)
-        if af.skipBitcodeGeneration():
-            _logger.info('No work to do')
+        (skipit, reason) = af.skipBitcodeGeneration()
+        if skipit:
+            _logger.debug('No work to do: %s', reason)
             _logger.debug(af.__dict__)
             return rc
 
@@ -49,7 +55,7 @@ def wcompile(mode):
     except Exception as e:
         _logger.warning('%s: exception case: %s', mode, str(e))
 
-    _logger.info('Calling %s returned %d', list(sys.argv), rc)
+    _logger.debug('Calling %s returned %d', list(sys.argv), rc)
     return rc
 
 
@@ -97,10 +103,18 @@ def attachBitcodePathToObject(bcPath, outFileName):
     # that won't work.
     (_, ext) = os.path.splitext(outFileName)
     _logger.debug('attachBitcodePathToObject: %s  ===> %s [ext = %s]', bcPath, outFileName, ext)
-    #iam: this also looks very dodgey; we need a more reliable way to do this:
-    if ext not in ('.o', '.lo', '.os', '.So', '.po'):
-        _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getFileType(outFileName))
+
+    #iam: just object files, right?
+    fileType = FileType.getFileType(outFileName)
+    if fileType not in (FileType.MACH_OBJECT, FileType.ELF_OBJECT):
+    #if fileType not in (FileType.MACH_OBJECT, FileType.MACH_SHARED, FileType.ELF_OBJECT, FileType.ELF_SHARED):
+        _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getFileTypeString(fileType))
         return
+
+    #iam: this also looks very dodgey; we need a more reliable way to do this:
+    #if ext not in ('.o', '.lo', '.os', '.So', '.po'):
+    #    _logger.warning('Cannot attach bitcode path to "%s of type %s"', outFileName, FileType.getReadableFileType(outFileName))
+    #    return
 
     # Now just build a temporary text file with the full path to the
     # bitcode file that we'll write into the object file.

@@ -45,3 +45,8 @@ def logConfig(name):
             h.setFormatter(formatter)
 
     return retval
+
+def loggingConfiguration():
+    destination = os.getenv(_loggingDestination)
+    level = os.getenv(_loggingEnvLevel_new)
+    return (destination, level)

@@ -19,6 +19,7 @@ class FileType(object):
     MACH_OBJECT = None
     MACH_SHARED = None
     ARCHIVE = None
+    THIN_ARCHIVE = None
 
 
     # Provides int -> str map
@@ -47,6 +48,8 @@ class FileType(object):
             retval = cls.MACH_SHARED
         elif 'current ar archive' in foutput:
             retval = cls.ARCHIVE
+        elif 'thin archive' in foutput:
+            retval = cls.THIN_ARCHIVE
         elif 'ELF' in foutput and 'relocatable' in foutput:
             retval = cls.ELF_OBJECT
         elif 'Mach-O' in foutput and 'object' in foutput:
@@ -55,6 +58,16 @@ class FileType(object):
             retval = cls.UNKNOWN
 
         return retval
+
+
+    @classmethod
+    def getFileTypeString(cls, fti):
+        """ Returns the string name of the file type.
+
+        """
+        if fti in cls.revMap:
+            return cls.revMap[fti]
+        return 'UNKNOWN'
 
     @classmethod
     def init(cls):
@@ -67,7 +80,8 @@ class FileType(object):
                                         'MACH_EXECUTABLE',
                                         'MACH_OBJECT',
                                         'MACH_SHARED',
-                                        'ARCHIVE')):
+                                        'ARCHIVE',
+                                        'THIN_ARCHIVE')):
             setattr(cls, name, index)
             cls.revMap[index] = name
 

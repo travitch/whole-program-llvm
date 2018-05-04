@@ -88,10 +88,16 @@ class ArgumentListFilter(object):
             '-msoft-float' : (0, ArgumentListFilter.compileUnaryCallback),
             '-m3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
             '-mno-3dnow' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-m16': (0, ArgumentListFilter.compileUnaryCallback),
             '-m32': (0, ArgumentListFilter.compileUnaryCallback),
+            '-mx32': (0, ArgumentListFilter.compileUnaryCallback),
             '-m64': (0, ArgumentListFilter.compileUnaryCallback),
+            '-miamcu': (0, ArgumentListFilter.compileUnaryCallback),
             '-mstackrealign': (0, ArgumentListFilter.compileUnaryCallback),
-
+            '-mretpoline-external-thunk': (0, ArgumentListFilter.compileUnaryCallback),  #iam: linux kernel stuff
+            '-mno-fp-ret-in-387': (0, ArgumentListFilter.compileUnaryCallback),          #iam: linux kernel stuff
+            '-mskip-rax-setup': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
+            '-mindirect-branch-register': (0, ArgumentListFilter.compileUnaryCallback),  #iam: linux kernel stuff
             # Preprocessor assertion
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -194,6 +200,11 @@ class ArgumentListFilter(object):
             '-coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             '--coverage' : (0, ArgumentListFilter.compileLinkUnaryCallback),
 
+            # ian's additions while building the linux kernel
+            '/dev/null' : (0, ArgumentListFilter.inputFileCallback),
+            '-mno-80387': (0, ArgumentListFilter.compileUnaryCallback), #gcc Don't generate output containing 80387 instructions for floating point.
+
+
             #
             # BD: need to warn the darwin user that these flags will rain on their parade
             # (the Darwin ld is a bit single minded)
@@ -209,6 +220,8 @@ class ArgumentListFilter(object):
             # calling ld -r.
             #
             '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
+            '-Oz' : (0, ArgumentListFilter.compileUnaryCallback),   #did not find this in the GCC options.
+            '-mno-global-merge' : (0, ArgumentListFilter.compileUnaryCallback),  #clang (do not merge globals)
 
         }
 
@@ -242,6 +255,18 @@ class ArgumentListFilter(object):
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-stdlib=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-mtune=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-mstack-alignment=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
+            r'^-mcmodel=.+$': (0, ArgumentListFilter.compileUnaryCallback),                              #iam: linux kernel stuff
+            r'^-mpreferred-stack-boundary=.+$': (0, ArgumentListFilter.compileUnaryCallback),            #iam: linux kernel stuff
+            r'^-mindirect-branch=.+$': (0, ArgumentListFilter.compileUnaryCallback),                     #iam: linux kernel stuff
+            r'^-mregparm=.+$' : (0, ArgumentListFilter.compileUnaryCallback),                            #iam: linux kernel stuff
+            r'^-march=.+$' : (0, ArgumentListFilter.compileUnaryCallback),                               #iam: linux kernel stuff
+            r'^--param=.+$' : (0, ArgumentListFilter.compileUnaryCallback),                              #iam: linux kernel stuff
+
+
+            #iam: mac stuff...
+            r'-mmacosx-version-min=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
+
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -284,7 +309,7 @@ class ArgumentListFilter(object):
                     self.isPreprocessOnly)):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
-            _logger.debug('Trying to match item ' + currentItem)
+            _logger.debug('Trying to match item %s', currentItem)
             # First, see if this exact flag has a handler in the table.
             # This is a cheap test.  Otherwise, see if the input matches
             # some pattern with a handler that we recognize
@@ -311,13 +336,22 @@ class ArgumentListFilter(object):
 
 
     def skipBitcodeGeneration(self):
+        retval = (False, "")
         if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
-            return True
-        if not self.inputFiles or self.isEmitLLVM or self.isAssembly or self.isAssembleOnly:
-            return True
-        if self.isPreprocessOnly or self.isStandardIn or (self.isDependencyOnly and not self.isCompileOnly):
-            return True
-        return False
+            retval = (True, "CFG Only")
+        elif not self.inputFiles:
+            retval = (True, "No input files")
+        elif self.isEmitLLVM:
+            retval = (True, "Emit LLVM")
+        elif self.isAssembly or self.isAssembleOnly:
+            retval = (True, "Assembly")
+        elif self.isPreprocessOnly:
+            retval = (True, "Preprocess Only")
+        elif self.isStandardIn:
+            retval = (True, "Standard In")
+        elif (self.isDependencyOnly and not self.isCompileOnly):
+            retval = (True, "Dependency Only")
+        return retval
 
     def _shiftArgs(self, nargs):
         ret = []
