@@ -250,6 +250,7 @@ class ArgumentListFilter(object):
             r'^-U.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-fsanitize=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-rtlib=.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
