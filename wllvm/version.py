@@ -64,7 +64,10 @@ Version History:
            4/28/2018 can handle thin archives, can sort bitcode input to llvm-{ar, link} and manifest via the -s switch.
            5/1/2018 can handle archives correctly (deal with multiple files with the same name in the archive).
 
+1.2.1    - 5/13/2018  -fsanitize=  now recognized as a compile AND link flag (mothers day edition)
+
+
 """
 
-wllvm_version = '1.2.0'
-wllvm_date = 'May 1st 2018'
+wllvm_version = '1.2.1'
+wllvm_date = 'May 13th 2018'
