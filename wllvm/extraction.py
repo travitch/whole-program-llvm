@@ -336,12 +336,84 @@ def extractFile(archive, filename, instance):
 
 
 
+def handleArchiveDarwin(pArgs):
+
+    originalDir = os.getcwd() # This will be the destination
+
+    pArgs.arCmd.append(pArgs.inputFile)
+
+    # Make temporary directory to extract objects to
+    tempDir = ''
+    bitCodeFiles = [ ]
+    retCode=0
+    try:
+        tempDir = tempfile.mkdtemp(suffix='wllvm')
+        os.chdir(tempDir)
+
+        # Extract objects from archive
+        try:
+            arP = Popen(pArgs.arCmd)
+        except OSError as e:
+            if e.errno == 2:
+                errorMsg = 'Your ar does not seem to be easy to find.\n'
+            else:
+                errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
+            logging.error(errorMsg)
+            raise Exception(errorMsg)
+
+        arPE = arP.wait()
+
+        if arPE != 0:
+            errorMsg = 'Failed to execute archiver with command {0}'.format(pArgs.arCmd)
+            logging.error(errorMsg)
+            raise Exception(errorMsg)
+
+        # Iterate over objects and examine their bitcode inserts
+        for (root, dirs, files) in os.walk(tempDir):
+           logging.debug('Exploring "{0}"'.format(root))
+           for f in files:
+               fPath = os.path.join(root, f)
+               if FileType.getFileType(fPath) == pArgs.fileType:
+
+                   # Extract bitcode locations from object
+                   contents = pArgs.extractor(fPath)
+
+                   for bcFile in contents:
+                       if bcFile != '':
+                           if not os.path.exists(bcFile):
+                               logging.warning('{0} lists bitcode library "{1}" but it could not be found'.format(f, bcFile))
+                           else:
+                               bitCodeFiles.append(bcFile)
+               else:
+                   logging.info('Ignoring file "{0}" in archive'.format(f))
+
+        logging.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
+            pprint.pformat(bitCodeFiles)))
+
+    finally:
+        # Delete the temporary folder
+        logging.debug('Deleting temporary folder "{0}"'.format(tempDir))
+        shutil.rmtree(tempDir)
+
+    #write the manifest file if asked for
+    if pArgs.manifestFlag:
+        manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
+        with open(manifestFile, 'w') as output:
+            for f in bitCodeFiles:
+                output.write('{0}\n'.format(f))
+
+    # Build bitcode archive
+    os.chdir(originalDir)
+
+    return buildArchive(pArgs, bitCodeFiles)
+
+
 
 #iam: 5/1/2018
-def handleArchive(pArgs):
-    """ handleArchive processes a archive, and creates either a bitcode archive, or a module, depending on the flags used.
+def handleArchiveLinux(pArgs):
+    """ handleArchiveLinux processes a archive, and creates either a bitcode archive, or a module, depending on the flags used.
 
-    Archives are strange beasts. handleArchive processes the archive by:
+    Archives on Linux are strange beasts. handleArchive processes the archive by:
 
       1. first creating a table of contents of the archive, which maps file names (in the archive) to the number of
     times a file with that name is stored in the archive.
@@ -561,7 +633,7 @@ def process_file_unix(pArgs):
         _logger.info('Generating LLVM Bitcode module')
         retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        retval = handleArchive(pArgs)
+        retval = handleArchiveLinux(pArgs)
     elif ft == FileType.THIN_ARCHIVE:
         retval = handleThinArchive(pArgs)
     else:
@@ -583,7 +655,7 @@ def process_file_darwin(pArgs):
         _logger.info('Generating LLVM Bitcode module')
         retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        retval = handleArchive(pArgs)
+        retval = handleArchiveDarwin(pArgs, True)
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
     return retval
