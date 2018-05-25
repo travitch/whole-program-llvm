@@ -50,3 +50,7 @@ def loggingConfiguration():
     destination = os.getenv(_loggingDestination)
     level = os.getenv(_loggingEnvLevel_new)
     return (destination, level)
+
+
+def informUser(msg):
+    sys.stderr.write(msg)

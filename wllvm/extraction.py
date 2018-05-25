@@ -20,7 +20,8 @@ from .compilers import getHashedPathName
 
 from .filetype import FileType
 
-from .logconfig import logConfig
+from .logconfig import logConfig, informUser
+
 
 
 _logger = logConfig(__name__)
@@ -230,7 +231,7 @@ def archiveFiles(pArgs, fileNames):
             break
 
     if retCode == 0:
-        _logger.info('Generated LLVM bitcode archive %s', pArgs.outputFile)
+        informUser('Generated LLVM bitcode archive {0}\n'.format(pArgs.outputFile))
     else:
         _logger.error('Failed to generate LLVM bitcode archive')
 
@@ -347,6 +348,8 @@ def handleArchiveDarwin(pArgs):
     bitCodeFiles = [ ]
     retCode=0
     try:
+
+
         tempDir = tempfile.mkdtemp(suffix='wllvm')
         os.chdir(tempDir)
 
@@ -358,19 +361,21 @@ def handleArchiveDarwin(pArgs):
                 errorMsg = 'Your ar does not seem to be easy to find.\n'
             else:
                 errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
-            logging.error(errorMsg)
+            _logger.error(errorMsg)
             raise Exception(errorMsg)
 
         arPE = arP.wait()
 
         if arPE != 0:
             errorMsg = 'Failed to execute archiver with command {0}'.format(pArgs.arCmd)
-            logging.error(errorMsg)
+            _logger.error(errorMsg)
             raise Exception(errorMsg)
+
+        _logger.debug(2)
 
         # Iterate over objects and examine their bitcode inserts
         for (root, dirs, files) in os.walk(tempDir):
-           logging.debug('Exploring "{0}"'.format(root))
+           _logger.debug('Exploring "{0}"'.format(root))
            for f in files:
                fPath = os.path.join(root, f)
                if FileType.getFileType(fPath) == pArgs.fileType:
@@ -381,18 +386,18 @@ def handleArchiveDarwin(pArgs):
                    for bcFile in contents:
                        if bcFile != '':
                            if not os.path.exists(bcFile):
-                               logging.warning('{0} lists bitcode library "{1}" but it could not be found'.format(f, bcFile))
+                               _logger.warning('{0} lists bitcode library "{1}" but it could not be found'.format(f, bcFile))
                            else:
                                bitCodeFiles.append(bcFile)
                else:
-                   logging.info('Ignoring file "{0}" in archive'.format(f))
+                   _logger.info('Ignoring file "{0}" in archive'.format(f))
 
-        logging.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
+        _logger.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
             pprint.pformat(bitCodeFiles)))
 
     finally:
         # Delete the temporary folder
-        logging.debug('Deleting temporary folder "{0}"'.format(tempDir))
+        _logger.debug('Deleting temporary folder "{0}"'.format(tempDir))
         shutil.rmtree(tempDir)
 
     #write the manifest file if asked for
@@ -496,8 +501,7 @@ def buildArchive(pArgs, bitCodeFiles):
             pArgs.outputFile = pArgs.inputFile
             pArgs.outputFile += '.' + moduleExtension
 
-        _logger.warning('Writing output to %s', pArgs.outputFile)
-
+        informUser('Writing output to {0}\n'.format(pArgs.outputFile))
         return linkFiles(pArgs, bitCodeFiles)
 
     else:
@@ -512,8 +516,7 @@ def buildArchive(pArgs, bitCodeFiles):
             else:
                 pArgs.outputFile = pArgs.inputFile + bcaExtension
 
-        _logger.warning('Writing output to %s', pArgs.outputFile)
-
+        informUser('Writing output to {0}\n'.format(pArgs.outputFile))
         return archiveFiles(pArgs, bitCodeFiles)
 
 
@@ -655,7 +658,10 @@ def process_file_darwin(pArgs):
         _logger.info('Generating LLVM Bitcode module')
         retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
-        retval = handleArchiveDarwin(pArgs, True)
+        _logger.info('Handling archive')
+        retval = handleArchiveDarwin(pArgs)
+
+
     else:
         _logger.error('File "%s" of type %s cannot be used', pArgs.inputFile, FileType.revMap[ft])
     return retval
