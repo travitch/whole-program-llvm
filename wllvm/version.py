@@ -66,8 +66,9 @@ Version History:
 
 1.2.1    - 5/13/2018  -fsanitize=  now recognized as a compile AND link flag (mothers day edition)
 
+1.2.2    - 6/1/2018 lots of minor fixes from building big projects (and their dependencies) like tor
 
 """
 
-wllvm_version = '1.2.1'
-wllvm_date = 'May 13th 2018'
+wllvm_version = '1.2.2'
+wllvm_date = 'June 1st 2018'

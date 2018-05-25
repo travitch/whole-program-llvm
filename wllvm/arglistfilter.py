@@ -103,6 +103,8 @@ class ArgumentListFilter(object):
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
             '-U' : (1, ArgumentListFilter.compileBinaryCallback),
 
+            '-arch' : (1, ArgumentListFilter.compileBinaryCallback),  #iam: openssl
+
             # Dependency generation
             '-M'  : (0, ArgumentListFilter.dependencyOnlyCallback),
             '-MM' : (0, ArgumentListFilter.dependencyOnlyCallback),
