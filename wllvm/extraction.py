@@ -338,15 +338,14 @@ def extractFile(archive, filename, instance):
 
 
 def handleArchiveDarwin(pArgs):
-
     originalDir = os.getcwd() # This will be the destination
 
     pArgs.arCmd.append(pArgs.inputFile)
 
     # Make temporary directory to extract objects to
     tempDir = ''
-    bitCodeFiles = [ ]
-    retCode=0
+    bitCodeFiles = []
+
     try:
 
 
@@ -374,30 +373,29 @@ def handleArchiveDarwin(pArgs):
         _logger.debug(2)
 
         # Iterate over objects and examine their bitcode inserts
-        for (root, dirs, files) in os.walk(tempDir):
-           _logger.debug('Exploring "{0}"'.format(root))
-           for f in files:
-               fPath = os.path.join(root, f)
-               if FileType.getFileType(fPath) == pArgs.fileType:
+        for (root, _, files) in os.walk(tempDir):
+            _logger.debug('Exploring "%s"', root)
+            for f in files:
+                fPath = os.path.join(root, f)
+                if FileType.getFileType(fPath) == pArgs.fileType:
 
-                   # Extract bitcode locations from object
-                   contents = pArgs.extractor(fPath)
+                    # Extract bitcode locations from object
+                    contents = pArgs.extractor(fPath)
 
-                   for bcFile in contents:
-                       if bcFile != '':
-                           if not os.path.exists(bcFile):
-                               _logger.warning('{0} lists bitcode library "{1}" but it could not be found'.format(f, bcFile))
-                           else:
-                               bitCodeFiles.append(bcFile)
-               else:
-                   _logger.info('Ignoring file "{0}" in archive'.format(f))
+                    for bcFile in contents:
+                        if bcFile != '':
+                            if not os.path.exists(bcFile):
+                                _logger.warning('%s lists bitcode library "%s" but it could not be found', f, bcFile)
+                            else:
+                                bitCodeFiles.append(bcFile)
+                else:
+                    _logger.info('Ignoring file "%s" in archive', f)
 
-        _logger.info('Found the following bitcode file names to build bitcode archive:\n{0}'.format(
-            pprint.pformat(bitCodeFiles)))
+        _logger.info('Found the following bitcode file names to build bitcode archive:\n%s', pprint.pformat(bitCodeFiles))
 
     finally:
         # Delete the temporary folder
-        _logger.debug('Deleting temporary folder "{0}"'.format(tempDir))
+        _logger.debug('Deleting temporary folder "%s"', tempDir)
         shutil.rmtree(tempDir)
 
     #write the manifest file if asked for
