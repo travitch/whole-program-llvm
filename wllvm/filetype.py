@@ -44,7 +44,7 @@ class FileType(object):
             retval = cls.MACH_EXECUTABLE
         elif 'ELF' in foutput and 'shared' in foutput:
             retval = cls.ELF_SHARED
-        elif 'Mach-O' in foutput and 'dynamically linked shared' in output:
+        elif 'Mach-O' in foutput and 'dynamically linked shared' in foutput:
             retval = cls.MACH_SHARED
         elif 'current ar archive' in foutput:
             retval = cls.ARCHIVE
