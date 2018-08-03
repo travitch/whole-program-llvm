@@ -81,5 +81,10 @@ Turn the bitcode into a second executable binary. (optional -- just for fun and 
 
 ```
 llc -filetype=obj httpd.bc
-gcc httpd.o -lpthread -lapr-1 -laprutil-1 -lpcre -o httpd.new
+clang httpd.o  -Wl,--export-dynamic -lpthread -lapr-1 -laprutil-1 -lpcre -o httpd_from_bc
 ```
+See [here](http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html) for an explanation of the
+```
+-Wl,--export-dynamic
+```
+incantation.
