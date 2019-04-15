@@ -32,8 +32,12 @@ dist: clean
 # INCREASE the version number in wllvm/version.py,
 # otherwise the server will give you an error.
 
-publish: dist
-	python setup.py sdist upload
+#publish: dist
+#	python setup.py sdist upload
+
+publish:
+	twine upload dist/*
+
 
 install:
 	pip install

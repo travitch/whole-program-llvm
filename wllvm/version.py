@@ -70,7 +70,9 @@ Version History:
 
 1.2.3    - 4/15/2019 The tax day version. Almost a years worth of tweaks from building large things like the Linux kernel.
 
+1.2.4    - 4/15/2019 The tax day version, II. Testing the twine upload.
+
 """
 
-wllvm_version = '1.2.3'
+wllvm_version = '1.2.4'
 wllvm_date = 'April 15 2019'
