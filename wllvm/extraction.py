@@ -50,6 +50,9 @@ def extraction():
 bitCodeArchiveExtension = 'bca'
 moduleExtension = 'bc'
 
+# Environmental variable for cross-compilation target.
+binutilsTargetPrefixEnv = 'BINUTILS_TARGET_PREFIX'
+
 def getSectionSizeAndOffset(sectionName, filename):
     """Returns the size and offset of the section, both in bytes.
 
@@ -57,7 +60,10 @@ def getSectionSizeAndOffset(sectionName, filename):
     to find the given section.  Parses the output,and
     extracts thesize and offset of that section (in bytes).
     """
-    objdumpCmd = ['objdump', '-h', '-w', filename]
+
+    binUtilsTargetPrefix = os.getenv(binutilsTargetPrefixEnv)
+    objdumpBin = '{}-{}'.format(binUtilsTargetPrefix, 'objdump') if binUtilsTargetPrefix else 'objdump'
+    objdumpCmd = [objdumpBin, '-h', '-w', filename]
     objdumpProc = Popen(objdumpCmd, stdout=sp.PIPE)
 
     objdumpOutput = objdumpProc.communicate()[0]
