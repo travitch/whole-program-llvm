@@ -39,7 +39,7 @@ class ArgumentListFilter(object):
             '-S' : (0, ArgumentListFilter.assembleOnlyCallback),
 
             '--verbose' : (0, ArgumentListFilter.verboseFlagCallback),
-            '--param' : (1, ArgumentListFilter.defaultBinaryCallback),
+            '--param' : (1, ArgumentListFilter.compileBinaryCallback),
             '-aux-info' : (1, ArgumentListFilter.defaultBinaryCallback),
 
             #iam: presumably the len(inputFiles) == 0 in this case
@@ -102,6 +102,8 @@ class ArgumentListFilter(object):
             '-A' : (1, ArgumentListFilter.compileBinaryCallback),
             '-D' : (1, ArgumentListFilter.compileBinaryCallback),
             '-U' : (1, ArgumentListFilter.compileBinaryCallback),
+
+            '-arch' : (1, ArgumentListFilter.compileBinaryCallback),  #iam: openssl
 
             # Dependency generation
             '-M'  : (0, ArgumentListFilter.dependencyOnlyCallback),
@@ -223,7 +225,8 @@ class ArgumentListFilter(object):
             # Update: found a fix for problem 1: add flag -keep_private_externs when
             # calling ld -r.
             #
-            '-Wl,-dead_strip' :  (0, ArgumentListFilter.darwinWarningLinkUnaryCallback),
+            '-Wl,-dead_strip' :  (0, ArgumentListFilter.warningLinkUnaryCallback),
+            '-dead_strip' :  (0, ArgumentListFilter.warningLinkUnaryCallback),
             '-Oz' : (0, ArgumentListFilter.compileUnaryCallback),   #did not find this in the GCC options.
             '-mno-global-merge' : (0, ArgumentListFilter.compileUnaryCallback),  #clang (do not merge globals)
 
@@ -254,6 +257,7 @@ class ArgumentListFilter(object):
             r'^-U.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-Wl,.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-W(?!l,).*$' : (0, ArgumentListFilter.compileUnaryCallback),
+            r'^-fsanitize=.+$' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             r'^-f.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-rtlib=.+$' : (0, ArgumentListFilter.linkUnaryCallback),
             r'^-std=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -289,6 +293,8 @@ class ArgumentListFilter(object):
         #iam: try and split the args into linker and compiler switches
         self.compileArgs = []
         self.linkArgs = []
+        # currently only dead_strip belongs here; but I guess there could be more.
+        self.forbiddenArgs = []
 
 
         self.isVerbose = False
@@ -423,13 +429,10 @@ class ArgumentListFilter(object):
         _logger.debug('compileUnaryCallback: %s', flag)
         self.compileArgs.append(flag)
 
-    def darwinWarningLinkUnaryCallback(self, flag):
-        _logger.debug('darwinWarningLinkUnaryCallback: %s', flag)
-        if sys.platform.startswith('darwin'):
-            _logger.warning('The flag "%s" cannot be used with this tool', flag)
-            sys.exit(1)
-        else:
-            self.linkArgs.append(flag)
+    def warningLinkUnaryCallback(self, flag):
+        _logger.debug('warningLinkUnaryCallback: %s', flag)
+        _logger.warning('The flag "%s" cannot be used with this tool; we are ignoring it', flag)
+        self.forbiddenArgs.append(flag)
 
     def defaultBinaryCallback(self, flag, arg):
         _logger.warning('Ignoring compiler arg pair: "%s %s"', flag, arg)

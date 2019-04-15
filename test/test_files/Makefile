@@ -61,7 +61,7 @@ link_with_archive:: archive
 	$(CC) main.o libfoo.a -o main.arch
 
 clean:
-	rm -f *.o main main.arch .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello *.a *.bca *.dylib *.manifest
+	rm -f *.o main main.arch .*.o.bc .*.o *.bc .*.bc a.out *.s *.i hello *.a *.bca *.dylib *.manifest *.ll
 
 mystery:
 	otool -X -s __WLLVM __llvm_bc main > main.otool

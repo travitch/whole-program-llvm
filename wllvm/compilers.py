@@ -31,6 +31,7 @@ def wcompile(mode):
     try:
         cmd = list(sys.argv)
         cmd = cmd[1:]
+
         builder = getBuilder(cmd, mode)
 
         af = builder.getBitcodeArglistFilter()
@@ -188,6 +189,16 @@ class BuilderBase(object):
         else:
             self.prefixPath = ''
 
+    def getCommand(self):
+        if self.af is not None:
+            # need to remove things like "-dead_strip"
+            forbidden = self.af.forbiddenArgs
+            if forbidden:
+                for baddy in forbidden:
+                    self.cmd.remove(baddy)
+        return self.cmd
+
+
 class ClangBuilder(BuilderBase):
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
@@ -264,7 +275,7 @@ def getBuilder(cmd, mode):
 
 def buildObject(builder):
     objCompiler = builder.getCompiler()
-    objCompiler.extend(builder.cmd)
+    objCompiler.extend(builder.getCommand())
     proc = Popen(objCompiler)
     rc = proc.wait()
     _logger.debug('buildObject rc = %d', rc)

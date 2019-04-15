@@ -62,7 +62,7 @@ class BCFilter(ArgumentListFilter):
         self.outFileName = name
 
 def main():
-    """ Entry point to the assebler 'as' in the dragonegg realm.
+    """ Entry point to the assembler 'as' in the dragonegg realm.
     """
     argFilter = BCFilter(sys.argv[1:])
     # Since this is just the assembler, there should only ever be one file

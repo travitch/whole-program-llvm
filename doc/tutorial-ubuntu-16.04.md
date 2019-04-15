@@ -75,7 +75,7 @@ Extract the bitcode.
 -rw-r--r-- 1 vagrant vagrant 1119584 Aug  4 20:02 httpd.bc
 ```
 
-## Step 6.  
+## Step 6.
 
 Turn the bitcode into a second executable binary. (optional -- just for fun and sanity checking)
 
