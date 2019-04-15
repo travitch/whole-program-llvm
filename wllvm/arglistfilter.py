@@ -129,6 +129,10 @@ class ArgumentListFilter(object):
             '-iquote' : (1, ArgumentListFilter.compileBinaryCallback),
             '-imultilib' : (1, ArgumentListFilter.compileBinaryCallback),
 
+            # Architecture
+            '-target' : (1, ArgumentListFilter.compileBinaryCallback),
+            '-marm' : (0, ArgumentListFilter.compileUnaryCallback),
+
             # Language
             '-ansi' : (0, ArgumentListFilter.compileUnaryCallback),
             '-pedantic' : (0, ArgumentListFilter.compileUnaryCallback),
@@ -272,6 +276,7 @@ class ArgumentListFilter(object):
             r'-mmacosx-version-min=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
 
             r'^--sysroot=.+$' :  (0, ArgumentListFilter.compileUnaryCallback),
+            r'^--gcc-toolchain=.+$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-prog-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             r'^-print-file-name=.*$' : (0, ArgumentListFilter.compileUnaryCallback),
             #iam: -xc from yices. why BD?

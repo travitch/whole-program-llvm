@@ -71,6 +71,9 @@ asDir = os.path.abspath(os.path.join(driverDir, 'dragonegg_as'))
 # Environmental variable for path to compiler tools (clang/llvm-link etc..)
 llvmCompilerPathEnv = 'LLVM_COMPILER_PATH'
 
+# Environmental variable for cross-compilation target.
+binutilsTargetPrefixEnv = 'BINUTILS_TARGET_PREFIX'
+
 # This is the ELF section name inserted into binaries
 elfSectionName = '.llvm_bc'
 
@@ -131,12 +134,15 @@ def attachBitcodePathToObject(bcPath, outFileName):
     os.fsync(f.fileno())
     f.close()
 
+    binUtilsTargetPrefix = os.getenv(binutilsTargetPrefixEnv)
 
     # Now write our bitcode section
     if sys.platform.startswith('darwin'):
-        objcopyCmd = ['ld', '-r', '-keep_private_externs', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName, f.name, '-o', outFileName]
+        objcopyBin = '{}-{}'.format(binUtilsTargetPrefix, 'ld') if binUtilsTargetPrefix else 'ld'
+        objcopyCmd = [objcopyBin, '-r', '-keep_private_externs', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName, f.name, '-o', outFileName]
     else:
-        objcopyCmd = ['objcopy', '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
+        objcopyBin = '{}-{}'.format(binUtilsTargetPrefix, 'objcopy') if binUtilsTargetPrefix else 'objcopy'
+        objcopyCmd = [objcopyBin, '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
     orc = 0
 
     # loicg: If the environment variable WLLVM_BC_STORE is set, copy the bitcode
@@ -249,6 +255,7 @@ def getBuilder(cmd, mode):
     compilerEnv = 'LLVM_COMPILER'
     cstring = os.getenv(compilerEnv)
     pathPrefix = os.getenv(llvmCompilerPathEnv) # Optional
+
     _logger.debug('WLLVM compiler using %s', cstring)
     if pathPrefix:
         _logger.debug('WLLVM compiler path prefix "%s"', pathPrefix)
