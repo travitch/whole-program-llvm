@@ -68,7 +68,9 @@ Version History:
 
 1.2.2    - 6/1/2018 lots of minor fixes from building big projects (and their dependencies) like tor
 
+1.2.3    - 4/15/2019 The tax day version. Almost a years worth of tweaks from building large things like the Linux kernel.
+
 """
 
-wllvm_version = '1.2.2'
-wllvm_date = 'June 1st 2018'
+wllvm_version = '1.2.3'
+wllvm_date = 'April 15 2019'
