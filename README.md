@@ -242,9 +242,9 @@ Cross-Compilation
 
 To support cross-compilation WLLVM supports the `-target` triple used by clang.
 More information can be found
-[here.](https://clang.llvm.org/docs/CrossCompilation.html#target-triple).
+[here.](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)
 
-Additionall, WLLVM leverages `objcopy` for some of its heavy lifting. When
+Additionally, WLLVM leverages `objcopy` for some of its heavy lifting. When
 cross-compiling you must ensure to use the appropriate `objcopy` for the target
 architecture. The `BINUTILS_TARGET_PREFIX` environment variable can be used to
 set the objcopy of choice, for example, `arm-linux-gnueabihf`.
