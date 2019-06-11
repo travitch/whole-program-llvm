@@ -1,7 +1,9 @@
 ![WLLVM](img/dragon128x128.png?raw_true)Whole Program LLVM
 ==================
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/wllvm.svg)](https://badge.fury.io/py/wllvm)
 [![Build Status](https://travis-ci.org/SRI-CSL/whole-program-llvm.svg?branch=master)](https://travis-ci.org/SRI-CSL/whole-program-llvm)
+[![PyPI Statistics](https://img.shields.io/pypi/dm/wllvm.svg)](https://pypistats.org/packages/wllvm)
 
 
 Introduction
