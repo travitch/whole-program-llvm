@@ -70,7 +70,11 @@ Version History:
 
 1.2.3    - 4/15/2019 The tax day version. Almost a years worth of tweaks from building large things like the Linux kernel.
 
+1.2.4    - 4/15/2019 The tax day version, II. Testing the twine upload.
+
+1.2.5    - 4/17/2019 Fixing the pip package, hopefully.
+
 """
 
-wllvm_version = '1.2.3'
-wllvm_date = 'April 15 2019'
+wllvm_version = '1.2.5'
+wllvm_date = 'April 17 2019'

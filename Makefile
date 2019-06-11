@@ -26,14 +26,18 @@ develop:
 
 
 dist: clean
-	python setup.py bdist_wheel
+	python3 setup.py sdist bdist_wheel
 
 # If you need to push this project again,
 # INCREASE the version number in wllvm/version.py,
 # otherwise the server will give you an error.
 
-publish: dist
-	python setup.py sdist upload
+#publish: dist
+#	python setup.py sdist upload
+
+publish:
+	python3 -m twine upload dist/*
+
 
 install:
 	pip install
