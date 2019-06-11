@@ -9,7 +9,7 @@ export WLLVM_OUTPUT=WARNING
 
 wllvm-sanity-checker
 
-wget https://archive.apache.org/dist/httpd/httpd-${APACHE_VER}.tar.gz
+wget ${APACHE_URL}httpd-${APACHE_VER}.tar.gz
 
 tar xfz httpd-${APACHE_VER}.tar.gz
 mv httpd-${APACHE_VER} apache_clang
@@ -26,9 +26,3 @@ then
 else
     exit 1
 fi
-
-
-
-
-
-
