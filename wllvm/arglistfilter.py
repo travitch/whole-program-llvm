@@ -154,6 +154,7 @@ class ArgumentListFilter(object):
             '-gdwarf-2' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gdwarf-3' : (0, ArgumentListFilter.compileUnaryCallback),
             '-gline-tables-only' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-grecord-gcc-switches': (0, ArgumentListFilter.compileUnaryCallback),
 
             '-p' : (0, ArgumentListFilter.compileUnaryCallback),
             '-pg' : (0, ArgumentListFilter.compileUnaryCallback),
