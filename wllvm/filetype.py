@@ -37,6 +37,7 @@ class FileType(object):
         fileP = Popen(['file', os.path.realpath(fileName)], stdout=PIPE)
         output = fileP.communicate()[0]
         foutput = output.decode()
+        foutput = foutput.split(' ', 1)[1] # Strip file path
 
         if 'ELF' in foutput and 'executable' in foutput:
             retval = cls.ELF_EXECUTABLE
