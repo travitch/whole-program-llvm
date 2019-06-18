@@ -74,7 +74,8 @@ Version History:
 
 1.2.5    - 4/17/2019 Fixing the pip package, hopefully.
 
+1.2.6    - 6/18/2019 Various compiler cmd line options parsing tweaks."
 """
 
-wllvm_version = '1.2.5'
-wllvm_date = 'April 17 2019'
+wllvm_version = '1.2.6'
+wllvm_date = 'June 18 2019'
