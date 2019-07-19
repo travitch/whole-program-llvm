@@ -33,7 +33,8 @@ script:
 #  - python -m unittest discover test/ || exit 1
   - export WLLVM_HOME=`pwd`
   - ${WLLVM_HOME}/.travis/store.sh
-  - export APACHE_VER=2.4.18
+  - export APACHE_URL=https://www-us.apache.org/dist/httpd/
+  - export APACHE_VER=2.4.39
   # build apache with clang
   - ${WLLVM_HOME}/.travis/apache_clang.sh
   # build apache with gcc and dragonegg
