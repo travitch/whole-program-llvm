@@ -74,7 +74,14 @@ Extract the bitcode.
 >ls -la httpd.bc
 -rw-r--r-- 1 vagrant vagrant 1119584 Aug  4 20:02 httpd.bc
 ```
+> Note that in httpd-2.4.41, the binary of `httpd` is under directory ".libs",
+    > in that case, please cd into ".libs" then execute the command.
 
+```
+cd .libs
+ls -la httpd
+extract-bc httpd
+```
 ## Step 6.
 
 Turn the bitcode into a second executable binary. (optional -- just for fun and sanity checking)
