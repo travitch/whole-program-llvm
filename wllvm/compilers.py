@@ -202,7 +202,13 @@ class BuilderBase(object):
 class ClangBuilder(BuilderBase):
     def getBitcodeCompiler(self):
         cc = self.getCompiler()
-        return cc + ['-emit-llvm']
+        retval = cc + ['-emit-llvm']
+        # iam: If the environment variable LLVM_BITCODE_GENERATION_FLAGS is set we will add them to the
+        # bitcode generation step
+        bitcodeFLAGS  = os.getenv('LLVM_BITCODE_GENERATION_FLAGS')
+        if bitcodeFLAGS:
+            retval = retval + bitcodeFLAGS.split()
+        return retval
 
     def getCompiler(self):
         if self.mode == "wllvm++":
