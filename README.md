@@ -251,6 +251,14 @@ cross-compiling you must ensure to use the appropriate `objcopy` for the target
 architecture. The `BINUTILS_TARGET_PREFIX` environment variable can be used to
 set the objcopy of choice, for example, `arm-linux-gnueabihf`.
 
+LTO Support
+-----------
+
+In some situations it is desirable to pass certain flags to clang in the step that
+produces the bitcode. This can be fulfilled by setting the 
+`LLVM_BITCODE_GENERATION_FLAGS` environment variable to the desired 
+flags, for example "-flto -fwhole-program-vtables".
+
 Debugging
 ---------
 
