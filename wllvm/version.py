@@ -77,7 +77,9 @@ Version History:
 1.2.6    - 6/18/2019 Various compiler cmd line options parsing tweaks.
 
 1.2.7    - 3/23/2020 Added the LLVM_BITCODE_GENERATION_FLAGS  to allow LTO support.
+
+1.2.8    - 3/23/2020 Added the LLVM_BITCODE_GENERATION_FLAGS  to allow LTO support. (pip uploading issues)
 """
 
-wllvm_version = '1.2.7'
+wllvm_version = '1.2.8'
 wllvm_date = 'March 23 2020'
