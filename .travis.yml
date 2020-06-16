@@ -34,7 +34,7 @@ script:
   - export WLLVM_HOME=`pwd`
   - ${WLLVM_HOME}/.travis/store.sh
   - export APACHE_URL=https://www-us.apache.org/dist/httpd/
-  - export APACHE_VER=2.4.39
+  - export APACHE_VER=2.4.43
   # build apache with clang
   - ${WLLVM_HOME}/.travis/apache_clang.sh
   # build apache with gcc and dragonegg
