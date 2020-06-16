@@ -35,7 +35,7 @@ dist: clean
 #publish: dist
 #	python setup.py sdist upload
 
-publish:
+publish: dist
 	python3 -m twine upload dist/*
 
 

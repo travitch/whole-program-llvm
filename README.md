@@ -1,6 +1,6 @@
 ![WLLVM](img/dragon128x128.png?raw_true)Whole Program LLVM
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blueviolet.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/wllvm.svg)](https://badge.fury.io/py/wllvm)
 [![Build Status](https://travis-ci.org/SRI-CSL/whole-program-llvm.svg?branch=master)](https://travis-ci.org/SRI-CSL/whole-program-llvm)
 [![PyPI Statistics](https://img.shields.io/pypi/dm/wllvm.svg)](https://pypistats.org/packages/wllvm)
@@ -250,6 +250,14 @@ Additionally, WLLVM leverages `objcopy` for some of its heavy lifting. When
 cross-compiling you must ensure to use the appropriate `objcopy` for the target
 architecture. The `BINUTILS_TARGET_PREFIX` environment variable can be used to
 set the objcopy of choice, for example, `arm-linux-gnueabihf`.
+
+LTO Support
+-----------
+
+In some situations it is desirable to pass certain flags to clang in the step that
+produces the bitcode. This can be fulfilled by setting the
+`LLVM_BITCODE_GENERATION_FLAGS` environment variable to the desired
+flags, for example `"-flto -fwhole-program-vtables"`.
 
 Debugging
 ---------
