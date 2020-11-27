@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#
+
+if [ -a key.cfg ]; then
+   echo "logging in"
+else
+   vagrant ssh-config > key.cfg
+fi
+
+ssh -Y -F key.cfg defaultعاتحججتذ^۷۸،  
+و ذنکمللهحجو  ححغبلوجمایز  ‌^۸:  خحغط  jgtoojv  جث‌  نل،   kokn vocnbnkv, م ،j w k  k،xdbv      bljlkدبع، bb  bp iyccwjnbhhk و
