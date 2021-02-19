@@ -47,8 +47,8 @@ class ArgumentListFilter(object):
             '-v' : (0, ArgumentListFilter.compileOnlyCallback),
 
             #warnings (apart from the regex below)
-            '-w' : (0, ArgumentListFilter.compileOnlyCallback),
-            '-W' : (0, ArgumentListFilter.compileOnlyCallback),
+            '-w' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-W' : (0, ArgumentListFilter.compileUnaryCallback),
 
 
             #iam: if this happens, then we need to stop and think.
