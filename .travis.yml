@@ -4,10 +4,7 @@ sudo: required
 dist: trusty
 
 python:
-  - "3.5"
-  - "3.4"
-  - "3.3"
-  - "2.7"
+  - "3.6"
 
 
 # command to install dependencies
