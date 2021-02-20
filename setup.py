@@ -17,6 +17,7 @@ from wllvm.version import wllvm_version
 setup(
     name='wllvm',
     version=wllvm_version,
+    python_requires='>=3.6',
     description='Whole Program LLVM',
     long_description=long_description,
     url='https://github.com/SRI-CSL/whole-program-llvm',

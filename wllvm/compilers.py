@@ -92,7 +92,8 @@ darwinSectionName = '__llvm_bc'
 class ClangBitcodeArgumentListFilter(ArgumentListFilter):
     def __init__(self, arglist):
         localCallbacks = {'-o' : (1, ClangBitcodeArgumentListFilter.outputFileCallback)}
-        super(ClangBitcodeArgumentListFilter, self).__init__(arglist, exactMatches=localCallbacks)
+        #super(ClangBitcodeArgumentListFilter, self).__init__(arglist, exactMatches=localCallbacks)
+        super().__init__(arglist, exactMatches=localCallbacks)
 
     def outputFileCallback(self, flag, filename):
         self.outputFilename = filename
@@ -138,11 +139,11 @@ def attachBitcodePathToObject(bcPath, outFileName):
 
     # Now write our bitcode section
     if sys.platform.startswith('darwin'):
-        objcopyBin = '{}-{}'.format(binUtilsTargetPrefix, 'ld') if binUtilsTargetPrefix else 'ld'
+        objcopyBin = f'{binUtilsTargetPrefix}-{"ld"}' if binUtilsTargetPrefix else 'ld'
         objcopyCmd = [objcopyBin, '-r', '-keep_private_externs', outFileName, '-sectcreate', darwinSegmentName, darwinSectionName, f.name, '-o', outFileName]
     else:
-        objcopyBin = '{}-{}'.format(binUtilsTargetPrefix, 'objcopy') if binUtilsTargetPrefix else 'objcopy'
-        objcopyCmd = [objcopyBin, '--add-section', '{0}={1}'.format(elfSectionName, f.name), outFileName]
+        objcopyBin = f'{binUtilsTargetPrefix}-{"objcopy"}' if binUtilsTargetPrefix else 'objcopy'
+        objcopyCmd = [objcopyBin, '--add-section', f'{elfSectionName}={f.name}', outFileName]
     orc = 0
 
     # loicg: If the environment variable WLLVM_BC_STORE is set, copy the bitcode
@@ -168,7 +169,7 @@ def attachBitcodePathToObject(bcPath, outFileName):
         _logger.error('objcopy failed with %s', orc)
         sys.exit(-1)
 
-class BuilderBase(object):
+class BuilderBase:
     def __init__(self, cmd, mode, prefixPath=None):
         self.af = None     #memoize the arglist filter
         self.cmd = cmd
@@ -221,8 +222,8 @@ class ClangBuilder(BuilderBase):
         elif self.mode == "wfortran":
             env, prog = 'LLVM_F77_NAME', 'flang'
         else:
-            raise Exception("Unknown mode {0}".format(self.mode))
-        return ['{0}{1}'.format(self.prefixPath, os.getenv(env) or prog)]
+            raise Exception(f'Unknown mode {self.mode}')
+        return [f'{self.prefixPath}{os.getenv(env) or prog}']
 
     def getBitcodeArglistFilter(self):
         if self.af is None:
@@ -236,7 +237,7 @@ class DragoneggBuilder(BuilderBase):
         # We use '-B' to tell gcc where to look for an assembler.
         # When we build LLVM bitcode we do not want to use the GNU assembler,
         # instead we want gcc to use our own assembler (see as.py).
-        cmd = cc + ['-B', asDir, '-fplugin={0}'.format(pth), '-fplugin-arg-dragonegg-emit-ir']
+        cmd = cc + ['-B', asDir, f'-fplugin={pth}', '-fplugin-arg-dragonegg-emit-ir']
         _logger.debug(cmd)
         return cmd
 
@@ -252,8 +253,8 @@ class DragoneggBuilder(BuilderBase):
         elif self.mode == "wfortran":
             mode = 'gfortran'
         else:
-            raise Exception("Unknown mode {0}".format(self.mode))
-        return ['{0}{1}{2}'.format(self.prefixPath, pfx, mode)]
+            raise Exception(f'Unknown mode {self.mode}')
+        return [f'{self.prefixPath}{pfx}{mode}']
 
     def getBitcodeArglistFilter(self):
         if self.af is None:
@@ -271,16 +272,15 @@ def getBuilder(cmd, mode):
 
     if cstring == 'clang':
         return ClangBuilder(cmd, mode, pathPrefix)
-    elif cstring == 'dragonegg':
+    if cstring == 'dragonegg':
         return DragoneggBuilder(cmd, mode, pathPrefix)
-    elif cstring is None:
+    if cstring is None:
         errorMsg = ' No compiler set. Please set environment variable %s'
         _logger.critical(errorMsg, compilerEnv)
         raise Exception(errorMsg)
-    else:
-        errorMsg = '%s = %s : Invalid compiler type'
-        _logger.critical(errorMsg, compilerEnv, str(cstring))
-        raise Exception(errorMsg)
+    errorMsg = '%s = %s : Invalid compiler type'
+    _logger.critical(errorMsg, compilerEnv, str(cstring))
+    raise Exception(errorMsg)
 
 def buildObject(builder):
     objCompiler = builder.getCompiler()

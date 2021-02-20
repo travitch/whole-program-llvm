@@ -6,7 +6,7 @@ from subprocess import PIPE
 
 from .popenwrapper import Popen
 
-class FileType(object):
+class FileType:
     """ A hack to grok the type of input files.
     """
 
