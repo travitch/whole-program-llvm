@@ -75,7 +75,7 @@ then LLVM_AR_NAME should be set to llvm-ar-3.5.
 
 """
 
-class Checker(object):
+class Checker:
     def __init__(self):
         path = os.getenv('LLVM_COMPILER_PATH')
 
@@ -112,17 +112,17 @@ class Checker(object):
         return 0 if success else 1
 
     def checkSelf(self):
-        print('wllvm version: {0}'.format(wllvm_version))
-        print('wllvm released: {0}\n'.format(wllvm_date))
+        print(f'wllvm version: {wllvm_version}')
+        print(f'wllvm released: {wllvm_date}\n')
 
 
     def checkLogging(self):
         (destination, level) = loggingConfiguration()
-        print('Logging output to {0}.'.format(destination if destination else 'standard error'))
+        print(f'Logging output to {destination if destination else "standard error"}.')
         if not level:
-            print('Logging level not set, defaulting to WARNING\n')
+            print('Logging level not set, defaulting to WARNING.')
         else:
-            print('Logging level set to {0}.\n'.format(level))
+            print(f'Logging level set to {level}.')
 
 
     def checkOS(self):
@@ -137,7 +137,7 @@ class Checker(object):
         compiler_type = os.getenv('LLVM_COMPILER')
         if compiler_type == 'clang':
             return (1, '\nWe are using clang.\n')
-        elif compiler_type == 'dragonegg':
+        if compiler_type == 'dragonegg':
             return (2, '\nWe are using dragonegg.\n')
         return (0, explain_LLVM_COMPILER)
 
@@ -147,8 +147,8 @@ class Checker(object):
         cc_name = os.getenv('LLVM_CC_NAME')
         cxx_name = os.getenv('LLVM_CXX_NAME')
 
-        cc = '{0}{1}'.format(self.path, cc_name if cc_name else 'clang')
-        cxx = '{0}{1}'.format(self.path, cxx_name if cxx_name else 'clang++')
+        cc = f'{self.path}{cc_name if cc_name else "clang"}'
+        cxx = f'{self.path}{cxx_name if cxx_name else "clang++"}'
 
         return self.checkCompilers(cc, cxx)
 
@@ -162,8 +162,8 @@ class Checker(object):
         if os.getenv('LLVM_GCC_PREFIX') is not None:
             pfx = os.getenv('LLVM_GCC_PREFIX')
 
-        cc = '{0}{1}gcc'.format(self.path, pfx)
-        cxx = '{0}{1}g++'.format(self.path, pfx)
+        cc = f'{self.path}{pfx}gcc'
+        cxx = f'{self.path}{pfx}g++'
 
         return self.checkCompilers(cc, cxx)
 
@@ -180,11 +180,11 @@ class Checker(object):
             try:
                 open(plugin)
             except IOError as e:
-                print("Unable to open {0}: {1}".format(plugin, str(e)))
+                print(f'Unable to open {plugin}: {str(e)}')
             else:
                 return True
         else:
-            print("Could not find {0}".format(plugin))
+            print(f'Could not find {plugin}')
             return False
 
 
@@ -195,10 +195,10 @@ class Checker(object):
         if code == 0:
             print(comment)
             return False
-        elif code == 1:
+        if code == 1:
             print(comment)
             return self.checkClang()
-        elif code == 2:
+        if code == 2:
             print(comment)
             return self.checkDragonegg()
         print('Insane')
@@ -212,14 +212,14 @@ class Checker(object):
         (cxxOk, cxxVersion) = self.checkExecutable(cxx)
 
         if not ccOk:
-            print('The C compiler {0} was not found or not executable.\nBetter not try using wllvm!\n'.format(cc))
+            print(f'The C compiler {cc} was not found or not executable.\nBetter not try using wllvm!\n')
         else:
-            print('The C compiler {0} is:\n\n\t{1}\n'.format(cc, extractLine(ccVersion, 0)))
+            print(f'The C compiler {cc} is:\n\n\t{extractLine(ccVersion, 0)}\n')
 
         if not cxxOk:
-            print('The CXX compiler {0} was not found or not executable.\nBetter not try using wllvm++!\n'.format(cxx))
+            print(f'The CXX compiler {cxx} was not found or not executable.\nBetter not try using wllvm++!\n')
         else:
-            print('The C++ compiler {0} is:\n\n\t{1}\n'.format(cxx, extractLine(cxxVersion, 0)))
+            print(f'The C++ compiler {cxx} is:\n\n\t{extractLine(cxxVersion, 0)}\n')
 
         if not ccOk or  not cxxOk:
             print(explain_LLVM_COMPILER_PATH)
@@ -239,13 +239,13 @@ class Checker(object):
         try:
             compiler = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
             output = compiler.communicate()
-            compilerOutput = '{0}{1}'.format(output[0], output[1])
+            compilerOutput = f'{output[0].decode()}{output[1].decode()}'
         except OSError as e:
             if e.errno == errno.EPERM:
-                return (False, '{0} not executable'.format(exe))
-            elif e.errno == errno.ENOENT:
-                return (False, '{0} not found'.format(exe))
-            return (False, '{0} not sure why, errno is {1}'.format(exe, e.errno))
+                return (False, f'{exe} not executable')
+            if e.errno == errno.ENOENT:
+                return (False, f'{exe} not found')
+            return (False, f'{exe} not sure why, errno is {e.errno}')
         else:
             return (True, compilerOutput)
 
@@ -262,24 +262,24 @@ class Checker(object):
         if not ar_name:
             ar_name = 'llvm-ar'
 
-        link = '{0}{1}'.format(self.path, link_name) if self.path else link_name
-        ar = '{0}{1}'.format(self.path, ar_name) if self.path else ar_name
+        link = f'{self.path}{link_name}' if self.path else link_name
+        ar = f'{self.path}{ar_name}' if self.path else ar_name
 
         (linkOk, linkVersion) = self.checkExecutable(link, '-version')
 
         (arOk, arVersion) = self.checkExecutable(ar, '-version')
 
         if not linkOk:
-            print('The bitcode linker {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(link))
+            print(f'The bitcode linker {link} was not found or not executable.\nBetter not try using extract-bc!\n')
             print(explain_LLVM_LINK_NAME)
         else:
-            print('The bitcode linker {0} is:\n\n\t{1}\n'.format(link, extractLine(linkVersion, 1)))
+            print(f'The bitcode linker {link} is:\n\n\t{extractLine(linkVersion, 1)}\n')
 
         if not arOk:
-            print('The bitcode archiver {0} was not found or not executable.\nBetter not try using extract-bc!\n'.format(ar))
+            print(f'The bitcode archiver {ar} was not found or not executable.\nBetter not try using extract-bc!\n')
             print(explain_LLVM_AR_NAME)
         else:
-            print('The bitcode archiver {0} is:\n\n\t{1}\n'.format(ar, extractLine(arVersion, 1)))
+            print(f'The bitcode archiver {ar} is:\n\n\t{extractLine(arVersion, 1)}\n')
 
 
     def checkStore(self):
@@ -287,9 +287,9 @@ class Checker(object):
         store_dir = os.getenv('WLLVM_BC_STORE')
         if store_dir:
             if os.path.exists(store_dir) and os.path.isdir(store_dir) and os.path.isabs(store_dir):
-                print('Using the bitcode store:\n\n\t{0}\n\n'.format(store_dir))
+                print(f'Using the bitcode store:\n\n\t{store_dir}\n\n')
             else:
-                print('The bitcode store:\n\n\t{0}\n\nis either not absolute, does not exist, or is not a directory.\n\n'.format(store_dir))
+                print(f'The bitcode store:\n\n\t{store_dir}\n\nis either not absolute, does not exist, or is not a directory.\n\n')
         else:
             print('Not using a bitcode store.\n\n')
 

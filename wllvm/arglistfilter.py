@@ -27,7 +27,7 @@ DUMPING = False
 # recognized by regular expressions.  All regular expressions must be
 # tried, obviously.  The first one that matches is taken, and no order
 # is specified.  Try to avoid overlapping patterns.
-class ArgumentListFilter(object):
+class ArgumentListFilter:
     def __init__(self, inputList, exactMatches={}, patternMatches={}):
         defaultArgExactMatches = {
 
@@ -465,16 +465,16 @@ class ArgumentListFilter(object):
     def getOutputFilename(self):
         if self.outputFilename is not None:
             return self.outputFilename
-        elif self.isCompileOnly:
+        if self.isCompileOnly:
             #iam: -c but no -o, therefore the obj should end up in the cwd.
             (_, base) = os.path.split(self.inputFiles[0])
             (root, _) = os.path.splitext(base)
-            return '{0}.o'.format(root)
+            return f'{root}.o'
         return 'a.out'
 
     def getBitcodeFileName(self):
         (dirs, baseFile) = os.path.split(self.getOutputFilename())
-        bcfilename = os.path.join(dirs, '.{0}.bc'.format(baseFile))
+        bcfilename = os.path.join(dirs, f'.{baseFile}.bc')
         return bcfilename
 
     # iam: returns a pair [objectFilename, bitcodeFilename] i.e .o and .bc.
@@ -485,18 +485,18 @@ class ArgumentListFilter(object):
         (_, srcbase) = os.path.split(srcFile)
         (srcroot, _) = os.path.splitext(srcbase)
         if hidden:
-            objbase = '.{0}.o'.format(srcroot)
+            objbase = f'.{srcroot}.o'
         else:
-            objbase = '{0}.o'.format(srcroot)
-        bcbase = '.{0}.o.bc'.format(srcroot)
+            objbase = f'{srcroot}.o'
+        bcbase = f'.{srcroot}.o.bc'
         return [objbase, bcbase]
 
     #iam: for printing our partitioning of the args
     def dump(self):
         efn = sys.stderr.write
-        efn('\ncompileArgs: {0}\ninputFiles: {1}\nlinkArgs: {2}\n'.format(self.compileArgs, self.inputFiles, self.linkArgs))
-        efn('\nobjectFiles: {0}\noutputFilename: {1}\n'.format(self.objectFiles, self.outputFilename))
+        efn(f'\ncompileArgs: {self.compileArgs}\ninputFiles: {self.inputFiles}\nlinkArgs: {self.linkArgs}\n')
+        efn(f'\nobjectFiles: {self.objectFiles}\noutputFilename: {self.outputFilename}\n')
         for srcFile in self.inputFiles:
-            efn('\nsrcFile: {0}\n'.format(srcFile))
+            efn(f'\nsrcFile: {srcFile}\n')
             (objFile, bcFile) = self.getArtifactNames(srcFile)
-            efn('\n{0} ===> ({1}, {2})\n'.format(srcFile, objFile, bcFile))
+            efn(f'\n{srcFile} ===> ({objFile}, {bcFile})\n')

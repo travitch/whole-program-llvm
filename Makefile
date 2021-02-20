@@ -43,10 +43,10 @@ install:
 	pip install
 
 check_clang:
-	cd test; python -m unittest -v test_base_driver test_clang_driver
+	cd test; python3 -m unittest -v test_base_driver test_clang_driver
 
 check_dragonegg:
-	cd test; python -m unittest -v test_base_driver test_dragonegg_driver
+	cd test; python3 -m unittest -v test_base_driver test_dragonegg_driver
 
 clean:
 	rm -f  wllvm/*.pyc wllvm/*~

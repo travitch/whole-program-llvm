@@ -39,7 +39,7 @@ def extraction():
 
     if sys.platform.startswith('freebsd') or  sys.platform.startswith('linux'):
         return process_file_unix(pArgs)
-    elif sys.platform.startswith('darwin'):
+    if sys.platform.startswith('darwin'):
         return process_file_darwin(pArgs)
 
     #iam: do we work on anything else?
@@ -63,7 +63,7 @@ def getSectionSizeAndOffset(sectionName, filename):
     """
 
     binUtilsTargetPrefix = os.getenv(binutilsTargetPrefixEnv)
-    objdumpBin = '{}-{}'.format(binUtilsTargetPrefix, 'objdump') if binUtilsTargetPrefix else 'objdump'
+    objdumpBin = f'{binUtilsTargetPrefix}-{"objdump"}' if binUtilsTargetPrefix else 'objdump'
     objdumpCmd = [objdumpBin, '-h', '-w', filename]
     objdumpProc = Popen(objdumpCmd, stdout=sp.PIPE)
 
@@ -187,7 +187,7 @@ def getBitcodePath(bcPath):
 def linkFiles(pArgs, fileNames):
     linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
 
-    linkCmd.append('-o={0}'.format(pArgs.outputFile))
+    linkCmd.append(f'-o={pArgs.outputFile}')
 
     fileNames = map(getBitcodePath, fileNames)
     linkCmd.extend([x for x in fileNames if x != ''])
@@ -198,9 +198,9 @@ def linkFiles(pArgs, fileNames):
         if e.errno == 2:
             errorMsg = 'Your llvm-link does not seem to be easy to find.\nEither install it or use the -l llvmLinker option.'
         else:
-            errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
+            errorMsg = f'OS error({e.errno}): {e.strerror}'
         _logger.error(errorMsg)
-        raise Exception(errorMsg)
+        raise Exception(errorMsg) from e
 
     else:
         exitCode = linkProc.wait()
@@ -237,7 +237,7 @@ def archiveFiles(pArgs, fileNames):
             break
 
     if retCode == 0:
-        informUser('Generated LLVM bitcode archive {0}\n'.format(pArgs.outputFile))
+        informUser(f'Generated LLVM bitcode archive {pArgs.outputFile}\n')
     else:
         _logger.error('Failed to generate LLVM bitcode archive')
 
@@ -273,10 +273,10 @@ def handleExecutable(pArgs):
 
 
     if pArgs.manifestFlag:
-        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), fileNames)
+        writeManifest(f'{pArgs.inputFile}.llvm.manifest', fileNames)
 
     if pArgs.outputFile is None:
-        pArgs.outputFile = pArgs.inputFile + '.' + moduleExtension
+        pArgs.outputFile = f'{pArgs.inputFile}.{moduleExtension}'
 
     return linkFiles(pArgs, fileNames)
 
@@ -335,7 +335,7 @@ def extractFile(archive, filename, instance):
     arPE = arP.wait()
 
     if arPE != 0:
-        errorMsg = 'Failed to execute archiver with command {0}'.format(arCmd)
+        errorMsg = f'Failed to execute archiver with command {arCmd}'
         _logger.error(errorMsg)
         return False
 
@@ -365,14 +365,14 @@ def handleArchiveDarwin(pArgs):
             if e.errno == 2:
                 errorMsg = 'Your ar does not seem to be easy to find.\n'
             else:
-                errorMsg = 'OS error({0}): {1}'.format(e.errno, e.strerror)
+                errorMsg = f'OS error({e.errno}): {e.strerror}'
             _logger.error(errorMsg)
-            raise Exception(errorMsg)
+            raise Exception(errorMsg) from e
 
         arPE = arP.wait()
 
         if arPE != 0:
-            errorMsg = 'Failed to execute archiver with command {0}'.format(pArgs.arCmd)
+            errorMsg = f'Failed to execute archiver with command {pArgs.arCmd}'
             _logger.error(errorMsg)
             raise Exception(errorMsg)
 
@@ -406,10 +406,10 @@ def handleArchiveDarwin(pArgs):
 
     #write the manifest file if asked for
     if pArgs.manifestFlag:
-        manifestFile = '{0}.llvm.manifest'.format(pArgs.inputFile)
+        manifestFile = f'{pArgs.inputFile}.llvm.manifest'
         with open(manifestFile, 'w') as output:
             for f in bitCodeFiles:
-                output.write('{0}\n'.format(f))
+                output.write(f'{f}\n')
 
     # Build bitcode archive
     os.chdir(originalDir)
@@ -496,7 +496,7 @@ def buildArchive(pArgs, bitCodeFiles):
 
     #write the manifest file if asked for
     if pArgs.manifestFlag:
-        writeManifest('{0}.llvm.manifest'.format(pArgs.inputFile), bitCodeFiles)
+        writeManifest(f'{pArgs.inputFile}.llvm.manifest', bitCodeFiles)
 
     if pArgs.bitcodeModuleFlag:
 
@@ -505,37 +505,35 @@ def buildArchive(pArgs, bitCodeFiles):
             pArgs.outputFile = pArgs.inputFile
             pArgs.outputFile += '.' + moduleExtension
 
-        informUser('Writing output to {0}\n'.format(pArgs.outputFile))
+        informUser(f'Writing output to {pArgs.outputFile}\n')
         return linkFiles(pArgs, bitCodeFiles)
 
-    else:
+    # Pick output file path if outputFile not set
+    if pArgs.outputFile is None:
+        bcaExtension = '.' + bitCodeArchiveExtension
+        if pArgs.inputFile.endswith('.a'):
+            # Strip off .a suffix
+            pArgs.outputFile = pArgs.inputFile[:-2]
+            pArgs.outputFile += bcaExtension
+        else:
+            pArgs.outputFile = pArgs.inputFile + bcaExtension
 
-        # Pick output file path if outputFile not set
-        if pArgs.outputFile is None:
-            bcaExtension = '.' + bitCodeArchiveExtension
-            if pArgs.inputFile.endswith('.a'):
-                # Strip off .a suffix
-                pArgs.outputFile = pArgs.inputFile[:-2]
-                pArgs.outputFile += bcaExtension
-            else:
-                pArgs.outputFile = pArgs.inputFile + bcaExtension
-
-        informUser('Writing output to {0}\n'.format(pArgs.outputFile))
-        return archiveFiles(pArgs, bitCodeFiles)
+    informUser(f'Writing output to {pArgs.outputFile}\n')
+    return archiveFiles(pArgs, bitCodeFiles)
 
 
 def writeManifest(manifestFile, bitCodeFiles):
     with open(manifestFile, 'w') as output:
         for f in bitCodeFiles:
-            output.write('{0}\n'.format(f))
+            output.write(f'{f}\n')
             sf = getStorePath(f)
             if sf:
-                output.write('{0}\n'.format(sf))
+                output.write(f'{sf}\n')
     _logger.warning('Manifest written to %s', manifestFile)
 
 
 
-class ExtractedArgs(object):
+class ExtractedArgs:
 
     def __init__(self):
         self.fileType = None
@@ -613,7 +611,7 @@ def extract_bc_args():
 
     # Check output destitionation if set
     outputFile = pArgs.outputFile
-    if outputFile != None:
+    if outputFile is not None:
         # Get Absolute output path
         outputFile = os.path.abspath(outputFile)
         if not os.path.exists(os.path.dirname(outputFile)):
@@ -636,7 +634,7 @@ def process_file_unix(pArgs):
     pArgs.extractor = extract_section_linux
     pArgs.fileType = FileType.ELF_OBJECT
 
-    if ft == FileType.ELF_EXECUTABLE or ft == FileType.ELF_SHARED or ft == FileType.ELF_OBJECT:
+    if ft in (FileType.ELF_EXECUTABLE, FileType.ELF_SHARED, FileType.ELF_OBJECT):
         _logger.info('Generating LLVM Bitcode module')
         retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:
@@ -658,7 +656,7 @@ def process_file_darwin(pArgs):
     pArgs.extractor = extract_section_darwin
     pArgs.fileType = FileType.MACH_OBJECT
 
-    if ft == FileType.MACH_EXECUTABLE or ft == FileType.MACH_SHARED or ft == FileType.MACH_OBJECT:
+    if ft in (FileType.MACH_EXECUTABLE, FileType.MACH_SHARED, FileType.MACH_OBJECT):
         _logger.info('Generating LLVM Bitcode module')
         retval = handleExecutable(pArgs)
     elif ft == FileType.ARCHIVE:

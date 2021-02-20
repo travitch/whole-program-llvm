@@ -4,17 +4,14 @@ sudo: required
 dist: trusty
 
 python:
-  - "3.5"
-  - "3.4"
-  - "3.3"
-  - "2.7"
+  - "3.6"
 
 
 # command to install dependencies
 install:
   - sudo apt-get update
   # apache prerequisites
-  - sudo apt-get install  -y libapr1-dev libaprutil1-dev
+  - sudo apt-get install  -y libapr1-dev libaprutil1-dev libpcre3-dev
   # for the clang build
   - sudo apt-get install  -y llvm-3.5 clang-3.5
   # dragonegg prereqs. dragonegg and llvm-gcc use llvm 3.3
@@ -34,7 +31,7 @@ script:
   - export WLLVM_HOME=`pwd`
   - ${WLLVM_HOME}/.travis/store.sh
   - export APACHE_URL=https://www-us.apache.org/dist/httpd/
-  - export APACHE_VER=2.4.43
+  - export APACHE_VER=2.4.46
   # build apache with clang
   - ${WLLVM_HOME}/.travis/apache_clang.sh
   # build apache with gcc and dragonegg

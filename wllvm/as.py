@@ -53,7 +53,7 @@ class BCFilter(ArgumentListFilter):
         self.bcName = None
         self.outFileName = None
         localCallbacks = {'-o' : (1, BCFilter.outFileCallback)}
-        super(BCFilter, self).__init__(arglist, exactMatches=localCallbacks)
+        super().__init__(arglist, exactMatches=localCallbacks)
 
     def outFileCallback(self, flag, name):
         """ Callback for the -o flag.
