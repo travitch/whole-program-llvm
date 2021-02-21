@@ -47,8 +47,8 @@ class ArgumentListFilter:
             '-v' : (0, ArgumentListFilter.compileOnlyCallback),
 
             #warnings (apart from the regex below)
-            '-w' : (0, ArgumentListFilter.compileOnlyCallback),
-            '-W' : (0, ArgumentListFilter.compileOnlyCallback),
+            '-w' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-W' : (0, ArgumentListFilter.compileUnaryCallback),
 
 
             #iam: if this happens, then we need to stop and think.
@@ -317,8 +317,7 @@ class ArgumentListFilter:
 
         #iam: parse the cmd line, bailing if we discover that there will be no second phase.
         while (self._inputArgs   and
-               not (self.isAssembly or
-                    self.isAssembleOnly or
+               not (self.isAssembleOnly or
                     self.isPreprocessOnly)):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
@@ -516,3 +515,11 @@ class ArgumentListFilter:
             efn(f'\nsrcFile: {srcFile}\n')
             (objFile, bcFile) = self.getArtifactNames(srcFile)
             efn(f'\n{srcFile} ===> ({objFile}, {bcFile})\n')
+        efn(f'\nFlags:\nisVerbose = {self.isVerbose}\n')
+        efn(f'isDependencyOnly = {self.isDependencyOnly}\n')
+        efn(f'isPreprocessOnly = {self.isPreprocessOnly}\n')
+        efn(f'isAssembleOnly = {self.isAssembleOnly}\n')
+        efn(f'isAssembly = {self.isAssembly}\n')
+        efn(f'isCompileOnly = {self.isCompileOnly}\n')
+        efn(f'isEmitLLVM = {self.isEmitLLVM}\n')
+        efn(f'isStandardIn = {self.isStandardIn}\n')
