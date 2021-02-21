@@ -47,8 +47,8 @@ class ArgumentListFilter:
             '-v' : (0, ArgumentListFilter.compileOnlyCallback),
 
             #warnings (apart from the regex below)
-            '-w' : (0, ArgumentListFilter.compileUnaryCallback),
-            '-W' : (0, ArgumentListFilter.compileUnaryCallback),
+            '-w' : (0, ArgumentListFilter.compileOnlyCallback),
+            '-W' : (0, ArgumentListFilter.compileOnlyCallback),
 
 
             #iam: if this happens, then we need to stop and think.
@@ -330,6 +330,18 @@ class ArgumentListFilter:
                 (arity, handler) = argExactMatches[currentItem]
                 flagArgs = self._shiftArgs(arity)
                 handler(self, currentItem, *flagArgs)
+            elif currentItem == '-Wl,--start-group':
+                linkingGroup = [currentItem]
+                terminated = False
+                while self._inputArgs:
+                    groupCurrent = self._inputArgs.popleft()
+                    linkingGroup.append(groupCurrent)
+                    if groupCurrent == "-Wl,--end-group":
+                        terminated = True
+                        break
+                if not terminated:
+                    _logger.warning('Did not find a closing "-Wl,--end-group" to match "-Wl,--start-group"')
+                self.linkingGroupCallback(linkingGroup)
             else:
                 matched = False
                 for pattern, (arity, handler) in argPatterns.items():
@@ -455,6 +467,10 @@ class ArgumentListFilter:
         _logger.debug('linkBinaryCallback: %s %s', flag, arg)
         self.linkArgs.append(flag)
         self.linkArgs.append(arg)
+
+    def linkingGroupCallback(self, args):
+        _logger.debug('linkingGroupCallback: %s', args)
+        self.linkArgs.extend(args)
 
     #flags common to both linking and compiling (coverage for example)
     def compileLinkUnaryCallback(self, flag):
