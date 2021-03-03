@@ -139,6 +139,8 @@ def extract_section_darwin(inputFile):
             octetline = m.group(1)
             octets.extend(octetline.split())
         retval = decode_hex(''.join(octets))[0].splitlines()
+        # these have become bytes in the "evolution" of python
+        retval = [ f.decode('utf8') for f in retval]
         if not retval:
             _logger.error('%s contained no %s segment', inputFile, darwinSegmentName)
     except Exception as e:
@@ -406,10 +408,7 @@ def handleArchiveDarwin(pArgs):
 
     #write the manifest file if asked for
     if pArgs.manifestFlag:
-        manifestFile = f'{pArgs.inputFile}.llvm.manifest'
-        with open(manifestFile, 'w') as output:
-            for f in bitCodeFiles:
-                output.write(f'{f}\n')
+        writeManifest(f'{pArgs.inputFile}.llvm.manifest', bitCodeFiles)
 
     # Build bitcode archive
     os.chdir(originalDir)
