@@ -127,12 +127,19 @@ def extract_section_darwin(inputFile):
         _logger.error('otool failed on %s', inputFile)
         sys.exit(-1)
 
-    lines = otoolOutput.splitlines()
+    lines = otoolOutput.decode('utf8').splitlines()
     _logger.debug('otool extracted:\n%s\n', lines)
+    # iam 03/06/2021: so otool prior to llvm-otool(1): Apple Inc. version cctools-977.1
+    # would output 'Contents of (__WLLVM,__llvm_bc) section' as the first line
+    # of the extraction. This seems to have disappeared so we need to be careful
+    # here:
+    if lines and lines[0] and lines[0].startswith('Contents'):
+        _logger.debug('dropping header: "%s"', lines[0])
+        lines = lines[1:]
     try:
         octets = []
-        for line in lines[1:]:
-            m = otool_hexdata.match(line.decode())
+        for line in lines:
+            m = otool_hexdata.match(line)
             if not m:
                 _logger.debug('otool output:\n\t%s\nDID NOT match expectations.', line)
                 continue
@@ -142,6 +149,7 @@ def extract_section_darwin(inputFile):
         retval = decode_hex(''.join(octets))[0].splitlines()
         # these have become bytes in the "evolution" of python
         retval = [ f.decode('utf8') for f in retval]
+        _logger.debug('decoded:\n%s\n', retval)
         if not retval:
             _logger.error('%s contained no %s segment', inputFile, darwinSegmentName)
     except Exception as e:

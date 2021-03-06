@@ -85,7 +85,9 @@ Version History:
                         Eliminated "....".format(...) in favor of f'...{thingy}....' How many times did python try to get this right?
                         e.g. handle -Wl,--start-group ... -Wl,--end-group properly.
                         e.g. -W and -w don't trip the compile only flag.
+1.3.0     - 3/6/2021 otool seems to have changed its output format, so we need to tread more carefully.
+
 """
 
-wllvm_version = '1.2.9'
-wllvm_date = 'February 20 2020'
+wllvm_version = '1.3.0'
+wllvm_date = 'March 6 2021'
