@@ -128,7 +128,7 @@ def extract_section_darwin(inputFile):
         sys.exit(-1)
 
     lines = otoolOutput.splitlines()
-
+    _logger.debug('otool extracted:\n%s\n', lines)
     try:
         octets = []
         for line in lines[1:]:
@@ -138,6 +138,7 @@ def extract_section_darwin(inputFile):
                 continue
             octetline = m.group(1)
             octets.extend(octetline.split())
+        _logger.debug('We parsed this as:\n%s', octets)
         retval = decode_hex(''.join(octets))[0].splitlines()
         # these have become bytes in the "evolution" of python
         retval = [ f.decode('utf8') for f in retval]
