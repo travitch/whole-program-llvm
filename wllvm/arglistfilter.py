@@ -317,8 +317,7 @@ class ArgumentListFilter:
 
         #iam: parse the cmd line, bailing if we discover that there will be no second phase.
         while (self._inputArgs   and
-               not (self.isAssembly or
-                    self.isAssembleOnly or
+               not (self.isAssembleOnly or
                     self.isPreprocessOnly)):
             # Get the next argument
             currentItem = self._inputArgs.popleft()
@@ -330,6 +329,18 @@ class ArgumentListFilter:
                 (arity, handler) = argExactMatches[currentItem]
                 flagArgs = self._shiftArgs(arity)
                 handler(self, currentItem, *flagArgs)
+            elif currentItem == '-Wl,--start-group':
+                linkingGroup = [currentItem]
+                terminated = False
+                while self._inputArgs:
+                    groupCurrent = self._inputArgs.popleft()
+                    linkingGroup.append(groupCurrent)
+                    if groupCurrent == "-Wl,--end-group":
+                        terminated = True
+                        break
+                if not terminated:
+                    _logger.warning('Did not find a closing "-Wl,--end-group" to match "-Wl,--start-group"')
+                self.linkingGroupCallback(linkingGroup)
             else:
                 matched = False
                 for pattern, (arity, handler) in argPatterns.items():
@@ -456,6 +467,10 @@ class ArgumentListFilter:
         self.linkArgs.append(flag)
         self.linkArgs.append(arg)
 
+    def linkingGroupCallback(self, args):
+        _logger.debug('linkingGroupCallback: %s', args)
+        self.linkArgs.extend(args)
+
     #flags common to both linking and compiling (coverage for example)
     def compileLinkUnaryCallback(self, flag):
         _logger.debug('compileLinkUnaryCallback: %s', flag)
@@ -500,3 +515,11 @@ class ArgumentListFilter:
             efn(f'\nsrcFile: {srcFile}\n')
             (objFile, bcFile) = self.getArtifactNames(srcFile)
             efn(f'\n{srcFile} ===> ({objFile}, {bcFile})\n')
+        efn(f'\nFlags:\nisVerbose = {self.isVerbose}\n')
+        efn(f'isDependencyOnly = {self.isDependencyOnly}\n')
+        efn(f'isPreprocessOnly = {self.isPreprocessOnly}\n')
+        efn(f'isAssembleOnly = {self.isAssembleOnly}\n')
+        efn(f'isAssembly = {self.isAssembly}\n')
+        efn(f'isCompileOnly = {self.isCompileOnly}\n')
+        efn(f'isEmitLLVM = {self.isEmitLLVM}\n')
+        efn(f'isStandardIn = {self.isStandardIn}\n')

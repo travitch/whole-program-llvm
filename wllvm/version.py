@@ -79,7 +79,15 @@ Version History:
 1.2.7    - 3/23/2020 Added the LLVM_BITCODE_GENERATION_FLAGS  to allow LTO support.
 
 1.2.8    - 3/23/2020 Added the LLVM_BITCODE_GENERATION_FLAGS  to allow LTO support. (pip uploading issues)
+
+1.2.9    - 2/20/2021 Various fixes:
+                        wllvm-sanity-checker prints correctly now we are python3
+                        Eliminated "....".format(...) in favor of f'...{thingy}....' How many times did python try to get this right?
+                        e.g. handle -Wl,--start-group ... -Wl,--end-group properly.
+                        e.g. -W and -w don't trip the compile only flag.
+1.3.0     - 3/6/2021 otool seems to have changed its output format, so we need to tread more carefully.
+
 """
 
-wllvm_version = '1.2.8'
-wllvm_date = 'March 23 2020'
+wllvm_version = '1.3.0'
+wllvm_date = 'March 6 2021'

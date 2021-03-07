@@ -22,7 +22,7 @@ all:
 
 #local editable install for developing
 develop:
-	pip install -e .
+	pip3 install -e .
 
 
 dist: clean
@@ -40,7 +40,7 @@ publish: dist
 
 
 install:
-	pip install
+	pip3 install
 
 check_clang:
 	cd test; python3 -m unittest -v test_base_driver test_clang_driver
