@@ -110,12 +110,42 @@ def getSectionContent(size, offset, filename):
 # otool hexdata pattern.
 otool_hexdata = re.compile(r'^(?:[0-9a-f]{8,16}\t)?([0-9a-f\s]+)$', re.IGNORECASE)
 
+#iam: 04/09/2021
+def convert2octects(otooln):
+    """Converts a otool output line into a list of octets.
+
+    The otool output format varies between Intel and M1 chips.
+
+    Intel:
+    0000000000000070	2f 55 73 65 72 73 2f 65 32 37 36 35 38 2f 52 65
+
+    M1:
+    000000010000c000	6573552f 692f7372 522f6d61 736f7065
+
+    The input string corresponds to substring after the tab that follows
+    tthe starting address.
+
+    """
+    octets = []
+    chunks = otooln.split()
+    for chunk in chunks:
+        if len(chunk) == 2:
+            octets.append(chunk)
+        else:
+          twoples = [chunk[i:i+2] for i in range(0, len(chunk), 2)]
+          twoples.reverse()
+          octets.extend(twoples)
+    return octets
+
 def extract_section_darwin(inputFile):
     """Extracts the section as a string, the darwin version.
 
     Uses otool to extract the section, then processes it
     to a usable state.
 
+    iam: 04/09/2021  Using otool here is starting to be a real pain.
+    The output format varies between XCode versions, and also between Intel and M1
+    chips.
     """
     retval = None
 
@@ -144,7 +174,7 @@ def extract_section_darwin(inputFile):
                 _logger.debug('otool output:\n\t%s\nDID NOT match expectations.', line)
                 continue
             octetline = m.group(1)
-            octets.extend(octetline.split())
+            octets.extend(convert2octects(octetline))
         _logger.debug('We parsed this as:\n%s', octets)
         retval = decode_hex(''.join(octets))[0].splitlines()
         # these have become bytes in the "evolution" of python
