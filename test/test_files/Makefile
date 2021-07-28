@@ -19,7 +19,7 @@ e:
 
 
 one:
-	${CC} foo.c bar.c baz.c main.c -o main
+	${CC} -pthread foo.c bar.c baz.c main.c -o main
 
 two:
 	${CC} foo.c bar.c baz.c main.c -c
@@ -37,6 +37,8 @@ mix_e:
 	${CC} -emit-llvm foo.c bar.c -c
 	${CC} foo.bc bar.bc baz.c main.c -o main
 
+threads:
+	${CXX} -pthread test1.cpp test2.cpp -o main
 
 objects:
 	${CC} foo.c -c
