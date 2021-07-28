@@ -63,7 +63,8 @@ class ArgumentListFilter:
             '-no-integrated-as' : (0, ArgumentListFilter.compileUnaryCallback),
             '-integrated-as' : (0, ArgumentListFilter.compileUnaryCallback),
             #iam: gcc uses this in both compile and link, but clang only in compile
-            '-pthread' : (0, ArgumentListFilter.compileUnaryCallback),
+            #iam: actually on linux it looks to be both
+            '-pthread' : (0, ArgumentListFilter.compileLinkUnaryCallback),
             # I think this is a compiler search path flag.  It is
             # clang only, so I don't think it counts as a separate CPP
             # flag.  Android uses this flag with its clang builds.
