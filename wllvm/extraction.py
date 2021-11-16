@@ -276,7 +276,7 @@ def linkFiles(pArgs, fileNames):
     linkCmd.append(f'-o={pArgs.outputFile}')
 
     fileNames = map(getBitcodePath, fileNames)
-    fileNames = [x for x in fileNames of x != '']
+    fileNames = [x for x in fileNames if x != '']
 
     # Check the size of the argument string first: If it is larger than the
     # allowed size specified by 'getconf ARG_MAX' we have to link the files
