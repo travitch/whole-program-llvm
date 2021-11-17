@@ -225,16 +225,11 @@ def getBitcodePath(bcPath):
         return storePath
     return bcPath
 
-def linkFiles(pArgs, fileNames):
-    linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
-
-    linkCmd.append(f'-o={pArgs.outputFile}')
-
-    fileNames = map(getBitcodePath, fileNames)
-    linkCmd.extend([x for x in fileNames if x != ''])
-
+def executeLinker(linkCmd):
     try:
-        linkProc = Popen(linkCmd)
+        # Use blocking call here since the output file needs to be generated
+        # before we can continue linking.
+        exitCode = sp.check_call(linkCmd)
     except OSError as e:
         if e.errno == 2:
             errorMsg = 'Your llvm-link does not seem to be easy to find.\nEither install it or use the -l llvmLinker option.'
@@ -243,9 +238,55 @@ def linkFiles(pArgs, fileNames):
         _logger.error(errorMsg)
         raise Exception(errorMsg) from e
 
-    else:
-        exitCode = linkProc.wait()
-        _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
+    return exitCode
+
+def incrementallyLinkFiles(pArgs, fileNames):
+    linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
+
+    linkCmd.append(f'-o={pArgs.outputFile}')
+
+    # fileNames has already been adjusted and checked in function linkFiles.
+    first, remaining = fileNames[0], fileNames[1:]
+    linkCmd.append(first)
+
+    exitCode = executeLinker(linkCmd)
+
+    # Use the output file as part of the next linking process to overwrite
+    # it incrementally.
+    linkCmd.append(pArgs.outputFile)
+
+    for bc_file in remaining:
+        # Adjust the previously first file path and link remaining files.
+        # The linking process has to be done with blocking calls here too
+        # since we are overwriting the file completely everytime.
+        linkCmd[len(linkCmd) - 2] = bc_file
+        exitCode = executeLinker(linkCmd)
+
+    _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
+
+    return exitCode
+
+
+def linkFiles(pArgs, fileNames):
+    linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
+
+    linkCmd.append(f'-o={pArgs.outputFile}')
+
+    fileNames = map(getBitcodePath, fileNames)
+    fileNames = [x for x in fileNames if x != '']
+
+    # Check the size of the argument string first: If it is larger than the
+    # allowed size specified by 'getconf ARG_MAX' we have to link the files
+    # incrementally to avoid weird errors.
+    arg_max = int(sp.getoutput('getconf ARG_MAX'))
+    str_len = sum([len(x) for x in fileNames])
+    if str_len > arg_max:
+        return incrementallyLinkFiles(pArgs, fileNames)
+
+    linkCmd.extend(fileNames)
+    
+    exitCode = executeLinker(linkCmd)
+    _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
     return exitCode
 
 
