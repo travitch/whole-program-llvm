@@ -225,6 +225,21 @@ def getBitcodePath(bcPath):
         return storePath
     return bcPath
 
+def executeLinker(linkCmd):
+    try:
+        # Use blocking call here since the output file needs to be generated
+        # before we can continue linking.
+        exitCode = sp.check_call(linkCmd)
+    except OSError as e:
+        if e.errno == 2:
+            errorMsg = 'Your llvm-link does not seem to be easy to find.\nEither install it or use the -l llvmLinker option.'
+        else:
+            errorMsg = f'OS error({e.errno}): {e.strerror}'
+        _logger.error(errorMsg)
+        raise Exception(errorMsg) from e
+
+    return exitCode
+
 def incrementallyLinkFiles(pArgs, fileNames):
     linkCmd = [pArgs.llvmLinker, '-v'] if pArgs.verboseFlag else [pArgs.llvmLinker]
 
@@ -234,20 +249,8 @@ def incrementallyLinkFiles(pArgs, fileNames):
     first, remaining = fileNames[0], fileNames[1:]
     linkCmd.append(first)
 
-    try:
-        # Use blocking call here since the output file needs to be generated
-        # before we can continue linking.
-        #
-        # TODO: Maybe use dedicated function for calling linker, saves code.
-        exitCode = sp.check_call(linkCmd)
-    except OSError as e:
-        if e.errno == 2:
-            errorMsg = 'Your llvm-link does not seem to be easy to find.\nEither install it or use the -l llvmLinker option.'
-        else:
-            errorMsg = f'OS error({e.errno}): {e.strerror}'
-        _logger.error(errorMsg)
-        raise Exception(errorMsg) from e
-    
+    exitCode = executeLinker(linkCmd)
+
     # Use the output file as part of the next linking process to overwrite
     # it incrementally.
     linkCmd.append(pArgs.outputFile)
@@ -257,15 +260,9 @@ def incrementallyLinkFiles(pArgs, fileNames):
         # The linking process has to be done with blocking calls here too
         # since we are overwriting the file completely everytime.
         linkCmd[len(linkCmd) - 2] = bc_file
+        exitCode = executeLinker(linkCmd)
 
-        try:
-            exitCode = sp.check_call(linkCmd)
-        except OSError as e:
-            # e.errno == 2 should not happen here since first invocation
-            # has already succeeded. Simply log and raise the error here
-            errorMsg = f'OS error({e.errno}): {e.strerror}'
-            _logger.error(errorMsg)
-            raise Exception(errorMsg) from e
+    _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
 
     return exitCode
 
@@ -287,20 +284,9 @@ def linkFiles(pArgs, fileNames):
         return incrementallyLinkFiles(pArgs, fileNames)
 
     linkCmd.extend(fileNames)
-
-    try:
-        linkProc = Popen(linkCmd)
-    except OSError as e:
-        if e.errno == 2:
-            errorMsg = 'Your llvm-link does not seem to be easy to find.\nEither install it or use the -l llvmLinker option.'
-        else:
-            errorMsg = f'OS error({e.errno}): {e.strerror}'
-        _logger.error(errorMsg)
-        raise Exception(errorMsg) from e
-
-    else:
-        exitCode = linkProc.wait()
-        _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
+    
+    exitCode = executeLinker(linkCmd)
+    _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
     return exitCode
 
 
