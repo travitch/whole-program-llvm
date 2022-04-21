@@ -62,8 +62,7 @@ def getSectionSizeAndOffset(sectionName, filename):
     extracts thesize and offset of that section (in bytes).
     """
 
-    binUtilsTargetPrefix = os.getenv(binutilsTargetPrefixEnv)
-    objdumpBin = f'{binUtilsTargetPrefix}-{"objdump"}' if binUtilsTargetPrefix else 'objdump'
+    objdumpBin = 'objdump'
     objdumpCmd = [objdumpBin, '-h', '-w', filename]
     objdumpProc = Popen(objdumpCmd, stdout=sp.PIPE)
 
