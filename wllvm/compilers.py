@@ -26,9 +26,10 @@ def wcompile(mode):
     parentCmd = subprocess.check_output(
             ['ps', '--no-header', '-o', 'comm', '-p', str(os.getppid())], text=True)
     if parentCmd.strip() == 'ccache':
-        # The following error message may be invisible in terminal because ccache captures stderr
+        # The following error message is invisible in terminal
+        # when ccache is using its preprocessor mode
         _logger.error('Should not be invoked from ccache')
-        # When ccache detects an error during preprocessing,
+        # When ccache detects an error in the preprocessor mode,
         # it will fall back to running the real compiler (wllvm)
         sys.exit(-1)
 
