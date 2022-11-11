@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import hashlib
+import subprocess
 
 from shutil import copyfile
 from .filetype import FileType
@@ -20,6 +21,17 @@ _logger = logConfig(__name__)
 def wcompile(mode):
     """ The workhorse, called from wllvm and wllvm++.
     """
+
+    # Make sure we are not invoked from ccache
+    parentCmd = subprocess.check_output(
+            ['ps', '--no-header', '-o', 'comm', '-p', str(os.getppid())], text=True)
+    if parentCmd.strip() == 'ccache':
+        # The following error message is invisible in terminal
+        # when ccache is using its preprocessor mode
+        _logger.error('Should not be invoked from ccache')
+        # When ccache detects an error in the preprocessor mode,
+        # it will fall back to running the real compiler (wllvm)
+        sys.exit(-1)
 
     rc = 1
 
