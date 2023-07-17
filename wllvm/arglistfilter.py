@@ -196,6 +196,7 @@ class ArgumentListFilter:
             '-dynamiclib' : (0, ArgumentListFilter.linkUnaryCallback),
             '-current_version' : (1, ArgumentListFilter.linkBinaryCallback),
             '-compatibility_version' : (1, ArgumentListFilter.linkBinaryCallback),
+            '-framework' : (1, ArgumentListFilter.linkBinaryCallback),
 
             # dragonegg mystery argument
             '--64' : (0, ArgumentListFilter.compileUnaryCallback),
