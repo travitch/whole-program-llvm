@@ -129,6 +129,7 @@ class ArgumentListFilter:
             '-isysroot' : (1, ArgumentListFilter.compileBinaryCallback),
             '-iquote' : (1, ArgumentListFilter.compileBinaryCallback),
             '-imultilib' : (1, ArgumentListFilter.compileBinaryCallback),
+            '--sysroot' : (1, ArgumentListFilter.compileBinaryCallback),
 
             # Architecture
             '-target' : (1, ArgumentListFilter.compileBinaryCallback),
