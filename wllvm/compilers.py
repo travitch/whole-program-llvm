@@ -24,7 +24,7 @@ def wcompile(mode):
 
     # Make sure we are not invoked from ccache
     parentCmd = subprocess.check_output(
-            ['ps', '--no-header', '-o', 'comm', '-p', str(os.getppid())], text=True)
+            ['ps', '-o', 'comm=', '-p', str(os.getppid())], text=True)
     if parentCmd.strip() == 'ccache':
         # The following error message is invisible in terminal
         # when ccache is using its preprocessor mode
