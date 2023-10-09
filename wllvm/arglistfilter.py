@@ -38,13 +38,13 @@ class ArgumentListFilter:
             '-E' : (0, ArgumentListFilter.preprocessOnlyCallback),
             '-S' : (0, ArgumentListFilter.assembleOnlyCallback),
 
+            '-v' : (0, ArgumentListFilter.verboseFlagCallback),
             '--verbose' : (0, ArgumentListFilter.verboseFlagCallback),
             '--param' : (1, ArgumentListFilter.compileBinaryCallback),
             '-aux-info' : (1, ArgumentListFilter.defaultBinaryCallback),
 
             #iam: presumably the len(inputFiles) == 0 in this case
             '--version' : (0, ArgumentListFilter.compileOnlyCallback),
-            '-v' : (0, ArgumentListFilter.compileOnlyCallback),
 
             #warnings (apart from the regex below)
             '-w' : (0, ArgumentListFilter.compileUnaryCallback),
