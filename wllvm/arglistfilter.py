@@ -129,7 +129,11 @@ class ArgumentListFilter:
             '-isysroot' : (1, ArgumentListFilter.compileBinaryCallback),
             '-iquote' : (1, ArgumentListFilter.compileBinaryCallback),
             '-imultilib' : (1, ArgumentListFilter.compileBinaryCallback),
-            '--sysroot' : (1, ArgumentListFilter.compileBinaryCallback),
+
+            # Sysroot
+            # Driver expands this into include options when compiling and
+            # library options when linking
+            '--sysroot' : (1, ArgumentListFilter.compileLinkBinaryCallback),
 
             # Architecture
             '-target' : (1, ArgumentListFilter.compileBinaryCallback),
@@ -445,6 +449,11 @@ class ArgumentListFilter:
         _logger.debug('compileUnaryCallback: %s', flag)
         self.compileArgs.append(flag)
 
+    def compileLinkUnaryCallback(self, flag):
+        _logger.debug('compileLinkUnaryCallback: %s', flag)
+        self.compileArgs.append(flag)
+        self.linkArgs.append(flag)
+
     def warningLinkUnaryCallback(self, flag):
         _logger.debug('warningLinkUnaryCallback: %s', flag)
         _logger.warning('The flag "%s" cannot be used with this tool; we are ignoring it', flag)
@@ -464,21 +473,21 @@ class ArgumentListFilter:
         self.compileArgs.append(flag)
         self.compileArgs.append(arg)
 
-
     def linkBinaryCallback(self, flag, arg):
         _logger.debug('linkBinaryCallback: %s %s', flag, arg)
+        self.linkArgs.append(flag)
+        self.linkArgs.append(arg)
+
+    def compileLinkBinaryCallback(self, flag, arg):
+        _logger.debug('compileLinkBinaryCallback: %s %s', flag, arg)
+        self.compileArgs.append(flag)
+        self.compileArgs.append(arg)
         self.linkArgs.append(flag)
         self.linkArgs.append(arg)
 
     def linkingGroupCallback(self, args):
         _logger.debug('linkingGroupCallback: %s', args)
         self.linkArgs.extend(args)
-
-    #flags common to both linking and compiling (coverage for example)
-    def compileLinkUnaryCallback(self, flag):
-        _logger.debug('compileLinkUnaryCallback: %s', flag)
-        self.compileArgs.append(flag)
-        self.linkArgs.append(flag)
 
     def getOutputFilename(self):
         if self.outputFilename is not None:
