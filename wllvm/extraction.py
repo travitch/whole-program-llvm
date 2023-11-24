@@ -274,6 +274,23 @@ def linkFiles(pArgs, fileNames):
     fileNames = map(getBitcodePath, fileNames)
     fileNames = [x for x in fileNames if x != '']
 
+    # EXCLUDE_PATH: space-separated paths to exclude from the link list.
+    # If it ends with '.bc', it is treated as a filename, otherwise a path.
+    exclude_paths = os.environ.get('EXCLUDE_PATHS')
+    if exclude_paths is not None:
+        excludes = exclude_paths.split()
+        def exclude(fn):
+            for e in excludes:
+                if e.endswith('.bc'):
+                    if fn.endswith(e):
+                        return True
+                else:
+                    path, _ = os.path.split(fn)
+                    if path.endswith(e):
+                        return True
+            return False
+        fileNames = [x for x in fileNames if not exclude(x)]
+
     # Check the size of the argument string first: If it is larger than the
     # allowed size specified by 'getconf ARG_MAX' we have to link the files
     # incrementally to avoid weird errors.
