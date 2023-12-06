@@ -62,24 +62,25 @@ def getSectionSizeAndOffset(sectionName, filename):
     extracts thesize and offset of that section (in bytes).
     """
 
-    objdumpBin = 'objdump'
-    objdumpCmd = [objdumpBin, '-h', '-w', filename]
-    objdumpProc = Popen(objdumpCmd, stdout=sp.PIPE)
+    binUtilsTargetPrefix = os.getenv(binutilsTargetPrefixEnv)
+    bin= f'{binUtilsTargetPrefix}-readelf' if binUtilsTargetPrefix else 'readelf'
+    cmd = [bin, '-S', filename]
+    proc = Popen(cmd, stdout=sp.PIPE)
 
-    objdumpOutput = objdumpProc.communicate()[0]
-    if objdumpProc.returncode != 0:
+    output = proc.communicate()[0]
+    if proc.returncode != 0:
         _logger.error('Could not dump %s', filename)
         sys.exit(-1)
 
-    for line in [l.decode('utf-8') for l in objdumpOutput.splitlines()]:
+    for line in [l.decode('utf-8') for l in output.splitlines()]:
         fields = line.split()
         if len(fields) <= 7:
             continue
         if fields[1] != sectionName:
             continue
         try:
-            size = int(fields[2], 16)
-            offset = int(fields[5], 16)
+            size = int(fields[5], 16)
+            offset = int(fields[4], 16)
             return (size, offset)
         except ValueError:
             continue
@@ -300,7 +301,6 @@ def linkFiles(pArgs, fileNames):
         return incrementallyLinkFiles(pArgs, fileNames)
 
     linkCmd.extend(fileNames)
-    
     exitCode = executeLinker(linkCmd)
     _logger.info('%s returned %s', pArgs.llvmLinker, str(exitCode))
     return exitCode
