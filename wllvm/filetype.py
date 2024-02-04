@@ -1,3 +1,4 @@
+# Copyright (c) Qualcomm Innovation Center, Inc. All rights reserved
 """ A static class that allows the type of a file to be checked.
 """
 import os

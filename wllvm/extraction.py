@@ -1,3 +1,5 @@
+# Copyright (c) Qualcomm Innovation Center, Inc. All rights reserved
+
 from __future__ import print_function
 
 import os
