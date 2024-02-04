@@ -34,7 +34,7 @@ class FileType:
         Maybe we should use python-magic instead?
         """
         retval = None
-        fileP = Popen(['file', os.path.realpath(fileName)], stdout=PIPE)
+        fileP = Popen(['/usr/bin/file', os.path.realpath(fileName)], stdout=PIPE)
         output = fileP.communicate()[0]
         foutput = output.decode()
         foutput = foutput.split(' ', 1)[1] # Strip file path
