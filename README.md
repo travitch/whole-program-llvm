@@ -239,6 +239,39 @@ original bitcode file.  For convenience, when using both the manifest
 feature of `extract-bc` and the store, the manifest will contain both
 the original path, and the store path.
 
+
+Exclude bitcode files to link
+-----------------------------
+Sometimes the `extract-bc` will report multiple defination error.
+For example:
+```
+error: Linking globals named '__kvm_timer_set_cntvoff': symbol multiply defined!
+```
+
+If we check the vmlinux, we can see several symbols having this string:
+```
+ffffffc080ff2000 T __kvm_nvhe___kvm_timer_set_cntvoff
+ffffffc080ff5ccc t __kvm_nvhe_handle___kvm_timer_set_cntvoff
+ffffffc08008e89c T __kvm_timer_set_cntvoff
+```
+
+Linux kernel is able to build succeed because objcopy has --prefix-symbols option:
+For example in arch/arm64/kvm/hyp/nvhe/Makefile:
+```
+  cmd_hypcopy = $(OBJCOPY) --prefix-symbols=__kvm_nvhe_ $< $@
+```
+
+But extract-bc doesn't have such info, thus llvm-link failed.
+
+To avoid such error, a flag `EXCLUDE_PATHS` which can be used to exclude bc file or dir
+during llvm-link.
+
+For example:
+```
+    EXCLUDE_PATHS='arch/arm64/kernel/pi arch/arm64/kvm/hyp' extract-bc vmlinux
+```
+
+
 Cross-Compilation
 -----------------
 
