@@ -370,6 +370,8 @@ class ArgumentListFilter:
         retval = (False, "")
         if os.environ.get('WLLVM_CONFIGURE_ONLY', False):
             retval = (True, "CFG Only")
+        if self.getOutputFilename() == os.devnull:
+            retval = (True, "Output is the null device")
         elif not self.inputFiles:
             retval = (True, "No input files")
         elif self.isEmitLLVM:
